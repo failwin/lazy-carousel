@@ -1,0 +1,28 @@
+/* ------------------------ Gallery Carousel ---------------------- */
+.gallery_carousel {
+    display: block;
+}
+
+.gallery_carousel .list_holder {
+    max-width: 1000px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.gallery_carousel ul.list {
+    display: block;
+    width: 10000em;
+}
+
+.gallery_carousel ul.list:after {
+    display: block;
+    content: '';
+    height: 0;
+    overflow: hidden;
+    clear: both;
+}
+
+.gallery_carousel ul.list li.item {
+    float: left;
+    width: 150px;
+}
