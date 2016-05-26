@@ -1,5 +1,5 @@
+var helpers = window.__helpers;
 var utils = window.utils;
-var $document = window.document;
 var LazyCarousel = window.LazyCarousel;
 
 function triggerEvent(name, element) {
@@ -30,15 +30,6 @@ function getDataList(list, dataAtrName) {
     });
 };
 
-function inject(cb){
-    var obj = {
-        create: function(elem, opts) {
-            return new LazyCarousel(elem, opts);
-        }
-    }
-    cb(obj);
-}
-
 describe('LazyCarouselSpec', function(){
     var $holder;
 
@@ -50,14 +41,17 @@ describe('LazyCarouselSpec', function(){
         return $holder.firstChild;
     }
 
-    beforeEach(function(){
+    var stylesRemove = null;
 
+    beforeEach(function(){
+    		stylesRemove = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
     });
     afterEach(function(){
+    		stylesRemove();
         utils.clearElement($holder);
     });
 
-    fdescribe('basic', function(){
+    describe('basic', function(){
         it('should have correct properties', function() {
             var elem = createElement('<div class="gallery_carousel"><ul class="list"></ul></div>');
 
@@ -109,10 +103,10 @@ describe('LazyCarouselSpec', function(){
             expect(inst.resize.calls.count()).toBe(1);
         });
 
-        it('should check basic template', inject(function(gCarousel) {
+        it('should check basic template', function() {
             var elem = createElement('<div class="gallery_carousel"><ul class="list"></ul></div>');
 
-            var inst = gCarousel.create(elem, {
+            var inst = new LazyCarousel(elem, {
                 noInit: true
             });
 
@@ -123,9 +117,9 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst.$list).toBeTruthy();
             expect(inst.$list).toBe(elem.firstChild);
-        }));
+        });
 
-        it('should calculate elements width', inject(function(gCarousel) {
+        it('should calculate elements width', function() {
             var elemStr =   '<div class="gallery_carousel">' +
                 '<div class="list_holder" style="width: 999px;">' +
                 '<ul class="list">' +
@@ -136,7 +130,7 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            var inst = gCarousel.create(elem, {
+            var inst = new LazyCarousel(elem, {
                 noInit: true
             });
 
@@ -146,9 +140,9 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst._holderWidth).toBe(999);
             expect(inst._itemWidth).toBe(111);
-        }));
+        });
 
-        xit('should calculate elements width if list is empty (from CSS)', inject(function(gCarousel) {
+        it('should calculate elements width if list is empty (from CSS)', function() {
             var elemStr =   '<div class="gallery_carousel">' +
                 '<div class="list_holder" style="width: 999px;">' +
                 '<ul class="list">' +
@@ -158,7 +152,7 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            var inst = gCarousel.create(elem, {
+            var inst = new LazyCarousel(elem, {
                 noInit: true
             });
 
@@ -170,9 +164,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._itemWidth).toBe(150); // main.css
 
             expect(inst.$list.firstChild).toBe(null);
-        }));
+        });
 
-        it('should calculate visible elemtnts', inject(function(gCarousel) {
+        it('should calculate visible elemtnts', function() {
             var elemStr =   '<div class="gallery_carousel">' +
                 '<div class="list_holder" style="width: 1000px;">' +
                 '<ul class="list">' +
@@ -183,7 +177,7 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            var inst = gCarousel.create(elem, {
+            var inst = new LazyCarousel(elem, {
                 noInit: true
             });
 
@@ -200,7 +194,7 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst._visible).toBe(1);
 
-        }));
+        });
     });
 
     describe('_updateVisible', function(){
@@ -217,17 +211,17 @@ describe('LazyCarouselSpec', function(){
             return arr.join(',');
         };
 
-        beforeEach(inject(function(gCarousel){
+        beforeEach(function(){
             var elem = createElement('<div class="gallery_carousel"><div><ul class="list"></ul></div></div>');
 
-            inst = gCarousel.create(elem, {
+            inst = new LazyCarousel(elem, {
                 noInit: true
             });
             inst._getItemTemplate = function(item) {
                 return '<li class="item" data-id="'+ item._id +'">'+ item.id +'</li>';
             };
 
-        }));
+        });
         afterEach(function(){
 
         });
@@ -238,9 +232,9 @@ describe('LazyCarouselSpec', function(){
 
         describe('_calculateVisibility', function() {
 
-            beforeEach(inject(function(gCarousel){
+            beforeEach(function(){
                 spyOn(inst, '_updateVisible');
-            }));
+            });
 
             it('should return correct ', function() {
                 var items, partialItems;
@@ -366,11 +360,11 @@ describe('LazyCarouselSpec', function(){
                 return arr.join(',');
             };
 
-            beforeEach(inject(function(gCarousel){
+            beforeEach(function(){
                 getPartialItems = inst._getPartialItems.bind(inst);
 
                 // _getPartialItems(active, visible, addition, list);
-            }));
+            });
 
             it('should return correct ', function() {
                 var partialItems;
@@ -436,11 +430,11 @@ describe('LazyCarouselSpec', function(){
         describe('_getItemByIndex', function(){
             var getItemByIndex;
 
-            beforeEach(inject(function(gCarousel){
+            beforeEach(function(){
                 getItemByIndex = inst._getItemByIndex.bind(inst);
 
                 // getItemByIndex(index, list, loop);
-            }));
+            });
 
             it('should return correct ', function() {
                 var items, item;
@@ -464,7 +458,7 @@ describe('LazyCarouselSpec', function(){
 
     });
 
-    xdescribe('_addItems/_removeItems', function(){
+    describe('_addItems/_removeItems', function(){
         var inst;
 
         function getStringOfContent(list) {
@@ -478,7 +472,7 @@ describe('LazyCarouselSpec', function(){
             return arr.join(',');
         };
 
-        beforeEach(inject(function(gCarousel){
+        beforeEach(function(){
             var elemStr =   '<div class="gallery_carousel">' +
                 '<div class="list_holder">' +
                 '<ul>' +
@@ -488,19 +482,19 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            inst = gCarousel.create(elem, {
+            inst = new LazyCarousel(elem, {
                 noInit: true
             });
             inst._getItemTemplate = function(item) {
                 return '<li class="item" data-id="'+ item._id +'">'+ item.id +'</li>';
             };
 
-        }));
+        });
         afterEach(function(){
 
         });
 
-        it('should add item into empty list', inject(function() {
+        it('should add item into empty list', function() {
 
             spyOn(inst, '_addItemPost').and.callThrough();
 
@@ -523,9 +517,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst.$list.firstChild).not.toBe(null);
             expect(inst._$partialItems.length).toBe(3);
             expect(getStringOfContent(inst.$list.children)).toBe('1,2,3');
-        }));
+        });
 
-        it('should append item into not empty list', inject(function() {
+        it('should append item into not empty list', function() {
 
             spyOn(inst, '_addItemPost').and.callThrough();
 
@@ -558,8 +552,6 @@ describe('LazyCarouselSpec', function(){
 
             inst._addItems();
 
-            console.log(inst.$list);
-
             expect(inst.$list.children.length).toBe(5);
             expect(inst._$partialItems.length).toBe(5);
 
@@ -571,9 +563,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._$partialItems.length).toBe(5);
             expect(inst._addItemPost.calls.count()).toBe(5);
             expect(getStringOfContent(inst.$list.children)).toBe('1,2,3,4,5');
-        }));
+        });
 
-        it('should prepend item into not empty list', inject(function() {
+        it('should prepend item into not empty list', function() {
 
             spyOn(inst, '_addItemPost').and.callThrough();
 
@@ -617,9 +609,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._$partialItems.length).toBe(5);
             expect(inst._addItemPost.calls.count()).toBe(5);
             expect(getStringOfContent(inst.$list.children)).toBe('-1,0,1,2,3');
-        }));
+        });
 
-        it('should prepend/append item into not empty list', inject(function() {
+        it('should prepend/append item into not empty list', function() {
 
             spyOn(inst, '_addItemPost').and.callThrough();
 
@@ -663,9 +655,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._$partialItems.length).toBe(5);
             expect(inst._addItemPost.calls.count()).toBe(5);
             expect(getStringOfContent(inst.$list.children)).toBe('0,1,2,3,4');
-        }));
+        });
 
-        it('should remove empty list', inject(function() {
+        it('should remove empty list', function() {
 
             spyOn(inst, '_removeItemPost').and.callThrough();
 
@@ -698,9 +690,9 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst.$list.children.length).toBe(0);
             expect(inst._$partialItems.length).toBe(0);
-        }));
+        });
 
-        it('should remove at the start of not empty list', inject(function() {
+        it('should remove at the start of not empty list', function() {
 
             spyOn(inst, '_removeItemPost').and.callThrough();
 
@@ -734,9 +726,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._$partialItems.length).toBe(2);
             expect(getStringOfContent(inst.$list.children)).toBe('2,3');
 
-        }));
+        });
 
-        it('should remove at the end of not empty list', inject(function() {
+        it('should remove at the end of not empty list', function() {
 
             spyOn(inst, '_removeItemPost').and.callThrough();
 
@@ -774,9 +766,9 @@ describe('LazyCarouselSpec', function(){
 
             expect(item1.getAttribute('data-id')).toBe('1');
             expect(item2.getAttribute('data-id')).toBe('2');
-        }));
+        });
 
-        it('should remove at the start/end of not empty list', inject(function() {
+        it('should remove at the start/end of not empty list', function() {
 
             spyOn(inst, '_removeItemPost').and.callThrough();
 
@@ -811,9 +803,9 @@ describe('LazyCarouselSpec', function(){
             var item2 = inst.$list.children[0];
 
             expect(item2.getAttribute('data-id')).toBe('2');
-        }));
+        });
 
-        it('should force remove all items', inject(function() {
+        it('should force remove all items', function() {
 
             spyOn(inst, '_removeItemPost').and.callThrough();
 
@@ -844,11 +836,11 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst.$list.children.length).toBe(0);
             expect(inst._$partialItems.length).toBe(0);
-        }));
+        });
 
     });
 
-    xdescribe('_centerList', function() {
+    describe('_centerList', function() {
         var inst;
 
         function applyOptions(inst, holderWidth, itemWidth, active, count) {
@@ -859,7 +851,7 @@ describe('LazyCarouselSpec', function(){
             inst._count = count;
         };
 
-        beforeEach(inject(function (gCarousel) {
+        beforeEach(function (gCarousel) {
             var elemStr = '<div class="gallery_carousel">' +
                 '<div class="list_holder">' +
                 '<ul>' +
@@ -870,15 +862,15 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            inst = gCarousel.create(elem, {
+            inst = new LazyCarousel(elem, {
                 noInit: true
             });
-        }));
+        });
         afterEach(function () {
 
         });
 
-        it('should center without nav', inject(function () {
+        it('should center without nav', function () {
             var holderWidth, itemWidth, active, count;
 
             inst.init();
@@ -960,9 +952,9 @@ describe('LazyCarouselSpec', function(){
             inst._centerList();
 
             expect(inst._offsetLeft).toBe(-650);
-        }));
+        });
 
-        it('should center with nav', inject(function () {
+        it('should center with nav', function () {
             var holderWidth, itemWidth, active, count;
 
             inst.init();
@@ -988,7 +980,7 @@ describe('LazyCarouselSpec', function(){
             // ----
 
 
-        }));
+        });
 
     });
 
@@ -1006,7 +998,7 @@ describe('LazyCarouselSpec', function(){
             return arr.join(',');
         };
 
-        beforeEach(inject(function(gCarousel){
+        beforeEach(function(){
            var elemStr =   '<div class="gallery_carousel">' +
                                 '<div class="list_holder">' +
                                     '<ul>' +
@@ -1016,19 +1008,19 @@ describe('LazyCarouselSpec', function(){
 
             var elem = createElement(elemStr);
 
-            inst = gCarousel.create(elem, {
+            inst = new LazyCarousel(elem, {
                 noInit: true
             });
             inst._getItemTemplate = function(item) {
                 return '<li class="item" data-id="'+ item._id +'">'+ item.id +'</li>';
             };
 
-        }));
+        });
         afterEach(function(){
 
         });
 
-        it('should not call _updateVisible if no items', inject(function(gCarousel) {
+        it('should not call _updateVisible if no items', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst._active = 0;
@@ -1041,9 +1033,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst.items.length).toBe(0);
             expect(inst.$list.children.length).toBe(0);
             expect(inst._$partialItems.length).toBe(0);
-        }));
+        });
 
-        it('should not call _updateVisible if items', inject(function(gCarousel) {
+        it('should not call _updateVisible if items', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst._active = 0;
@@ -1064,9 +1056,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst.items.length).toBe(3);
             expect(inst.$list.children.length).not.toBe(0);
             expect(inst._$partialItems.length).not.toBe(0);
-        }));
+        });
 
-        it('should add items into empty list with nav', inject(function(gCarousel) {
+        it('should add items into empty list with nav', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst.init();
@@ -1093,9 +1085,9 @@ describe('LazyCarouselSpec', function(){
 
             expect(inst._$partialItems.length).toBe(3);
             expect(getStringOfContent(inst.$list.children)).toBe('1,2,3');
-        }));
+        });
 
-        it('should add items into empty list with no nav', inject(function(gCarousel) {
+        it('should add items into empty list with no nav', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst.init();
@@ -1121,9 +1113,9 @@ describe('LazyCarouselSpec', function(){
             expect(inst._$partialItems.length).toBe(1);
 
             expect(getStringOfContent(inst.$list.children)).toBe('1');
-        }));
+        });
 
-        it('should update items with no nav', inject(function(gCarousel) {
+        it('should update items with no nav', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst.init();
@@ -1166,10 +1158,10 @@ describe('LazyCarouselSpec', function(){
             expect(inst._updateVisible.calls.count()).toBe(3);
 
             expect(getStringOfContent(inst.$list.children)).toBe('2');
-        }));
+        });
 
 
-        it('should update items with nav', inject(function(gCarousel) {
+        it('should update items with nav', function() {
             spyOn(inst, '_updateVisible').and.callThrough();
 
             inst.init();
@@ -1243,7 +1235,7 @@ describe('LazyCarouselSpec', function(){
             expect(inst._updateVisible.calls.count()).toBe(4);
 
             expect(getStringOfContent(inst.$list.children)).toBe('1,2,3');
-        }));
+        });
     });
 
 });

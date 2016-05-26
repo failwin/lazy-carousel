@@ -21,6 +21,8 @@ module.exports = function(config) {
       'src/utils.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
+      'test/helpers.js',
+      { pattern: 'test/fixtures/**/*.css', included: false },
       'test/**/*.js'
     ],
 

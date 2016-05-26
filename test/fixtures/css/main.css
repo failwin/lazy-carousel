@@ -1,17 +1,38 @@
 /* ------------------------ Gallery Carousel ---------------------- */
 .gallery_carousel {
     display: block;
+    margin: 0;
+    padding: 0;
 }
 
 .gallery_carousel .list_holder {
-    max-width: 1000px;
-    margin: 0 auto;
+    position: relative;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 .gallery_carousel ul.list {
-    display: block;
-    width: 10000em;
+    position: relative;
+    width: 1000em;
+    margin: 0;
+    padding: 0;
+    opacity: 0.99999;
+
+    -webkit-appearance: none;
+    -webkit-backface-visibility: hidden;
+
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
+    -o-transform: translateX(0);
+    -ms-transform: translateX(0);
+    transform: translateX(0);
+
+    -webkit-transition: -webkit-transform 0s linear;
+    -moz-transition: -moz-transform 0s linear;
+    -o-transition: -o-transform 0s linear;
+    -ms-transition: -ms-transform 0s linear;
+    transition: transform 0s linear;
 }
 
 .gallery_carousel ul.list:after {
@@ -23,6 +44,9 @@
 }
 
 .gallery_carousel ul.list li.item {
+    position: relative;
     float: left;
     width: 150px;
+    margin: 0;
+    padding: 0;
 }
