@@ -21,11 +21,11 @@ module.exports = function(config) {
       'src/utils.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
+      { pattern: 'src/base.css', included: false },
       'test/helpers.js',
       { pattern: 'test/fixtures/**/*.css', included: false },
-      'test/**/*.js'
+      'test/**/*Spec.js'
     ],
-
 
     // list of files to exclude
     exclude: [

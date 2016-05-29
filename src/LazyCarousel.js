@@ -6,6 +6,15 @@ var Promise = window.ES6Promise.Promise;
 var EventEmitter = window.events.EventEmitter;
 var utils = window.utils;
 
+var debug = false;
+var logLevel = ['calls', 'calls res']; // 'calls', 'calls res'
+var log = function() {
+    var args = [].slice.call(arguments, 0);
+    if (logLevel.indexOf(args.shift()) > -1) {
+        console.log(args);
+    }
+};
+
 var LazyCarousel = (function() {
     function LazyCarousel(elem, opts) {
         this.opts = utils.extend({}, this.defOpts);
@@ -50,7 +59,8 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype.defOpts = {
         noInit: false,
-        itemWidth: 50
+        itemWidth: 50,
+        debug: false
     };
 
     LazyCarousel.prototype.init = function() {
@@ -75,10 +85,10 @@ var LazyCarousel = (function() {
 
         this.$wrapper = this.$list.parentNode;
 
-        this.$swipe = new SwipeWrapper(this.$list, {
-            parent: this,
-            supportMouse: false
-        });
+        //this.$swipe = new SwipeWrapper(this.$list, {
+        //    parent: this,
+        //    supportMouse: false
+        //});
 
         this._transformProperty = utils.getPrefixedStyleValue('transform');
         this._translateZ = utils.supportsPerspective() ? 'translateZ(0)' : '';
@@ -95,28 +105,33 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype.resize = function(force, _itemWidth, _holderWidth) {
+        if (debug) {
+            log('calls', 'LazyCarousel.resize', force, _itemWidth, _holderWidth);
+        }
+
         var self = this;
 
         this._holderWidth = _holderWidth || this.$wrapper.clientWidth;
 
-        var item = this.$list.firstChild;
-
         if (typeof _itemWidth != 'undefined') {
             this._itemWidth = _itemWidth;
         }
-        else if (item) {
-            this._itemWidth = item.clientWidth;
+        else if (this.$list.firstChild && this.$list.firstChild.tagName === 'LI') {
+            this._itemWidth = this.$list.firstChild.clientWidth;
         }
         else {
-            utils.prependElement(this.$list, '<li class="item"></li>');
-            item = this.$list.firstChild;
+            var item = utils.prependElement(this.$list, '<li class="item"></li>');
             this._itemWidth = item.clientWidth;
-            utils.clearElement(this.$list);
+            this.$list.removeChild(item);
         }
 
         if (this._itemWidth < 10) {
             this._itemWidth = this.opts.itemWidth;
-            //this.$events.emit('error', new Error('LazyCarousel._itemWidth == 0'));
+            this.$events.emit('error', new Error('LazyCarousel._itemWidth == 0'));
+        }
+
+        if (debug) {
+            log('calls res', 'LazyCarousel.resize result', this._holderWidth, this._itemWidth);
         }
 
         if (!this.items.length) {
@@ -131,6 +146,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._calculateVisibility = function(noUpdate){
+        if (debug) {
+            log('calls', 'LazyCarousel._calculateVisibility', noUpdate);
+        }
+
         var innerUpdate = false;
 
         var visible = this._itemWidth ? Math.floor(this._holderWidth/this._itemWidth) + 1 : 0;
@@ -164,6 +183,10 @@ var LazyCarousel = (function() {
             this._addition = 0;
         }
 
+        if (debug) {
+            log('calls res', 'LazyCarousel._calculateVisibility', innerUpdate, visible, this._addition, this._isSimple);
+        }
+
         if (noUpdate) {
             this._visible = visible;
         }
@@ -174,6 +197,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype.updateItems = function(list) {
+        if (debug) {
+            log('calls', 'LazyCarousel.updateItems', list);
+        }
+
         var self = this;
 
         this.items = list;
@@ -189,6 +216,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._updateVisible = function(replace) {
+        if (debug) {
+            log('calls', 'LazyCarousel._updateVisible', replace);
+        }
+
         var active = this._active,
             visible = this._visible;
 
@@ -201,6 +232,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype.slideTo = function(dir, _count, _fast) {
+        if (debug) {
+            log('calls', 'LazyCarousel.slideTo', dir, _count, _fast);
+        }
+
         return new Promise(function(resolve, reject) {
             var newActive, left;
 
@@ -261,6 +296,10 @@ var LazyCarousel = (function() {
         }.bind(this));
     };
     LazyCarousel.prototype.slideToId = function(id) {
+        if (debug) {
+            log('calls', 'LazyCarousel.slideToId', id);
+        }
+
         return new Promise(function(resolve, reject) {
             var activeIndex = this._active,
                 newIndex = this._getItemIndexById(id, this._partialItems, '_id');
@@ -286,11 +325,19 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._setOffset = function(offsetLeft) {
+        if (debug) {
+            log('calls', 'LazyCarousel._setOffset', offsetLeft);
+        }
+
         var $elem = this.$list;
 
         $elem.style[this._transformProperty] = 'translateX('+ offsetLeft +'px) ' + this._translateZ;
     };
     LazyCarousel.prototype._animateOffset = function(offsetLeft, duration) {
+        if (debug) {
+            log('calls', 'LazyCarousel._animateOffset', offsetLeft, duration);
+        }
+
         var $elem = this.$list;
 
         return new Promise(function(resolve, reject) {
@@ -364,6 +411,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._centerList = function() {
+        if (debug) {
+            log('calls', 'LazyCarousel._centerList');
+        }
+
         var active = this._active,
             visible = this._visible,
             addition = this._addition;
@@ -375,6 +426,10 @@ var LazyCarousel = (function() {
         this._offsetLeft = offsetLeft;
     };
     LazyCarousel.prototype._getOffsetLeft = function(_index, _isDir, _isSimple) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getOffsetLeft', _index, _isDir, _isSimple);
+        }
+
         var index = this._active || _index,
             visible = this._visible,
             addition = this._addition,
@@ -407,9 +462,17 @@ var LazyCarousel = (function() {
             }
         }
 
+        if (debug) {
+            log('calls res', 'LazyCarousel._getOffsetLeft result', offsetLeft);
+        }
+
         return offsetLeft;
     };
     LazyCarousel.prototype._getMaxSlideCount = function(dir){
+        if (debug) {
+            log('calls', 'LazyCarousel._getMaxSlideCount', dir);
+        }
+
         var count;
 
         var active = this._normalizeIndex(this._active);
@@ -425,10 +488,18 @@ var LazyCarousel = (function() {
             count = this._addition;
         }
 
+        if (debug) {
+            log('calls res', 'LazyCarousel._getMaxSlideCount result', count);
+        }
+
         return count;
     };
 
     LazyCarousel.prototype._getPartialItems = function(_active, _visible, _addition, _isSimple, _list) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getPartialItems', _active, _visible, _addition, _isSimple, _list);
+        }
+
         var active = _active || this._active,
             visible = _visible || this._visible,
             addition =_addition || this._addition,
@@ -458,10 +529,19 @@ var LazyCarousel = (function() {
 
             list.push(clearItem);
         }
+
+        if (debug) {
+            log('calls res', 'LazyCarousel._getPartialItems result', list);
+        }
+
         return list;
     };
 
     LazyCarousel.prototype._addItems = function() {
+        if (debug) {
+            log('calls', 'LazyCarousel._addItems');
+        }
+
         var addBeforeItems = [],
             addAfterItems = [];
 
@@ -513,6 +593,10 @@ var LazyCarousel = (function() {
         this._$partialItems = Array.prototype.slice.call(this.$list.children, 0);
     };
     LazyCarousel.prototype._addItemPre = function(item, before, callback) {
+        if (debug) {
+            log('calls', 'LazyCarousel._addItemPre', item, before, callback);
+        }
+
         if (typeof before == 'function') {
             callback = before;
             before = false;
@@ -532,10 +616,17 @@ var LazyCarousel = (function() {
         callback($item, item, before);
     };
     LazyCarousel.prototype._addItemPost = function($item, item, before) {
+        if (debug) {
+            log('calls', 'LazyCarousel._addItemPost', $item, item, before);
+        }
 
     };
 
     LazyCarousel.prototype._removeItems = function(force) {
+        if (debug) {
+            log('calls', 'LazyCarousel._removeItems', force);
+        }
+
         var $removeItems = [];
 
         this._$partialItems.forEach(function($item){
@@ -566,15 +657,27 @@ var LazyCarousel = (function() {
         //}
     };
     LazyCarousel.prototype._removeItemPre = function($item, callback) {
+        if (debug) {
+            log('calls', 'LazyCarousel._removeItemPre', $item, callback);
+        }
+
         callback = callback || function() {};
 
         callback($item);
     };
     LazyCarousel.prototype._removeItemPost = function($item) {
+        if (debug) {
+            log('calls', 'LazyCarousel._removeItemPost', $item);
+        }
+
         $item.parentNode.removeChild($item);
     };
 
     LazyCarousel.prototype._updateNav = function(val) {
+        if (debug) {
+            log('calls', 'LazyCarousel._updateNav', val);
+        }
+
         if (this._isSimple) {
             if (this._normalizeIndex(this._active) <= 0) {
                 this._nav.prev = false;
@@ -596,9 +699,18 @@ var LazyCarousel = (function() {
                 next: true
             };
         }
+
+        if (debug) {
+            log('calls res', 'LazyCarousel._updateNav', this._nav);
+        }
+
         this.$events.emit('navChange', this._nav);
     };
     LazyCarousel.prototype._updateActive = function(active, _force) {
+        if (debug) {
+            log('calls', 'LazyCarousel._updateActive', active, _force);
+        }
+
         if (this._active === active && !_force) {
             return;
         }
@@ -614,6 +726,10 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._getItemById = function(id, _list, _key) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getItemById', id, _list, _key);
+        }
+
         var list = _list || this.items,
             key = _key || 'id';
 
@@ -627,6 +743,10 @@ var LazyCarousel = (function() {
         return false;
     };
     LazyCarousel.prototype._getItemIndexById = function(id, _list, _key) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getItemIndexById', id, _list, _key);
+        }
+
         var list = _list || this.items,
             key = _key || 'id';
 
@@ -639,6 +759,10 @@ var LazyCarousel = (function() {
         return -1;
     };
     LazyCarousel.prototype._getItemByIndex = function(index, _list, loop) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getItemIndexById', index, _list, loop);
+        }
+
         var list = _list || this.items;
 
         if (!list.length) {
@@ -655,16 +779,26 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._getItemTemplate = function(item) {
+        if (debug) {
+            log('calls', 'LazyCarousel._getItemTemplate', item);
+        }
+
         return '<li class="item" data-id="'+ item._id +'"></li>';
     };
 
     LazyCarousel.prototype._attachHandlers = function() {
+        if (debug) {
+            log('calls', 'LazyCarousel._attachHandlers');
+        }
+
         window.addEventListener('resize', this, false);
-        document.addEventListener('keyup', this, false);
     };
     LazyCarousel.prototype._detachHandlers = function() {
+        if (debug) {
+            log('calls', 'LazyCarousel._detachHandlers');
+        }
+
         window.removeEventListener('resize', this, false);
-        document.addEventListener('keyup', this, false);
     };
 
     LazyCarousel.prototype.handleEvent = function(event) {
@@ -677,27 +811,6 @@ var LazyCarousel = (function() {
                 this._resizeHandler(event);
                 break;
             }
-            case 'keyup': {
-                this._keyHandler(event);
-                break;
-            }
-            case 'touchstart':
-            case 'mousedown': {
-
-                break;
-            }
-            case 'touchmove':
-            case 'mousemove': {
-
-                break;
-            }
-            case 'touchend':
-            case 'touchcancel':
-            case 'mouseup':
-            case 'mouseleave': {
-
-                break;
-            }
             default : {
 
                 break;
@@ -707,21 +820,6 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype._resizeHandler = function(event) {
         this.resize();
-    };
-
-    LazyCarousel.prototype._keyHandler = function(event) {
-        // > 39
-        // < 37
-
-        var keyCode = event.which || event.keyCode;
-
-        if (keyCode == 39 || keyCode == 37) {
-            var dir = 1;
-            if (keyCode == 37) {
-                dir = -1;
-            }
-            this.slideTo(dir);
-        }
     };
 
     LazyCarousel.prototype._normalizeIndex = function(_active, _count) {

@@ -28,16 +28,17 @@
     };
 
     function injectCssByUrl(url){
-
         var _style = document.createElement('link');
         _style.rel = "stylesheet";
         _style.href = url;
 
         document.head.appendChild(_style);
 
-        return function clear() {
-            document.head.removeChild(_style);
-        }
+        return {
+            remove: function() {
+                document.head.removeChild(_style);
+            }
+        };
     }
 
     window.__helpers = {

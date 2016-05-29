@@ -304,7 +304,10 @@ var UtilService = (function() {
         return ret;
     };
     UtilService.prototype.appendElement = function(parent, element) {
-        var fragment = this.createElement(element);
+        var fragment = element;
+        if(typeof element === 'string') {
+            fragment = this.createElement(element);
+        }
         parent.appendChild(fragment);
         return parent.lastChild;
     };

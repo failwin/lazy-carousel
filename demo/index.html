@@ -20,6 +20,18 @@
 
 <style type="text/css">
 
+#console {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    background: #fff;
+}
+
+.lazy_carousel {
+    user-select: none;
+}
+
 .lazy_carousel li {
     list-style: none;
 
@@ -32,10 +44,20 @@
     border: solid 1px black;
 }
 
+@media (max-width: 700px) {
+
+    .lazy_carousel li {
+        width: 200px;
+    }
+}
+
 </style>
 
 </head>
 <body class="">
+<div id="console">
+
+</div>
     <div id="demo1" class="lazy_carousel">
         <div class="lc-list_holder">
             <ul class="lc-list">
@@ -46,25 +68,41 @@
         </div>
     </div>
     <div class="lc-nav">
-        <a href="#" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" class="lc-nav_link next" data-dir="1">Next</a>
+        <a href="#" onclick="demo1.slideTo(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+        <a href="#" onclick="demo1.slideTo(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
     </div>
 
     <script src="../src/lib/es6-promise/promise.js"></script>
     <script src="../src/lib/events/events.js"></script>
     <script src="../src/utils.js"></script>
-    <script src="../src/SwipeWrapper.js"></script>
+    <script src="../src/KeyHandlerDecorator.js"></script>
+    <script src="../src/SwipeDecorator.js"></script>
     <script src="../src/LazyCarousel.js"></script>
 
     <script>
         (function(){
+            var LazyCarousel = window.LazyCarousel,
+                keyHandlerDecorator = window.keyHandlerDecorator,
+                swipeDecorator = window.swipeDecorator;
+
+
             var demo1Holder = document.getElementById("demo1");
-            var demo1 = new LazyCarousel(demo1Holder);
+
+            var LazyCarouselWithKeysAndSwipe = swipeDecorator({})(keyHandlerDecorator({})(LazyCarousel));
+
+            var demo1 = new LazyCarouselWithKeysAndSwipe(demo1Holder, {debug: true});
+
+            demo1._getItemTemplate = function(item) {
+                return '<li class="item" data-id="'+ item._id +'">'+ item.id +'</li>';
+            };
 
             demo1.updateItems([
                 {id: 1},
                 {id: 2},
-                {id: 3}
+                {id: 3},
+                {id: 4},
+                {id: 5},
+                {id: 6}
             ]);
 
             window.demo1 = demo1;
