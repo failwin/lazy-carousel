@@ -1,18 +1,8 @@
-/* ------------------------ Gallery Carousel ---------------------- */
-.gallery_carousel {
-    display: block;
-    margin: 0;
-    padding: 0;
-}
-
-.gallery_carousel .list_holder {
+#testCarousel > div  {
     position: relative;
     overflow: hidden;
-    margin: 0;
-    padding: 0;
 }
-
-.gallery_carousel ul.list {
+#testCarousel > div > ul {
     position: relative;
     width: 1000em;
     margin: 0;
@@ -35,18 +25,11 @@
     transition: transform 0s linear;
 }
 
-.gallery_carousel ul.list:after {
-    display: block;
-    content: '';
-    height: 0;
-    overflow: hidden;
-    clear: both;
-}
-
-.gallery_carousel ul.list li.item {
+#testCarousel > div > ul > li {
     position: relative;
     float: left;
-    width: 150px;
     margin: 0;
     padding: 0;
+
+    width: 150px;
 }

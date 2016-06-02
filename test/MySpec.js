@@ -33,7 +33,7 @@ describe('LazyCarousel', function(){
     var baseStyles = null,
         fixturesStyles = null;
 
-    beforeEach(function() {
+    beforeEach(function(done) {
         baseStyles = helpers.injectCssByUrl('/base/src/base.css');
         fixturesStyles = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
 
@@ -75,12 +75,14 @@ describe('LazyCarousel', function(){
                 }
             }
         });
+
+        setTimeout(done, 20);
     });
     afterEach(function() {
-        baseStyles.remove();
-        fixturesStyles.remove();
+        //baseStyles.remove();
+        //fixturesStyles.remove();
 
-        document.body.removeChild($holder);
+        //document.body.removeChild($holder);
     });
 
     it('should be defined', function() {
@@ -90,113 +92,27 @@ describe('LazyCarousel', function(){
     it('should be possible to postpone initialization', function() {
         var inst = createCarousel({noInit: true}, null);
 
-        expect(inst.$holder).toBeFalsy(false);
+        expect(inst.$holder).toBeFalsy();
 
-        var elem = utils.createElement('<div><ul /></div>');
+        var temp = utils.createElement('<div id="testCarousel"><div><ul></ul></div></div>');
+        var elem = utils.appendElement($holder, temp);
         inst.init(elem);
 
         expect(inst.$holder).not.toBe(false);
     });
 
-    describe('HTML structure', function() {
+    describe('base', function() {
 
-        it('should keep main holder reference', function() {
-            var elem = utils.appendElement($holder, '<div><ul /></div>');
-            var inst = createCarousel(null, elem);
+        it('should calculate elements width from existed item', function() {
+            var inst = createCarousel(null, '<div id="testCarousel"><div><ul><li style="width: 111px"></li></ul></div></div>');
 
-            expect(inst.$holder).toBeDefined();
-            expect(inst.$holder).toBe(elem);
+            expect(inst._itemWidth).toBe(111);
         });
 
-        it('should throw an error if "holder" does not found', function() {
-            var inst;
+        it('should calculate elements width from CSS', function() {
+            var inst = createCarousel(null, '<div id="testCarousel"><div><ul></ul></div></div>');
 
-            expect(function() {
-                inst = createCarousel(null, null);
-            }).toThrow();
+            expect(inst._itemWidth).toBe(150);
         });
-
-        it('should throw an error if "ul" does not found', function() {
-            var inst;
-
-            expect(function() {
-                inst = createCarousel(null, '<div></div>');
-            }).toThrow();
-        });
-
-        it('should keep list holder reference', function() {
-            var inst = createCarousel(null, '<div class="holder"><ul /></div>');
-
-            expect(inst.$wrapper).toBeDefined();
-            expect(inst.$wrapper.classList.contains('holder')).toBeTruthy();
-        });
-    });
-
-    describe('Publick methods', function() {
-
-    });
-
-    describe('Private methods', function() {
-
-        describe('calculateVisibility', function() {
-            var calculateVisibility, clearHistroy;
-
-            beforeEach(function() {
-                var inst = createCarousel(null, '<div><ul /></div>');
-
-                calculateVisibility = function(){
-                    inst._calculateVisibility(arguments);
-
-                    return {
-                        visible: inst._visible,
-                        addition: inst._addition,
-                        isSimple: inst._isSimple
-                    };
-                };
-
-                clearHistroy = function() {
-                    inst._visible = this._addition = this._isSimple = null;
-                };
-
-            });
-
-            fit('should return integer number', function() {
-                var res = calculateVisibility(0, 0);
-
-                expect(res.visible).toBeInteger();
-
-
-                //expect(calculateVisibility(-10, 0)).toBeInteger();
-                //expect(calculateVisibility(0, -10)).toBeInteger();
-                //expect(calculateVisibility(10, 0)).toBeInteger();
-                //expect(calculateVisibility(0, 10)).toBeInteger();
-                //expect(calculateVisibility(10, 10)).toBeInteger();
-            });
-
-            it('should return positive count or zero', function() {
-                expect(calculateVisibility(0, 0)).toBeGreaterThan(-1);
-                expect(calculateVisibility(-10, 0)).toBeGreaterThan(-1);
-                expect(calculateVisibility(0, -10)).toBeGreaterThan(-1);
-                expect(calculateVisibility(10, 0)).toBeGreaterThan(-1);
-                expect(calculateVisibility(0, 10)).toBeGreaterThan(-1);
-                expect(calculateVisibility(10, 10)).toBeGreaterThan(-1);
-            });
-
-            it('should return odd number', function() {
-                expect(calculateVisibility(0, 0)).toBeOdd();
-                expect(calculateVisibility(-10, 0)).toBeOdd();
-                expect(calculateVisibility(0, -10)).toBeOdd();
-                expect(calculateVisibility(10, 0)).toBeOdd();
-                expect(calculateVisibility(0, 10)).toBeOdd();
-                expect(calculateVisibility(10, 10)).toBeOdd();
-            });
-
-            it('should return +1 than possible for even', function() {
-                expect(calculateVisibility(10, 1)).toBe(11);
-                expect(calculateVisibility(10, 2)).toBe(5);
-            });
-        });
-
-
     });
 });

@@ -20,7 +20,7 @@ var LazyCarousel = (function() {
         this.opts = utils.extend({}, this.defOpts);
         this.opts = utils.extend(this.opts, opts);
 
-        this.$holder = elem;
+        this.$holder = elem ? elem : null;
         this.$wrapper = null;
         this.$list = null;
 
@@ -63,14 +63,15 @@ var LazyCarousel = (function() {
         debug: false
     };
 
-    LazyCarousel.prototype.init = function() {
+    LazyCarousel.prototype.init = function(elem) {
         var self = this;
 
         this.$events.on('error', function(e){
             console.error(e);
-            //console.log(e.message);
+            console.log(e.message);
         });
 
+        this.$holder = elem ? elem : this.$holder;
         if (!this.$holder) {
             this.$events.emit('error', new Error('LazyCarousel.$holder not found.'));
             return;

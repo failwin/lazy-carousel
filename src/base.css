@@ -29,7 +29,7 @@
 }
 
 .lc-item,
-.lc-list .item {
+.lc-list li.item {
     position: relative;
     float: left;
     margin: 0;
