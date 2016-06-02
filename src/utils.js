@@ -312,13 +312,26 @@ var UtilService = (function() {
         return parent.lastChild;
     };
     UtilService.prototype.prependElement = function(parent, element) {
-        var fragment = this.createElement(element);
+        var fragment = element;
+        if(typeof element === 'string') {
+            fragment = this.createElement(element);
+        }
         if (!parent.firstChild) {
             parent.appendChild(fragment);
             return parent.lastChild;
         }
         parent.insertBefore(fragment, parent.firstChild);
         return parent.firstChild;
+    };
+    UtilService.prototype.insertBeforeElement = function(parent, element, where) {
+        if (!where) {
+            return this.appendElement(parent, element);
+        }
+        var fragment = element;
+        if(typeof element === 'string') {
+            fragment = this.createElement(element);
+        }
+        return parent.insertBefore(fragment, where);
     };
     UtilService.prototype.clearElement = function(element) {
         while (element.firstChild) {
@@ -638,6 +651,138 @@ var UtilService = (function() {
         return string.replace(/-([a-z])/g, function(str, letter){
             return letter.toUpperCase();
         });
+    };
+
+    UtilService.prototype.arraysDiff = function(base, current) {
+        var result = [];
+
+        var baseMap = {},
+            baseIndices = [];
+
+        var operateMap = {};
+
+        // map base array
+        for (var i = 0, len = base.length; i < len; i++) {
+            var node = base[i];
+            var id = node.id;
+            baseMap[id] = node;
+            node.$$i = i;
+            baseIndices.push(i);
+        }
+
+        // iterate over current nodes and base nodes
+        for (var i = 0, len = current.length; i < len; i++) {
+            var currenNode = current[i],
+                baseNode = base[baseIndices[i]],
+                id = currenNode.id;
+
+            // skip if we already performed an insertion map
+            if (operateMap[id]) {
+                continue;
+            }
+
+            // check if the node has an id
+            // if it exists in the base map, then move that node to the correct
+            // position, this will usually be the same node, which means no dom move
+            // is necessary, otherwise clone the node from the source (new inserts)
+            var existing = baseMap[id];
+            if (existing) {
+                if (!baseNode || existing.id != baseNode.id) {
+                    var relativeBaseIndex = existing.$$i;
+                    result.push({
+                        'action': 'moveChildElement',
+                        'element': existing,
+                        'baseIndex': '0>' + relativeBaseIndex,
+                        'sourceIndex': '0>' + i
+                    });
+
+                    // move the index so we can retrieve the next appropriate node
+                    baseIndices.splice(i, 0, baseIndices.splice(relativeBaseIndex, 1)[0]);
+                }
+            } else {
+                var relativeBaseIndex = i;
+                result.push({
+                    'action': 'insertChildElement',
+                    'element': currenNode,
+                    'baseIndex': '0>' + relativeBaseIndex,
+                    'sourceIndex': '0>' + relativeBaseIndex });
+            }
+            operateMap[id] = true;
+        }
+
+        // Remove any tail nodes in the base
+        for (var i = 0, len = base.length; i < len; i++) {
+            var remove = base[i];
+            var removeId = remove.id;
+            if (!operateMap[removeId]) {
+                result.push({
+                    'action': 'removeChildElement',
+                    'element': remove,
+                    'baseIndex': '0>' + remove.$$i,
+                    'sourceIndex': null });
+            }
+        }
+
+        result.sort(sortChange);
+
+        function sortChange(a, b) {
+            if (a['sourceIndex'] === b['sourceIndex']) {
+                return 0;
+            } else if (!a['sourceIndex'] && b['sourceIndex']) {
+                return -1;
+            } else if (a['sourceIndex'] && !b['sourceIndex']) {
+                return 1;
+            }
+            var aIndices = a['sourceIndex'].split('>');
+            var bIndices = b['sourceIndex'].split('>');
+            var equal = true;
+            var i = 0;
+            while (equal && i < aIndices.length && i < bIndices.length) {
+                var aN = parseInt(aIndices[i], 10);
+                var bN = parseInt(bIndices[i], 10);
+                if (aN === bN) {
+                    i++;
+                    continue;
+                } else if (isNaN(aN) || isNaN(bN)) {
+                    return isNaN(aN) ? 1 : -1;
+                } else {
+                    return aN > bN ? 1 : -1;
+                }
+            }
+
+            return 0;
+        }
+
+        return result;
+    };
+    UtilService.prototype.domListPatch = function(domList, changes, beforeAdd, afterAdd, beforeRemove, afterRemove) {
+
+        for(var i = 0, c = changes.length; i < c; i++) {
+            var change = changes[i],
+                element = change.element,
+                baseIndex = change.baseIndex.split('>')[1],
+                sourceIndex = change.sourceIndex.split('>')[1];
+
+            if (change.action == 'insertChildElement') {
+                beforeAdd(element, function(html) {
+                    var $item = utils.insertBeforeElement(domList, html, domList.childNodes[sourceIndex]);
+                    afterAdd(element, $item);
+                });
+            }
+            else if (change.action == 'removeChildElement') {
+                var $item = domList.childNodes[baseIndex];
+
+                beforeRemove(element, $item, function($item) {
+                    domList.removeChild($item);
+                    afterRemove(element, $item);
+                });
+            }
+            else if (change.action == 'moveChildElement') {
+                // TODO check if we realy need this movement, by Node index
+                var $item = domList.childNodes[baseIndex];
+                utils.insertBeforeElement(domList, $item, domList.childNodes[sourceIndex]);
+            }
+        }
     };
 
     UtilService.prototype._ready = function() {

@@ -16,8 +16,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       //'src/**/*.js',
-      'src/lib/events/events.js',
-      'src/lib/es6-promise/promise.js',
+      'src/lib/**/*.js',
       'src/utils.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
