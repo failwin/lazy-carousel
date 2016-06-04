@@ -15,9 +15,11 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      //'src/**/*.js',
+      'bower_components/angular/angular.js',
+      'bower_components/angular-mocks/angular-mocks.js',
       'src/lib/**/*.js',
       'src/utils.js',
+      'src/changesTracker.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
       { pattern: 'src/base.css', included: false },

@@ -2,23 +2,12 @@
 var path = require('path');
 
 var gulp = require('gulp'),
-    concat = require("gulp-concat"),
-    order = require("gulp-order"),
-    rename = require("gulp-rename"),
-    wrapper = require('gulp-wrapper'),
     clean = require('gulp-clean'),
-    watch = require('gulp-watch'),
-    jshint = require('gulp-jshint'),
-    uglify = require('gulp-uglify');
+    watch = require('gulp-watch');
+
+var    jshint = require('gulp-jshint');
 
 var map = require('map-stream');
-
-var stylus = require('gulp-stylus'),
-    nib = require('nib'),
-    sourcemaps = require('gulp-sourcemaps'),
-    combineMq = require('gulp-combine-mq');
-
-var rjs = require('gulp-requirejs');
 
 gulp.task('clean', function() {
     gulp.src(['./css/*.css.map'], {read: false})
@@ -51,121 +40,15 @@ gulp.task('jshint', function() {
     };
 });
 
-gulp.task('requirejs-min', function () {
-    return rjs({
-        baseUrl: "./js",
-        name : 'boot',
-        mainConfigFile: ["./js/boot.min.config.js"],
-        optimize : 'none',
-        out: 'boot.min.js'
-    }).on('error', log)
-    .pipe(uglify({
-        mangle: false,
-        compress: {
-            unused        : false,  // drop unused variables/functions
-            sequences     : false,  // join consecutive statemets with the “comma operator”
-            properties    : false,  // optimize property access: a["foo"] → a.foo
-            dead_code     : false,  // discard unreachable code
-            drop_debugger : false,  // discard “debugger” statements
-            conditionals  : false,  // optimize if-s and conditional expressions
-            comparisons   : false,  // optimize comparisons
-            evaluate      : false,  // evaluate constant expressions
-            booleans      : false,  // optimize boolean expressions
-            loops         : false,  // optimize loops
-            unused        : false,  // drop unused variables/functions
-            hoist_funs    : false,  // hoist function declarations
-            hoist_vars    : false,  // hoist variable declarations
-            if_return     : false,  // optimize if-s followed by return/continue
-            join_vars     : false,  // join var declarations
-            cascade       : false,  // try to cascade `right` into `left` in sequences
-            side_effects  : false,  // drop side-effect-free statements
-            warnings      : false
-        }
-    }))
-    .pipe(gulp.dest('./js/'));
-});
-
-gulp.task('stylus', function() {
-    return gulp.src(['./styl/*.styl', '!./styl/_*.styl'])
-        .pipe(sourcemaps.init())
-        .pipe(
-            stylus({
-                compress: false,
-                'include css': true,
-                url: 'embedurl',
-                use: [nib()]
-            })
-        ).on('error', log)
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('./css'));
-});
-
-gulp.task('stylus-min', function() {
-    return gulp.src(['./styl/*.styl', '!./styl/_*.styl'])
-        .pipe(
-            stylus({
-                compress: false,
-                'include css': true,
-                url: 'embedurl',
-                use: [nib()]
-            })
-        ).on('error', log)
-        .pipe(gulp.dest('./css'));
-});
-
-gulp.task('css-combineMq', ['stylus-min'], function () {
-    return gulp.src('./css/*.css')
-        .pipe(combineMq({
-            log: false,
-            beautify: true
-        })).on('error', log)
-        .pipe(gulp.dest('./css'));
-});
-
-gulp.task('views-combine', function () {
-    return gulp.src(['./views/**/*.html', '!./views/_*.html'])
-        .pipe(wrapper({
-            header: function(file){
-                var index = file.path.indexOf('Content');
-                var id = file.path.substr(index);
-                id = id.replace(/\\/g, '/');
-                id = '/' + id;
-
-                var str = '<div id="'+ id +'" class="my-template">\n';
-
-                return str;
-            },
-            footer: '\n</div>\n'
-        })).on('error', log)
-        .pipe(order([
-            "home.html",
-            "campaign.html",
-            "campaign.record.html",
-            "campaign.record.recording.html",
-            "campaign.record.checking.html",
-            "campaign.upload.html",
-            "campaign.form.html",
-            "campaign.result.html",
-            "how.html",
-            "info.html",
-            "gallery.html",
-            "popups/*",
-            "directives/*"
-        ]))
-        .pipe(concat('_result.html'))
-        .pipe(gulp.dest('./views'));
-});
-
 gulp.task('watch', function () {
-    gulp.watch('./styl/**/*.styl', ['stylus'])
+
 });
 
+gulp.task('default', ['build']);
 
-gulp.task('default', ['clean', 'jshint', 'stylus']);
+gulp.task('build', ['clean', 'jshint']);
 
-gulp.task('build', ['clean', 'jshint', 'stylus']);
-
-gulp.task('build-min', ['clean', 'jshint', 'stylus-min', 'css-combineMq', 'requirejs-min']);
+gulp.task('build-min', ['clean', 'jshint']);
 
 function log(error) {
     console.log([
@@ -184,32 +67,4 @@ function log(error) {
         this.emit("end");
     }
     //stream.end();
-}
-
-function viewsCombine(options) {
-
-
-
-    if (!prefixText) {
-        throw new PluginError(PLUGIN_NAME, 'Missing prefix text!');
-    }
-    prefixText = new Buffer(prefixText); // allocate ahead of time
-
-    // Creating a stream through which each file will pass
-    return through.obj(function(file, enc, cb) {
-        if (file.isNull()) {
-            // return empty file
-            return cb(null, file);
-        }
-        if (file.isBuffer()) {
-            file.contents = Buffer.concat([prefixText, file.contents]);
-        }
-        if (file.isStream()) {
-            file.contents = file.contents.pipe(prefixStream(prefixText));
-        }
-
-        cb(null, file);
-
-    });
-
 }

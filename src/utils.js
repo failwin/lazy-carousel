@@ -333,6 +333,24 @@ var UtilService = (function() {
         }
         return parent.insertBefore(fragment, where);
     };
+    UtilService.prototype.insertBefore = function(parent, element, index) {
+        if (index === 0) {
+            return this.prependElement(parent, element);
+        }
+        var prevElem = parent.children[index];
+        if (!prevElem) {
+            return this.appendElement(parent, element);
+        }
+        var fragment = element;
+        if(typeof element === 'string') {
+            fragment = this.createElement(element);
+        }
+        if (fragment === prevElem) {
+            return prevElem;
+        }
+        parent.insertBefore(fragment, prevElem);
+        return parent.children[index];
+    };
     UtilService.prototype.clearElement = function(element) {
         while (element.firstChild) {
             element.removeChild(element.firstChild);
@@ -347,7 +365,7 @@ var UtilService = (function() {
         while (elem.childNodes[0]) {
             frag.appendChild(elem.childNodes[0]);
         }
-        return frag;
+        return frag.childNodes[0];
     };
 
     UtilService.prototype.getElementIndex = function(node) {
@@ -387,6 +405,8 @@ var UtilService = (function() {
     UtilService.prototype.addEventListener = function($holders, eventName, targetSelector, handler){
         var self = this;
 
+        var delegatedHandlers = [];
+
         if (!$holders) {
             return;
         }
@@ -401,7 +421,7 @@ var UtilService = (function() {
         if (this.isString($holders)) {
             $holders = document.querySelectorAll($holders);
         }
-        else {
+        else if (!$holders.length) {
             $holders = [$holders];
         }
 
@@ -413,7 +433,8 @@ var UtilService = (function() {
 
         $holders.forEach(function($holder) {
             if (targetSelector) {
-                delegateEvent($holder, eventName, targetSelector, handler);
+                var delegatedHandler = delegateEvent($holder, eventName, targetSelector, handler);
+                delegatedHandlers.push(delegatedHandler);
             }
             else {
                 $holder.addEventListener(eventName, handler);
@@ -421,7 +442,7 @@ var UtilService = (function() {
         });
 
         function delegateEvent($holder, eventName, targetSelector, handler) {
-            $holder.addEventListener(eventName, function(e) {
+            var delegatedHandler = function(e) {
                 var event = e || window.event;
                 var target = event.target || event.srcElement,
                     delegateTarget = false;
@@ -440,20 +461,33 @@ var UtilService = (function() {
                 if (delegateTarget){
                     handler.call(delegateTarget, event);
                 }
-            });
+            };
+            $holder.addEventListener(eventName, delegatedHandler);
+
+            return delegatedHandler;
         }
+
+        return function removeEventListener() {
+            $holders.forEach(function($holder, i) {
+                if (targetSelector) {
+                    $holder.removeEventListener(eventName, delegatedHandlers[i]);
+                    delegatedHandlers[i] = null;
+                }
+                else {
+                    $holder.removeEventListener(eventName, handler);
+                }
+            });
+
+            $holders = null;
+        };
     };
 
-    UtilService.prototype.transitionEnd = function ($elemnt, elementClass, callback) {
+    UtilService.prototype.transitionEnd = function ($elemnt, elementClass, callback, _maxTime) {
+        callback = callback || function() {};
         var timer = null,
-            maxTime = 5000;
+            maxTime = _maxTime || 5000;
 
-        timer = setTimeout(function () {
-            var fakeEvent = {
-                target: $elemnt
-            };
-            transitionEnd(fakeEvent);
-        }, maxTime);
+        timer = setTimeout(finishTransition, maxTime);
 
         $elemnt.addEventListener('transitionend', transitionEnd, false);
         $elemnt.addEventListener('msTransitionEnd', transitionEnd, false);
@@ -469,13 +503,24 @@ var UtilService = (function() {
 
                 clearTimeout(timer);
 
-                if (typeof callback == 'function') {
-                    callback();
-                }
+                callback();
 
                 $elemnt = null;
             }
         }
+
+        function finishTransition() {
+            if (!$elemnt) {
+                return;
+            }
+
+            var fakeEvent = {
+                target: $elemnt
+            };
+            transitionEnd(fakeEvent);
+        }
+
+        return finishTransition;
     };
 
     UtilService.prototype.animateCss = function (el, styles, _opt) {
@@ -723,66 +768,214 @@ var UtilService = (function() {
             }
         }
 
-        result.sort(sortChange);
-
-        function sortChange(a, b) {
-            if (a['sourceIndex'] === b['sourceIndex']) {
-                return 0;
-            } else if (!a['sourceIndex'] && b['sourceIndex']) {
-                return -1;
-            } else if (a['sourceIndex'] && !b['sourceIndex']) {
-                return 1;
-            }
-            var aIndices = a['sourceIndex'].split('>');
-            var bIndices = b['sourceIndex'].split('>');
-            var equal = true;
-            var i = 0;
-            while (equal && i < aIndices.length && i < bIndices.length) {
-                var aN = parseInt(aIndices[i], 10);
-                var bN = parseInt(bIndices[i], 10);
-                if (aN === bN) {
-                    i++;
-                    continue;
-                } else if (isNaN(aN) || isNaN(bN)) {
-                    return isNaN(aN) ? 1 : -1;
-                } else {
-                    return aN > bN ? 1 : -1;
-                }
-            }
-
-            return 0;
-        }
+        result.sort(UtilService._sortChange);
 
         return result;
     };
     UtilService.prototype.domListPatch = function(domList, changes, beforeAdd, afterAdd, beforeRemove, afterRemove) {
 
+        var moves = [],
+            insertions = [],
+            removals = [];
+
         for(var i = 0, c = changes.length; i < c; i++) {
-            var change = changes[i],
+            var change = changes[i];
+
+            if (change.action == 'insertChildElement') {
+                insertions.push(change);
+            }
+            else if (change.action == 'removeChildElement') {
+                removals.push(change);
+            }
+            else if (change.action == 'moveChildElement') {
+                // TODO check if we realy need this movement, by Node index
+                moves.push(change);
+            }
+        }
+
+        moves.sort(UtilService._sortChange);
+        insertions.sort(UtilService._sortChange);
+
+        for(var i = 0, c = moves.length; i < c; i++) {
+            var change = moves[i],
                 element = change.element,
-                baseIndex = change.baseIndex.split('>')[1],
-                sourceIndex = change.sourceIndex.split('>')[1];
+                baseIndex = change.baseIndex ? change.baseIndex.split('>')[1] : null,
+                sourceIndex = change.sourceIndex ? change.sourceIndex.split('>')[1] : null;
+
+            if (change.action == 'moveChildElement') {
+                var $item = domList.childNodes[baseIndex];
+                if (!$item) {
+                    continue;
+                }
+                utils.insertBeforeElement(domList, $item, domList.children[sourceIndex]);
+            }
+        }
+
+        for(var i = 0, c = insertions.length; i < c; i++) {
+            var change = insertions[i],
+                element = change.element,
+                baseIndex = change.baseIndex ? change.baseIndex.split('>')[1] : null,
+                sourceIndex = change.sourceIndex ? change.sourceIndex.split('>')[1] : null;
 
             if (change.action == 'insertChildElement') {
                 beforeAdd(element, function(html) {
-                    var $item = utils.insertBeforeElement(domList, html, domList.childNodes[sourceIndex]);
+                    var $item = utils.insertBeforeElement(domList, html, domList.children[sourceIndex]);
                     afterAdd(element, $item);
                 });
             }
-            else if (change.action == 'removeChildElement') {
-                var $item = domList.childNodes[baseIndex];
+        }
+
+        for(var i = 0, c = removals.length; i < c; i++) {
+            var change = removals[i],
+                element = change.element,
+                baseIndex = change.baseIndex ? + change.baseIndex.split('>')[1] : null,
+                sourceIndex = change.sourceIndex ? + change.sourceIndex.split('>')[1] : null;
+
+            if (change.action == 'removeChildElement') {
+                var $item = domList.children[baseIndex];
 
                 beforeRemove(element, $item, function($item) {
                     domList.removeChild($item);
                     afterRemove(element, $item);
                 });
             }
-            else if (change.action == 'moveChildElement') {
-                // TODO check if we realy need this movement, by Node index
-                var $item = domList.childNodes[baseIndex];
-                utils.insertBeforeElement(domList, $item, domList.childNodes[sourceIndex]);
+        }
+
+    };
+    UtilService._sortChange = function(a, b) {
+        if (a['sourceIndex'] === b['sourceIndex']) {
+            return 0;
+        } else if (!a['sourceIndex'] && b['sourceIndex']) {
+            return -1;
+        } else if (a['sourceIndex'] && !b['sourceIndex']) {
+            return 1;
+        }
+        var aIndices = a['sourceIndex'].split('>');
+        var bIndices = b['sourceIndex'].split('>');
+        var equal = true;
+        var i = 0;
+        while (equal && i < aIndices.length && i < bIndices.length) {
+            var aN = parseInt(aIndices[i], 10);
+            var bN = parseInt(bIndices[i], 10);
+            if (aN === bN) {
+                i++;
+                continue;
+            } else if (isNaN(aN) || isNaN(bN)) {
+                return isNaN(aN) ? 1 : -1;
+            } else {
+                return aN > bN ? 1 : -1;
             }
         }
+
+        return 0;
+    };
+
+    UtilService.prototype.updateList = function(domList, base, current, hooks) {
+        var lastBlockMap = {},
+            nextBlockMap = {},
+            nextBlockOrder;
+
+        base.forEach(function(item, index) {
+            item.$$index = index;
+            item.$$isNew = false;
+            lastBlockMap[item.id] = item;
+        });
+
+        var previousNodeId = 0,
+            nextNodeId;
+
+        var collectionLength = current.length;
+        nextBlockOrder = new Array(collectionLength);
+
+        // locate existing items
+        for (var index = 0; index < collectionLength; index++) {
+            var key = index;
+            var value = current[key];
+            var trackById = value.id;
+            if (lastBlockMap[trackById]) {
+                // found previously seen block
+                var block = lastBlockMap[trackById];
+                delete lastBlockMap[trackById];
+                nextBlockMap[trackById] = block;
+                nextBlockOrder[index] = block;
+            } else if (nextBlockMap[trackById]) {
+                // if collision detected  throw an error
+                throw new Error('UtilService.updateList(), Duplicates in a repeater are not allowed.');
+            } else {
+                // new never before seen block
+                value.$$isNew = true;
+                nextBlockOrder[index] = value;
+                nextBlockMap[trackById] = value;
+            }
+        }
+
+        // remove leftover items
+        for (var blockKey in lastBlockMap) {
+            var block = lastBlockMap[blockKey];
+            var index = block.$$index;
+            // TODO Remove element
+
+            console.log('Remove', block.id, index);
+
+            var elem = domList.children[index];
+            if (!elem) {
+                console.log('NOR FOUND!!!');
+            }
+            domList.removeChild(elem);
+
+
+        }
+
+        // we are not using forEach for perf reasons (trying to avoid #call)
+        for (index = 0; index < collectionLength; index++) {
+            key = index;
+            value = current[key];
+            block = nextBlockOrder[index];
+
+            console.log(block);
+
+            if (!block.$$isNew) {
+                // if we have already seen this object, then move it
+                //nextNodeId = previousNodeId;
+
+                // skip nodes that are already pending removal via leave animation
+                //do {
+                //    nextNode = nextNode.nextSibling;
+                //} while (nextNode && nextNode[NG_REMOVED]);
+
+                //do {
+                //    nextNodeId++;
+                //} while (nextNodeId < collectionLength && redyForRemove(nextNodeId));
+
+
+                //block.$$isNew = false;
+                console.log('previousNodeId - ' + previousNodeId);
+
+                if (block.$$index != previousNodeId) {
+                    console.log('Move', block.id, previousNodeId);
+
+                    var elem = domList.children[block.$$index];
+                    if (!elem) {
+                        console.log('NOR FOUND!!!');
+                    }
+                    this.insertBefore(domList, elem, previousNodeId);
+
+
+                }
+                previousNodeId++;
+            } else {
+                // new item which we don't know about
+
+                console.log('Enter', block.id, previousNodeId);
+
+                this.insertBefore(domList, '<li>'+ block.id +'</li>', previousNodeId);
+
+                previousNodeId++;
+
+                nextBlockMap[block.id] = block;
+            }
+        }
+        //lastBlockMap = nextBlockMap;
     };
 
     UtilService.prototype._ready = function() {
