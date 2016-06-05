@@ -15,13 +15,17 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/angular/angular.js',
-      'bower_components/angular-mocks/angular-mocks.js',
-      'bower_components/my-utils/src/utils.js',
-      'src/lib/**/*.js',
+      'lib/angular/angular.js',
+      'lib/angular-animate/angular-animate.js',
+      'lib/angular-mocks/angular-mocks.js',
+      'lib/my-utils/src/utils.js',
+      'lib/class-list/classList.js',
+      'lib/events/events.js',
+      'lib/es6-promise/promise.js',
       'src/ChangesTracker.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
+      'src/MyLazyCarouselAngular.js',
       { pattern: 'src/base.css', included: false },
       'test/helpers.js',
       { pattern: 'test/fixtures/**/*.css', included: false },

@@ -94,10 +94,6 @@ function createElement(str) {
     return frag.childNodes[0];
 }
 
-function trackByIdFn(key, value, index, trackById) {
-    return value[trackById];
-}
-
 function domInsert(element, parentElement, afterElement) {
     // if for some reason the previous element was removed
     // from the dom sometime before this code runs then let's
@@ -145,6 +141,9 @@ var ChangesTracker = (function() {
     ChangesTracker.prototype.defOpts = {
         debug: true,
         trackById: 'id',
+        trackByIdFn: function(key, value, index, trackById) {
+            return value[trackById] + '_' + value['id'];
+        },
         beforeAdd: function(data, callback) {
             callback = callback || function() {};
 
@@ -188,11 +187,13 @@ var ChangesTracker = (function() {
         collectionLength = collection.length;
         nextBlockOrder = new Array(collectionLength);
 
+        console.log(collection);
+
         // locate existing items
         for (index = 0; index < collectionLength; index++) {
             key = index;
             value = collection[key];
-            trackById = trackByIdFn(key, value, index, this.opts.trackById);
+            trackById = this.opts.trackByIdFn(key, value, index, this.opts.trackById);
             if (this.lastBlockMap[trackById]) {
                 // found previously seen block
                 block = this.lastBlockMap[trackById];

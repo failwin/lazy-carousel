@@ -37,11 +37,24 @@
 
     width: 300px;
     height: 300px;
-    line-height: 300px;
+    /*line-height: 300px;*/
     text-align: center;
-    font-size: 250px;
+    font-size: 50px;
 
     border: solid 1px black;
+}
+
+.lazy_carousel .item {
+    opacity: 0;
+
+    transition: opacity 1s;
+}
+.lazy_carousel .item.showed {
+    opacity: 1;
+}
+
+.lazy_carousel .item.active {
+    color: red;
 }
 
 @media (max-width: 700px) {
@@ -72,13 +85,36 @@
         <a href="#" onclick="demo1.slideTo(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
     </div>
 
-    <script src="../bower_components/my-utils/src/utils.js"></script>
-    <script src="../src/lib/es6-promise/promise.js"></script>
-    <script src="../src/lib/events/events.js"></script>
+    <div ng-app="demo" ng-controller="demoCtrl">
+        <div class="lazy_carousel" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.activeItem" item-as="item">
+            <div class="item" ng-class="{'active': carousel.activeItem._id == item._id, 'showed': $isShowed}">
+                {{item.id}},    {{carousel.activeItem.id}}, {{$isActive}}
+                <br />
+                <a href="#" ng-click="$carousel.setActive($event, item)">Active</a>
+            </div>
+        </div>
+
+        <br>
+        <br>
+        <br>
+
+        <div class="lazy_carousel" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.activeItem">
+            <div class="item">
+                {{item.id}}
+            </div>
+        </div>
+    </div>
+
+    <script src="../lib/angular/angular.js"></script>
+    <script src="../lib/my-utils/src/utils.js"></script>
+    <script src="../lib/es6-promise/promise.js"></script>
+    <script src="../lib/events/events.js"></script>
     <script src="../src/ChangesTracker.js"></script>
     <script src="../src/KeyHandlerDecorator.js"></script>
     <script src="../src/SwipeDecorator.js"></script>
     <script src="../src/LazyCarousel.js"></script>
+    <script src="../src/MyLazyCarouselAngular.js"></script>
+    <script src="angular.js"></script>
 
     <script>
         (function(){

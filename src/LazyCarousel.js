@@ -198,7 +198,7 @@ var LazyCarousel = (function() {
         }
     };
 
-    LazyCarousel.prototype.updateItems = function(list) {
+    LazyCarousel.prototype.updateItems = function(list, active) {
         if (debug) {
             log('calls', 'LazyCarousel.updateItems', list);
         }
@@ -210,9 +210,13 @@ var LazyCarousel = (function() {
 
         this._calculateVisibility(true);
 
-        this._updateActive(this._count ? 0 : null, true);
-
         this._updateVisible(true);
+
+        var active = typeof active !== 'undefined' ? active : this._count ? 0 : null;
+        if (active >= this._count) {
+            active = this._count - 1;
+        }
+        this._updateActive(active, true);
 
         this._centerList();
     };
@@ -226,8 +230,6 @@ var LazyCarousel = (function() {
             visible = this._visible;
 
         this._partialItems = this._getPartialItems();
-
-        console.log(this._partialItems);
 
         this.changesTracker.updateList(this._partialItems);
 
@@ -617,9 +619,10 @@ var LazyCarousel = (function() {
         }
         this._active = active;
 
-        active = this._normalizeIndex(this._active);
-        if (this.items[active]){
-            this.$events.emit('activeChange', this.items[active]);
+        var active = this._getItemById(this._active, this._partialItems, '_id');
+
+        if (active){
+            this.$events.emit('activeChange', active);
         }
         else {
             this.$events.emit('activeChange', null);
