@@ -17,8 +17,8 @@ module.exports = function(config) {
     files: [
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/my-utils/src/utils.js',
       'src/lib/**/*.js',
-      'src/utils.js',
       'src/changesTracker.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
