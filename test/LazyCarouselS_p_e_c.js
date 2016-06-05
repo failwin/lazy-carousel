@@ -1239,12 +1239,3 @@ describe('LazyCarouselSpec', function(){
     });
 
 });
-
-
-
-describe('sdvsvdsdv', function(){
-
-it('sdvsdvdsdv', function() {
-    expect(true).toBe(true);
-});
-});

@@ -19,7 +19,7 @@ module.exports = function(config) {
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/my-utils/src/utils.js',
       'src/lib/**/*.js',
-      'src/changesTracker.js',
+      'src/ChangesTracker.js',
       'src/SwipeWrapper.js',
       'src/LazyCarousel.js',
       { pattern: 'src/base.css', included: false },

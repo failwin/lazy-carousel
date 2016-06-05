@@ -103,12 +103,6 @@ describe('LazyCarousel', function(){
 
     describe('base', function() {
 
-        it('should calculate elements width from existed item', function() {
-            var inst = createCarousel(null, '<div id="testCarousel"><div><ul><li style="width: 111px"></li></ul></div></div>');
-
-            expect(inst._itemWidth).toBe(111);
-        });
-
         it('should calculate elements width from CSS', function() {
             var inst = createCarousel(null, '<div id="testCarousel"><div><ul></ul></div></div>');
 

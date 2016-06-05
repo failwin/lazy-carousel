@@ -5,6 +5,7 @@
 var Promise = window.ES6Promise.Promise;
 var EventEmitter = window.events.EventEmitter;
 var utils = window.utils;
+var ChangesTracker = window.ChangesTracker;
 
 var debug = false;
 var logLevel = ['calls', 'calls res']; // 'calls', 'calls res'
@@ -26,7 +27,6 @@ var LazyCarousel = (function() {
 
         this.items = [];
         this._partialItems = [];
-        this._$partialItems = [];
 
         this._holderWidth = 0;
         this._itemWidth = 0;
@@ -41,6 +41,8 @@ var LazyCarousel = (function() {
         this._transformProperty = '';
         this._translateZ = '';
 
+        this.changesTracker = null;
+
         this._nav = {
             prev: false,
             next: false
@@ -50,7 +52,6 @@ var LazyCarousel = (function() {
         this._isBusy = false;
 
         this.$events = new EventEmitter();
-        this.$swipe = null;
 
         if (!this.opts.noInit) {
             this.init();
@@ -86,13 +87,16 @@ var LazyCarousel = (function() {
 
         this.$wrapper = this.$list.parentNode;
 
-        //this.$swipe = new SwipeWrapper(this.$list, {
-        //    parent: this,
-        //    supportMouse: false
-        //});
-
         this._transformProperty = utils.getPrefixedStyleValue('transform');
         this._translateZ = utils.supportsPerspective() ? 'translateZ(0)' : '';
+
+        this.changesTracker = new ChangesTracker(this.$list, {
+            trackById: '_id',
+            beforeAdd: this._addItemPre.bind(this),
+            afterAdd: this._addItemPost.bind(this),
+            beforeRemove: this._removeItemPre.bind(this),
+            afterRemove: this._removeItemPost.bind(this)
+        });
 
         this._attachHandlers();
 
@@ -100,9 +104,6 @@ var LazyCarousel = (function() {
     };
     LazyCarousel.prototype.destroy = function() {
         this._detachHandlers();
-        if (this.$swipe && this.$swipe.destroy) {
-            this.$swipe.destroy();
-        }
     };
 
     LazyCarousel.prototype.resize = function(force, _itemWidth, _holderWidth) {
@@ -226,8 +227,9 @@ var LazyCarousel = (function() {
 
         this._partialItems = this._getPartialItems();
 
-        this._removeItems(replace);
-        this._addItems();
+        console.log(this._partialItems);
+
+        this.changesTracker.updateList(this._partialItems);
 
         this._updateNav();
     };
@@ -538,140 +540,38 @@ var LazyCarousel = (function() {
         return list;
     };
 
-    LazyCarousel.prototype._addItems = function() {
-        if (debug) {
-            log('calls', 'LazyCarousel._addItems');
-        }
-
-        var addBeforeItems = [],
-            addAfterItems = [];
-
-        var after = false;
-
-        var domItems = this._$partialItems.map(function($item, index) {
-            return {
-                _id: $item.getAttribute('data-id'),
-                index: index
-            };
-        });
-
-        this._partialItems.forEach(function(item){
-            var domIndex = this._getItemIndexById(item._id, domItems, '_id');
-
-            if (domIndex < 0) {
-                // no in DOM
-                if (after) {
-                    addAfterItems.push(item);
-                }
-                else {
-                    addBeforeItems.push(item);
-                }
-            }
-            else {
-                // in DOM, change after
-                after = true;
-            }
-
-        }.bind(this));
-
-        addBeforeItems.reverse();
-        addBeforeItems.forEach(function(item) {
-            this._addItemPre(item, true, function($item, item, before) {
-                this._addItemPost($item, item, before);
-            }.bind(this));
-
-        }.bind(this));
-
-        addAfterItems.forEach(function(item) {
-            this._addItemPre(item, function($item, item, before) {
-                this._addItemPost($item, item, before);
-            }.bind(this));
-        }.bind(this));
-
-        //console.log(addBeforeItems);
-        //console.log(addAfterItems);
-
-        this._$partialItems = Array.prototype.slice.call(this.$list.children, 0);
-    };
-    LazyCarousel.prototype._addItemPre = function(item, before, callback) {
+    LazyCarousel.prototype._addItemPre = function(item, callback) {
         if (debug) {
             log('calls', 'LazyCarousel._addItemPre', item, before, callback);
         }
 
-        if (typeof before == 'function') {
-            callback = before;
-            before = false;
-        }
         callback = callback || function(){};
 
         var itemStr = this._getItemTemplate(item),
-            $item = null;
+            $item = utils.createElement(itemStr);
 
-        if (before) {
-            $item = utils.prependElement(this.$list, itemStr);
-        }
-        else {
-            $item = utils.appendElement(this.$list, itemStr);
-        }
-
-        callback($item, item, before);
+        callback($item);
     };
-    LazyCarousel.prototype._addItemPost = function($item, item, before) {
+    LazyCarousel.prototype._addItemPost = function(item, $item) {
         if (debug) {
-            log('calls', 'LazyCarousel._addItemPost', $item, item, before);
+            log('calls', 'LazyCarousel._addItemPost', item, $item);
         }
 
     };
 
-    LazyCarousel.prototype._removeItems = function(force) {
+    LazyCarousel.prototype._removeItemPre = function(item, $item, callback) {
         if (debug) {
-            log('calls', 'LazyCarousel._removeItems', force);
-        }
-
-        var $removeItems = [];
-
-        this._$partialItems.forEach(function($item){
-            if (force) {
-                $removeItems.push($item);
-            }
-            else {
-
-                var id = $item.getAttribute('data-id');
-
-                if (!this._getItemById(id, this._partialItems, '_id')) {
-                    $removeItems.push($item);
-                }
-            }
-        }.bind(this));
-
-        $removeItems.forEach(function($item){
-
-            this._removeItemPre($item, function($item) {
-                this._removeItemPost($item);
-            }.bind(this));
-        }.bind(this));
-
-        var childs = this.$list.children || [];
-        this._$partialItems = Array.prototype.slice.call(childs, 0);
-        //if (force) {
-        //    this._partialItems = [];
-        //}
-    };
-    LazyCarousel.prototype._removeItemPre = function($item, callback) {
-        if (debug) {
-            log('calls', 'LazyCarousel._removeItemPre', $item, callback);
+            log('calls', 'LazyCarousel._removeItemPre', item, $item, callback);
         }
 
         callback = callback || function() {};
 
-        callback($item);
+        callback();
     };
     LazyCarousel.prototype._removeItemPost = function($item) {
         if (debug) {
             log('calls', 'LazyCarousel._removeItemPost', $item);
         }
-
-        $item.parentNode.removeChild($item);
     };
 
     LazyCarousel.prototype._updateNav = function(val) {
