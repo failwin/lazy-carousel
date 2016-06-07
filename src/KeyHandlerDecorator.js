@@ -1,4 +1,20 @@
-(function(window, document, undefined){
+(function (global, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS
+        factory(exports);
+    } else {
+        // Browser globals
+        var mod = {
+            exports: {}
+        };
+        var result = factory(mod.exports);
+        global.keyHandlerDecorator = result ? result : mod.exports;
+    }
+})(this, function (exports) {
+
 'use strict';
 
 // Import
@@ -47,7 +63,10 @@ function keyHandlerDecorator(options) {
 }
 
 // Export
-window.keyHandlerDecorator = keyHandlerDecorator;
+exports.keyHandlerDecorator = keyHandlerDecorator;
+exports.KeyHandlerDecorator = KeyHandlerDecorator;
 
-})(window, document);
+return keyHandlerDecorator;
+
+});
 

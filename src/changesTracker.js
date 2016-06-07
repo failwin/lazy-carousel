@@ -187,8 +187,6 @@ var ChangesTracker = (function() {
         collectionLength = collection.length;
         nextBlockOrder = new Array(collectionLength);
 
-        console.log(collection);
-
         // locate existing items
         for (index = 0; index < collectionLength; index++) {
             key = index;
@@ -284,6 +282,9 @@ var ChangesTracker = (function() {
 
     return ChangesTracker;
 })();
+
+// Export
+exports.ChangesTracker = ChangesTracker;
 
 return ChangesTracker;
 

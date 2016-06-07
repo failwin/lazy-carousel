@@ -1,4 +1,20 @@
-(function(window, document, undefined){
+(function (global, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS
+        factory(exports);
+    } else {
+        // Browser globals
+        var mod = {
+            exports: {}
+        };
+        var result = factory(mod.exports);
+        global.LazyCarousel = result ? result : mod.exports;
+    }
+})(this, function (exports) {
+
 'use strict';
 
 // Import
@@ -198,7 +214,7 @@ var LazyCarousel = (function() {
         }
     };
 
-    LazyCarousel.prototype.updateItems = function(list, active) {
+    LazyCarousel.prototype.updateItems = function(list, _active) {
         if (debug) {
             log('calls', 'LazyCarousel.updateItems', list);
         }
@@ -212,11 +228,16 @@ var LazyCarousel = (function() {
 
         this._updateVisible(true);
 
-        var active = typeof active !== 'undefined' ? active : this._count ? 0 : null;
-        if (active >= this._count) {
-            active = this._count - 1;
+        var active = this._count ? 0 : null;
+
+        if (typeof _active !== 'undefined') {
+            active = _active;
+            if (active > this._count) {
+                active = this._count - 1;
+            }
         }
-        this._updateActive(active, true);
+
+        this._updateActive(active, true, 0);
 
         this._centerList();
     };
@@ -270,7 +291,7 @@ var LazyCarousel = (function() {
             newActive = this._active + dir;
 
             if (utils.supportsTransitions()) {
-                this._updateActive(newActive, true);
+                this._updateActive(newActive, true, dir > 0 ? 1 : -1);
             }
 
             // the same index
@@ -286,7 +307,7 @@ var LazyCarousel = (function() {
                     this._isBusy = false;
 
                     if (!utils.supportsTransitions()) {
-                        this._updateActive(newActive, true);
+                        this._updateActive(newActive, true, dir > 0 ? 1 : -1);
                     }
 
                     this._updateVisible();
@@ -609,7 +630,7 @@ var LazyCarousel = (function() {
 
         this.$events.emit('navChange', this._nav);
     };
-    LazyCarousel.prototype._updateActive = function(active, _force) {
+    LazyCarousel.prototype._updateActive = function(active, _force, _div) {
         if (debug) {
             log('calls', 'LazyCarousel._updateActive', active, _force);
         }
@@ -619,13 +640,20 @@ var LazyCarousel = (function() {
         }
         this._active = active;
 
-        var active = this._getItemById(this._active, this._partialItems, '_id');
+        var active = this._getPartialItemByIndex(this._active, _div);
+        //this._getItemById(this._active, this._partialItems, '_id');
 
         if (active){
-            this.$events.emit('activeChange', active);
+            this.$events.emit('activeChange', {
+                item: active,
+                activeIndex: this._active
+            });
         }
         else {
-            this.$events.emit('activeChange', null);
+            this.$events.emit('activeChange', {
+                item: null,
+                activeIndex: this._active
+            });
         }
     };
 
@@ -674,6 +702,52 @@ var LazyCarousel = (function() {
         }
 
         index = this._normalizeIndex(index, list.length);
+
+        if (list[index]) {
+            return list[index];
+        }
+
+        return false;
+    };
+
+    LazyCarousel.prototype._getPartialItemByIndex = function(globalIndex, dir) {
+        var list = this._partialItems,
+            loop = true;
+
+        if (!list.length) {
+            return false;
+        }
+
+        var index = globalIndex;
+
+        if (!this._isSimple) {
+            index = this._addition + Math.floor(this._visible/2) + index - this._active + dir;
+        }
+
+        if (loop) {
+            var count = list.length,
+                i = 0;
+
+            while (index < 0) {
+                i++;
+                index = count + index;
+
+                if (i > 100) {
+                    this.$events.emit('error', new Error('GCarousel._getItemByIndex() too much recursion.'));
+                    return;
+                }
+            }
+
+            while (index >= count) {
+                i++;
+                index = index - count;
+
+                if (i > 100) {
+                    this.$events.emit('error', new Error('GCarousel._getItemByIndex() too much recursion.'));
+                    return;
+                }
+            }
+        }
 
         if (list[index]) {
             return list[index];
@@ -765,7 +839,8 @@ var LazyCarousel = (function() {
 })();
 
 // Export
-window.LazyCarousel = LazyCarousel;
+exports.LazyCarousel = LazyCarousel;
 
-})(window, document);
+return LazyCarousel;
 
+});

@@ -23,11 +23,7 @@ var demoCtrl = (function() {
             {id: 5},
             {id: 6}
         ];
-
-        $scope.carousel.activeItem = {
-            _id: 1,
-            id: 2
-        };
+        $scope.carousel.active = 2;
 
         this.add = function(item, index) {
             var newArr = $scope.carousel.items.slice(0);

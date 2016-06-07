@@ -1,4 +1,20 @@
-(function(window, document, undefined){
+(function (global, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS
+        factory(exports);
+    } else {
+        // Browser globals
+        var mod = {
+            exports: {}
+        };
+        var result = factory(mod.exports);
+        global.myLazyCarouselModule = result ? result : mod.exports;
+    }
+})(this, function (exports) {
+
 'use strict';
 
 // Import
@@ -89,7 +105,7 @@ function MyLazyCarouselDirective($timeout) {
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            active: '=myLazyCarouselActive'
+            activeIndex: '=myLazyCarouselActive'
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -106,39 +122,36 @@ function MyLazyCarouselDirective($timeout) {
 
                 ctrl.init(element[0], transclude);
 
+                $scope.active = null;
                 $scope.nav = {
                     prev: false,
                     next: false
                 };
+
+                var innerActiveIndex = $scope.activeIndex;
 
                 $scope.goTo = function ($event, dir) {
                     $event.preventDefault();
                     ctrl.slideTo(parseInt(dir, 10));
                 };
 
-                $scope.setActive = function ($event, item) {
-                    if ($event) {
-                        $event.preventDefault();
-                    }
-                    $scope.active = item;
-                };
-
                 $scope.$watch('items', function (newList) {
-                    ctrl.updateItems(newList || [], $scope.active ? $scope.active._id : undefined);
+                    ctrl.updateItems(newList || [], innerActiveIndex);
                 });
 
-                $scope.$watch('active', function (newActive) {
-                    if (newActive) {
-                        ctrl.slideToId(newActive._id);
-                    }
-                });
+                //$scope.$watch('activeIndex', function (newActiveIndex) {
+                //    innerActiveIndex = $scope.activeIndex;
+                //});
 
                 $scope.$on('$destroy', ctrl.destroy.bind(ctrl));
 
-                ctrl.$events.on('activeChange', function (item) {
+                ctrl.$events.on('activeChange', function (data) {
+                    var item = data.item;
                     if ($scope.active && item && $scope.active._id == item._id) {
                         return;
                     }
+
+                    innerActiveIndex = data.activeIndex;
 
                     $timeout(function () {
                         $scope.active = item;
@@ -163,7 +176,8 @@ myLazyCarouselModule.directive('myLazyCarousel', MyLazyCarouselDirective);
 myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
 
 // Export
-window.myLazyCarousel = myLazyCarouselModule;
+exports.myLazyCarouselModule = myLazyCarouselModule;
 
-})(window, document);
+return myLazyCarouselModule;
 
+});
