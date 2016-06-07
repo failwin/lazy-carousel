@@ -9,6 +9,10 @@ var    jshint = require('gulp-jshint');
 
 var map = require('map-stream');
 
+var wrapper = require('gulp-wrapper'),
+    order = require("gulp-order"),
+    concat = require("gulp-concat");
+
 gulp.task('clean', function() {
     gulp.src(['./css/*.css.map'], {read: false})
     .pipe(clean()).on('error', log);
@@ -40,6 +44,19 @@ gulp.task('jshint', function() {
     };
 });
 
+gulp.task('merge', function () {
+    return gulp.src(['./src/**/*.js'])
+        .pipe(order([
+            "ChangesTracker.js",
+            "LazyCarousel.js",
+            "SwipeDecorator.js",
+            "KeyHandlerDecorator.js",
+            "MyLazyCarouselAngular.js"
+        ]))
+        .pipe(concat('lazy-carousel.js'))
+        .pipe(gulp.dest('./dist'));
+});
+
 gulp.task('watch', function () {
 
 });
@@ -48,7 +65,7 @@ gulp.task('default', ['build']);
 
 gulp.task('build', ['clean', 'jshint']);
 
-gulp.task('build-min', ['clean', 'jshint']);
+gulp.task('build-min', ['clean', 'jshint', 'merge']);
 
 function log(error) {
     console.log([

@@ -6,21 +6,23 @@
   "dependencies": {},
   "devDependencies": {
     "gulp": "~3.9.0",
-    "gulp-watch": "~4.3.4",
     "gulp-clean": "~0.3.1",
+    "gulp-concat": "^2.6.0",
     "gulp-jshint": "~1.11.2",
+    "gulp-order": "^1.1.1",
+    "gulp-watch": "~4.3.4",
+    "gulp-wrapper": "^1.0.0",
     "jasmine-core": "~2.3.4",
-    "karma-jasmine": "~0.3.6",
     "karma": "~0.13.11",
-    "karma-firefox-launcher": "~0.1.6",
     "karma-chrome-launcher": "~0.2.1",
-    "karma-coverage": "~0.5.3"
+    "karma-coverage": "~0.5.3",
+    "karma-firefox-launcher": "~0.1.6",
+    "karma-jasmine": "~0.3.6"
   },
   "scripts": {
-  	"build": ".\\node_modules\\.bin\\gulp build",
+    "build": ".\\node_modules\\.bin\\gulp build",
     "build-min": ".\\node_modules\\.bin\\gulp build-min",
     "watch": ".\\node_modules\\.bin\\gulp watch",
-
     "test": ".\\node_modules\\.bin\\karma start karma.conf.js --single-run",
     "test-watch": ".\\node_modules\\.bin\\karma start karma.conf.js"
   }

@@ -231,10 +231,7 @@ var LazyCarousel = (function() {
         var active = this._count ? 0 : null;
 
         if (typeof _active !== 'undefined') {
-            active = _active;
-            if (active > this._count) {
-                active = this._count - 1;
-            }
+            active = this._normalizeIndex(_active, this._count);
         }
 
         this._updateActive(active, true, 0);
