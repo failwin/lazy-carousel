@@ -1,7 +1,7 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['exports'], factory);
+        define("LazyCarousel", ['exports', 'ES6Promise', 'events', 'utils', 'ChangesTracker'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -10,18 +10,21 @@
         var mod = {
             exports: {}
         };
-        var result = factory(mod.exports);
-        global.LazyCarousel = result ? result : mod.exports;
+        var res = factory(mod.exports,
+            window.ES6Promise,
+            window.events,
+            window.utils,
+            window.ChangesTracker
+        );
+        global.LazyCarousel = res ? res : mod.exports;
     }
-})(this, function (exports) {
+})(this, function (exports, ES6Promise, events, utils, ChangesTracker) {
 
 'use strict';
 
 // Import
-var Promise = window.ES6Promise.Promise;
-var EventEmitter = window.events.EventEmitter;
-var utils = window.utils;
-var ChangesTracker = window.ChangesTracker;
+var Promise = ES6Promise.Promise;
+var EventEmitter = events.EventEmitter;
 
 var debug = false;
 var logLevel = ['calls', 'calls res']; // 'calls', 'calls res'

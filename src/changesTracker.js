@@ -1,7 +1,7 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['exports'], factory);
+        define("ChangesTracker", ['exports'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -10,8 +10,8 @@
         var mod = {
             exports: {}
         };
-        var result = factory(mod.exports);
-        global.ChangesTracker = result ? result : mod.exports;
+        var res = factory(mod.exports);
+        global.ChangesTracker = res ? res : mod.exports;
     }
 })(this, function (exports) {
 

@@ -1,7 +1,7 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['exports'], factory);
+        define("KeyHandlerDecorator", ['exports', 'utils'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -10,15 +10,16 @@
         var mod = {
             exports: {}
         };
-        var result = factory(mod.exports);
-        global.keyHandlerDecorator = result ? result : mod.exports;
+        factory(mod.exports,
+            window.utils
+        );
+        global.keyHandlerDecorator = mod.exports;
     }
-})(this, function (exports) {
+})(this, function (exports, utils) {
 
 'use strict';
 
 // Import
-var utils = window.utils;
 
 var KeyHandlerDecorator = function(base, options) {
     function KeyHandlerDecorator() {
@@ -65,8 +66,6 @@ function keyHandlerDecorator(options) {
 // Export
 exports.keyHandlerDecorator = keyHandlerDecorator;
 exports.KeyHandlerDecorator = KeyHandlerDecorator;
-
-return keyHandlerDecorator;
 
 });
 
