@@ -57,6 +57,12 @@ gulp.task('merge', function () {
         .pipe(gulp.dest('./dist'));
 });
 
+gulp.task('copy', function () {
+    return gulp.src(['./src/base.css'])
+        .pipe(concat('base.css'))
+        .pipe(gulp.dest('./dist'));
+});
+
 gulp.task('watch', function () {
 
 });
@@ -65,7 +71,7 @@ gulp.task('default', ['build']);
 
 gulp.task('build', ['clean', 'jshint']);
 
-gulp.task('build-min', ['clean', 'jshint', 'merge']);
+gulp.task('build-min', ['clean', 'jshint', 'merge', 'copy']);
 
 function log(error) {
     console.log([

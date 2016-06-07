@@ -1,0 +1,37 @@
+.lazy_carousel {
+
+}
+.lc-list_holder {
+    position: relative;
+    overflow: hidden;
+}
+.lc-list {
+    position: relative;
+    width: 1000em;
+    margin: 0;
+    padding: 0;
+    opacity: 0.99999;
+
+    -webkit-appearance: none;
+    -webkit-backface-visibility: hidden;
+
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
+    -o-transform: translateX(0);
+    -ms-transform: translateX(0);
+    transform: translateX(0);
+
+    -webkit-transition: -webkit-transform 0s linear;
+    -moz-transition: -moz-transform 0s linear;
+    -o-transition: -o-transform 0s linear;
+    -ms-transition: -ms-transform 0s linear;
+    transition: transform 0s linear;
+}
+
+.lc-item,
+.lc-list li.item {
+    position: relative;
+    float: left;
+    margin: 0;
+    padding: 0;
+}
