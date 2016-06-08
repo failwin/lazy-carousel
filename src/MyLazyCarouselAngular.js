@@ -65,7 +65,6 @@ var MyLazyCarouselCtrl = (function() {
 
             $scope.$carousel = self.$scope;
             $scope.$isActive = false;
-            $scope.$isShowed = false;
 
             $scope.$watch('$carousel.active._id', function (newActiveId) {
                 $scope.$isActive = (newActiveId == item._id) ? true : false;
@@ -76,10 +75,6 @@ var MyLazyCarouselCtrl = (function() {
             $timeout(function(){
                 $scope.$digest();
             });
-
-            $timeout(function(){
-                $scope.$isShowed = true;
-            }, 500);
         });
     };
     MyLazyCarouselCtrl.prototype._removeItemPre = function(item, $item, callback) {
@@ -109,12 +104,8 @@ function MyLazyCarouselDirective($timeout) {
             activeIndex: '=myLazyCarouselActive'
         },
         template:   '<div class="lc-list_holder">' +
-        '   <ul class="lc-list"></ul>' +
-        '</div>' +
-        '<div class="lc-nav">' +
-        '   <a href="#" ng-click="goTo($event, -1)" class="lc-nav_link prev" data-dir="-1">Prev</a>' +
-        '   <a href="#" ng-click="goTo($event, 1)" class="lc-nav_link next" data-dir="1">Next</a>' +
-        '</div>',
+                    '   <ul class="lc-list"></ul>' +
+                    '</div>',
         controller: 'myLazyCarouselCtrl',
         compile: function(tElement, tAttrs) {
 
