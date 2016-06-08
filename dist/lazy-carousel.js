@@ -185,7 +185,7 @@ var LazyCarousel = (function() {
             }
         }
 
-        if (this._count && visible >= this._count) {
+        if (this._count && visible * 3 >= this._count) {
             if (visible != this._visible) {
                 innerUpdate = true;
             }
@@ -196,9 +196,9 @@ var LazyCarousel = (function() {
         }
 
         this._addition = visible;
-        if (this._addition <= 0) {
-            this._addition = 1;
-        }
+        //if (this._addition <= 0) {
+        //    this._addition = 1;
+        //}
 
         if (this._isSimple) {
             this._addition = 0;
@@ -456,6 +456,7 @@ var LazyCarousel = (function() {
         }
 
         var index = this._active || _index,
+            count = this._count,
             visible = this._visible,
             addition = this._addition,
             offsetLeft = 0;
@@ -464,13 +465,13 @@ var LazyCarousel = (function() {
             index = 0;
         }
         else {
-            index = this._normalizeIndex(index);
+            index = this._normalizeIndex(index, undefined, this._isSimple);
         }
 
         if (_isSimple) {
             offsetLeft = this._holderWidth/2 - this._itemWidth/2;
 
-            offsetLeft = offsetLeft - index * this._itemWidth;
+            offsetLeft = offsetLeft - ((Math.floor(count/2) + index) * this._itemWidth);
         }
         else {
             if (_isDir) {
@@ -500,13 +501,13 @@ var LazyCarousel = (function() {
 
         var count;
 
-        var active = this._normalizeIndex(this._active);
+        var active = this._normalizeIndex(this._active, undefined, this._isSimple);
         if (this._isSimple) {
             if (dir > 0) {
-                count = this._count - active - 1;
+                count = this._count -  Math.floor(this._count/2) - active - 1; //this._count - active - 1;
             }
             else {
-                count = Math.abs(active);
+                count = Math.floor(this._count/2) + active; //Math.abs(active);
             }
         }
         else {
@@ -541,16 +542,17 @@ var LazyCarousel = (function() {
             startIndex = active - Math.floor(count/2);
 
         if (isSimple) {
-            startIndex = 0;
+            startIndex = Math.ceil(globalListLength/2);
             count = globalListLength;
         }
 
         for (var i = startIndex, j = 0; j < count; i++, j++){
             var item = this._getItemByIndex(i, globalList);
 
-            var clearItem = utils.extend({}, item, true);
+            //var clearItem = utils.extend({}, item, true);
+            var clearItem = item;
 
-            clearItem._id = i;
+            clearItem._id = clearItem.id;
 
             list.push(clearItem);
         }
@@ -602,14 +604,14 @@ var LazyCarousel = (function() {
         }
 
         if (this._isSimple) {
-            if (this._normalizeIndex(this._active) <= 0) {
+            if (this._getMaxSlideCount(-1) <= 0) {
                 this._nav.prev = false;
             }
             else {
                 this._nav.prev = true;
             }
 
-            if (this._normalizeIndex(this._active) >= this._count - 1) {
+            if (this._getMaxSlideCount(1) <= 0) {
                 this._nav.next = false;
             }
             else {
@@ -726,7 +728,11 @@ var LazyCarousel = (function() {
 
         var index = globalIndex;
 
-        if (!this._isSimple) {
+        if (this._isSimple) {
+            index = Math.floor(this._count/2) + index;
+            loop = false;
+        }
+        else {
             index = this._addition + Math.floor(this._visible/2) + index - this._active + dir;
         }
 
@@ -806,9 +812,13 @@ var LazyCarousel = (function() {
         this.resize();
     };
 
-    LazyCarousel.prototype._normalizeIndex = function(_active, _count) {
+    LazyCarousel.prototype._normalizeIndex = function(_active, _count, _isSimple) {
         var active = this._active,
             count = this._count;
+
+        if (_isSimple) {
+            return _active;
+        }
 
         var newActive = 0;
 
@@ -831,7 +841,7 @@ var LazyCarousel = (function() {
             parts++;
             newActive = active - (count * parts * dir);
 
-            return this._normalizeIndex(newActive, count);
+            return this._normalizeIndex(newActive, count, _isSimple);
         }
         else {
             newActive = active - (count * parts * dir);
@@ -1359,10 +1369,10 @@ function MyLazyCarouselDirective($timeout) {
                     next: false
                 };
 
-                var innerActiveIndex = $scope.activeIndex || 0;
-
                 $scope.goTo = function ($event, dir) {
-                    $event.preventDefault();
+                    if ($event) {
+                        $event.preventDefault();
+                    }
                     ctrl.slideTo(parseInt(dir, 10));
                 };
 
@@ -1374,7 +1384,7 @@ function MyLazyCarouselDirective($timeout) {
                 };
 
                 $scope.$watch('items', function (newList) {
-                    ctrl.updateItems(newList || [], innerActiveIndex);
+                    ctrl.updateItems(newList || [], $scope.activeIndex);
                 });
 
                 //$scope.$watch('activeIndex', function (newActiveIndex) {
@@ -1389,7 +1399,7 @@ function MyLazyCarouselDirective($timeout) {
                         return;
                     }
 
-                    $scope.activeIndex = innerActiveIndex = data.activeIndex;
+                    $scope.activeIndex = data.activeIndex;
 
                     $timeout(function () {
                         $scope.active = item;
