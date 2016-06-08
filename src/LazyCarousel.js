@@ -226,18 +226,17 @@ var LazyCarousel = (function() {
 
         this.items = list;
         this._count = this.items.length;
+        this._active = 0;
+
+        if (typeof _active !== 'undefined') {
+            this._active = this._normalizeIndex(_active, this._count);
+        }
 
         this._calculateVisibility(true);
 
         this._updateVisible(true);
 
-        var active = this._count ? 0 : null;
-
-        if (typeof _active !== 'undefined') {
-            active = this._normalizeIndex(_active, this._count);
-        }
-
-        this._updateActive(active, true, 0);
+        this._updateActive(this._active, true, 0);
 
         this._centerList();
     };
@@ -565,7 +564,7 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype._addItemPre = function(item, callback) {
         if (debug) {
-            log('calls', 'LazyCarousel._addItemPre', item, before, callback);
+            log('calls', 'LazyCarousel._addItemPre', item, callback);
         }
 
         callback = callback || function(){};
@@ -621,6 +620,13 @@ var LazyCarousel = (function() {
             this._nav = {
                 prev: true,
                 next: true
+            };
+        }
+
+        if (!this._count) {
+            this._nav = {
+                prev: false,
+                next: false
             };
         }
 
@@ -812,6 +818,10 @@ var LazyCarousel = (function() {
 
         if (typeof _count != 'undefined') {
             count = _count;
+        }
+
+        if (count == 0) {
+            return 0;
         }
 
         var dir = active < 0 ? -1 : 1;

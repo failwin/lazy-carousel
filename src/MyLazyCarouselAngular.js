@@ -105,6 +105,14 @@ function MyLazyCarouselDirective($timeout) {
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
+                    '</div>' +
+                    '<div class="nav_holder" ng-class="{has_prev: nav.prev, has_next: nav.next}">' +
+                    '   <a href="#/prev" ng-click="goTo($event, -1)" class="nav_link prev">' +
+                    '       <span class="fonticon fonticon-arrow-left"></span>' +
+                    '   </a>' +
+                    '   <a href="#/next" ng-click="goTo($event, 1)" class="nav_link next" >' +
+                    '       <span class="fonticon fonticon-arrow-right"></span>' +
+                    '   </a>' +
                     '</div>',
         controller: 'myLazyCarouselCtrl',
         compile: function(tElement, tAttrs) {
@@ -120,7 +128,7 @@ function MyLazyCarouselDirective($timeout) {
                     next: false
                 };
 
-                var innerActiveIndex = $scope.activeIndex;
+                var innerActiveIndex = $scope.activeIndex || 0;
 
                 $scope.goTo = function ($event, dir) {
                     $event.preventDefault();
@@ -150,7 +158,7 @@ function MyLazyCarouselDirective($timeout) {
                         return;
                     }
 
-                    innerActiveIndex = data.activeIndex;
+                    $scope.activeIndex = innerActiveIndex = data.activeIndex;
 
                     $timeout(function () {
                         $scope.active = item;
