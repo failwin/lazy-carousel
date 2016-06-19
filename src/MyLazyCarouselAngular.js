@@ -29,6 +29,8 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 var MyLazyCarouselCtrl = (function() {
     var $timeout;
 
+    var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
+
     function MyLazyCarouselCtrl($scope, _$timeout_) {
         $timeout = _$timeout_;
         this.$scope = $scope;

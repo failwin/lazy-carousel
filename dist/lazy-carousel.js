@@ -224,15 +224,36 @@ var LazyCarousel = (function() {
 
         var self = this;
 
+        var isFirstRun = false;
+        if (this._active === null) {
+            isFirstRun = true;
+        }
+
         this.items = list;
         this._count = this.items.length;
         this._active = 0;
 
+        this._calculateVisibility(this._holderWidth === 0 ? false : true);
+
         if (typeof _active !== 'undefined') {
-            this._active = this._normalizeIndex(_active, this._count);
+            this._active = this._normalizeIndex(_active, this._count, this._isSimple);
+
+            if(this._isSimple && isFirstRun && this._active >= Math.floor(this._count/2) + 1){
+                this._active = this._active - this._count;
+            }
         }
 
-        this._calculateVisibility(true);
+        // check max/min after removing/adding
+        var rightMax = this._getMaxSlideCount(1);
+        var leftMax = this._getMaxSlideCount(-1);
+        if (rightMax < 0) {
+            this._active = this._active + rightMax;
+        }
+        if (leftMax < 0) {
+            this._active = this._active - leftMax;
+        }
+
+        this.resize();
 
         this._updateVisible(true);
 
@@ -301,7 +322,7 @@ var LazyCarousel = (function() {
 
             // animate
             var time = _fast ? 0 : 300;
-            var animationPromise = this._animateOffset(left, time)
+            return this._animateOffset(left, time)
                 .then(function() {
                     this._isBusy = false;
 
@@ -316,8 +337,6 @@ var LazyCarousel = (function() {
                     return true;
                 }.bind(this));
 
-            resolve(animationPromise);
-
         }.bind(this));
     };
     LazyCarousel.prototype.slideToId = function(id) {
@@ -327,22 +346,34 @@ var LazyCarousel = (function() {
 
         return new Promise(function(resolve, reject) {
             var activeIndex = this._active,
-                newIndex = this._getItemIndexById(id, this._partialItems, '_id');
+                newIndex = this._getItemIndexById(id, this._partialItems, '_id', this._isSimple),
+                dir, count;
 
-            if (!this._isSimple) {
-                activeIndex = Math.floor(this._visible/2) + this._addition;
+            if (this._isSimple) {
+                dir = activeIndex > newIndex ? -1 : 1;
+
+                count = Math.abs(newIndex - activeIndex);
+
+                if (count > 0) {
+                    var slideToPromise = this.slideTo(dir, count);
+
+                    return resolve(slideToPromise);
+                }
             }
+            else {
+                activeIndex = Math.floor(this._visible/2) + this._addition;
 
-            var dir = newIndex - activeIndex;
+                dir = newIndex - activeIndex;
 
-            var count = Math.abs(dir);
+                count = Math.abs(dir);
 
-            dir = dir > 0 ? 1 : -1;
+                dir = dir > 0 ? 1 : -1;
 
-            if (newIndex >= 0 && count > 0) {
-                var slideToPromise = this.slideTo(dir, count);
+                if (newIndex >= 0 && count > 0) {
+                    var slideToPromise = this.slideTo(dir, count);
 
-                return resolve(slideToPromise);
+                    return resolve(slideToPromise);
+                }
             }
             resolve();
 
@@ -387,6 +418,10 @@ var LazyCarousel = (function() {
                     move($elem, offsetLeft, duration, resolve, this);
                 }
             }
+        }.bind(this))
+        .then(function() {
+            this._offsetLeft = offsetLeft;
+            return true;
         }.bind(this));
 
         function move($elem, to, duration, complete, self) {
@@ -682,21 +717,30 @@ var LazyCarousel = (function() {
 
         return false;
     };
-    LazyCarousel.prototype._getItemIndexById = function(id, _list, _key) {
+    LazyCarousel.prototype._getItemIndexById = function(id, _list, _key, _isSimple) {
         if (debug) {
             log('calls', 'LazyCarousel._getItemIndexById', id, _list, _key);
         }
 
+        var result = null;
+
         var list = _list || this.items,
             key = _key || 'id';
 
+
+
         for (var i = 0, c = list.length; i < c; i++){
             if (list[i][key] == id) {
-                return i;
+                result = i;
+                break;
             }
         }
 
-        return -1;
+        if (_isSimple) {
+            result = result - Math.floor(list.length/2);
+        }
+
+        return result;
     };
     LazyCarousel.prototype._getItemByIndex = function(index, _list, loop) {
         if (debug) {
@@ -857,7 +901,6 @@ var LazyCarousel = (function() {
 
     return LazyCarousel;
 })();
-
 // Export
 exports.LazyCarousel = LazyCarousel;
 
@@ -919,7 +962,7 @@ var SwipeDecorator = function(base, options) {
     utils.inherits(SwipeDecorator, base);
 
     SwipeDecorator.prototype.defOpts = utils.extend({
-        supportMouse: true,
+        supportMouse: false,
         supportTouch: true
     }, base.prototype.defOpts);
 
@@ -946,14 +989,15 @@ var SwipeDecorator = function(base, options) {
     SwipeDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        if (isMobile) {
+        if (this.opts.supportTouch) {
             // Touch
             this.$list.removeEventListener('touchstart', this, false);
             this.$list.removeEventListener('touchmove', this, false);
             this.$list.removeEventListener('touchend', this, false);
             this.$list.removeEventListener('touchcancel', this, false);
         }
-        else {
+
+        if (this.opts.supportMouse) {
             // Mouse
             this.$list.removeEventListener('mousedown', this, false);
             this.$list.removeEventListener('mousemove', this, false);
@@ -1264,6 +1308,8 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 // Controller
 var MyLazyCarouselCtrl = (function() {
     var $timeout;
+
+    var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
 
     function MyLazyCarouselCtrl($scope, _$timeout_) {
         $timeout = _$timeout_;
