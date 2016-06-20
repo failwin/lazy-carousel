@@ -80,7 +80,8 @@ var LazyCarousel = (function() {
     LazyCarousel.prototype.defOpts = {
         noInit: false,
         itemWidth: 50,
-        debug: false
+        debug: false,
+        changesTrackerOpts: {}
     };
 
     LazyCarousel.prototype.init = function(elem) {
@@ -109,13 +110,13 @@ var LazyCarousel = (function() {
         this._transformProperty = utils.getPrefixedStyleValue('transform');
         this._translateZ = utils.supportsPerspective() ? 'translateZ(0)' : '';
 
-        this.changesTracker = new ChangesTracker(this.$list, {
+        this.changesTracker = new ChangesTracker(this.$list, utils.extend({
             trackById: '_id',
             beforeAdd: this._addItemPre.bind(this),
             afterAdd: this._addItemPost.bind(this),
             beforeRemove: this._removeItemPre.bind(this),
             afterRemove: this._removeItemPost.bind(this)
-        });
+        }, this.opts.changesTrackerOpts));
 
         this._attachHandlers();
 
@@ -901,6 +902,7 @@ var LazyCarousel = (function() {
 
     return LazyCarousel;
 })();
+
 // Export
 exports.LazyCarousel = LazyCarousel;
 

@@ -80,7 +80,8 @@ var LazyCarousel = (function() {
     LazyCarousel.prototype.defOpts = {
         noInit: false,
         itemWidth: 50,
-        debug: false
+        debug: false,
+        changesTrackerOpts: {}
     };
 
     LazyCarousel.prototype.init = function(elem) {
@@ -109,13 +110,13 @@ var LazyCarousel = (function() {
         this._transformProperty = utils.getPrefixedStyleValue('transform');
         this._translateZ = utils.supportsPerspective() ? 'translateZ(0)' : '';
 
-        this.changesTracker = new ChangesTracker(this.$list, {
+        this.changesTracker = new ChangesTracker(this.$list, utils.extend({
             trackById: '_id',
             beforeAdd: this._addItemPre.bind(this),
             afterAdd: this._addItemPost.bind(this),
             beforeRemove: this._removeItemPre.bind(this),
             afterRemove: this._removeItemPost.bind(this)
-        });
+        }, this.opts.changesTrackerOpts));
 
         this._attachHandlers();
 
@@ -901,6 +902,7 @@ var LazyCarousel = (function() {
 
     return LazyCarousel;
 })();
+
 // Export
 exports.LazyCarousel = LazyCarousel;
 
@@ -1281,7 +1283,7 @@ exports.KeyHandlerDecorator = KeyHandlerDecorator;
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel'], factory);
+        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'SwipeDecorator', 'KeyHandlerDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -1293,15 +1295,19 @@ exports.KeyHandlerDecorator = KeyHandlerDecorator;
         var res = factory(mod.exports,
             window.angular,
             window.utils,
-            window.LazyCarousel
+            window.LazyCarousel,
+            window.swipeDecorator,
+            window.keyHandlerDecorator
         );
         global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel) {
+})(this, function (exports, angular, utils, LazyCarousel_, SwipeDecorator, KeyHandlerDecorator) {
 
 'use strict';
 
 // Import
+var swipeDecorator = SwipeDecorator.swipeDecorator;
+var keyHandlerDecorator = KeyHandlerDecorator.keyHandlerDecorator;
 
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
@@ -1318,7 +1324,12 @@ var MyLazyCarouselCtrl = (function() {
 
         LazyCarousel.call(this, null, {
             noInit: true,
-            trackById: '_id'
+            changesTrackerOpts: {
+                trackById: '_id',
+                trackByIdFn: function(key, value, index, trackById) {
+                    return value[trackById];
+                }
+            }
         });
     }
     MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
@@ -1616,10 +1627,10 @@ var ChangesTracker = (function() {
     }
 
     ChangesTracker.prototype.defOpts = {
-        debug: true,
+        debug: false,
         trackById: 'id',
         trackByIdFn: function(key, value, index, trackById) {
-            return value[trackById] + '_' + value['id'];
+            return value[trackById];
         },
         beforeAdd: function(data, callback) {
             callback = callback || function() {};

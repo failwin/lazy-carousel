@@ -139,10 +139,10 @@ var ChangesTracker = (function() {
     }
 
     ChangesTracker.prototype.defOpts = {
-        debug: true,
+        debug: false,
         trackById: 'id',
         trackByIdFn: function(key, value, index, trackById) {
-            return value[trackById] + '_' + value['id'];
+            return value[trackById];
         },
         beforeAdd: function(data, callback) {
             callback = callback || function() {};

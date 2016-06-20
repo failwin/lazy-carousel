@@ -1,7 +1,7 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel'], factory);
+        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'SwipeDecorator', 'KeyHandlerDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -13,15 +13,19 @@
         var res = factory(mod.exports,
             window.angular,
             window.utils,
-            window.LazyCarousel
+            window.LazyCarousel,
+            window.swipeDecorator,
+            window.keyHandlerDecorator
         );
         global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel) {
+})(this, function (exports, angular, utils, LazyCarousel_, SwipeDecorator, KeyHandlerDecorator) {
 
 'use strict';
 
 // Import
+var swipeDecorator = SwipeDecorator.swipeDecorator;
+var keyHandlerDecorator = KeyHandlerDecorator.keyHandlerDecorator;
 
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
@@ -38,7 +42,12 @@ var MyLazyCarouselCtrl = (function() {
 
         LazyCarousel.call(this, null, {
             noInit: true,
-            trackById: '_id'
+            changesTrackerOpts: {
+                trackById: '_id',
+                trackByIdFn: function(key, value, index, trackById) {
+                    return value[trackById];
+                }
+            }
         });
     }
     MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
