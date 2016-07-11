@@ -1,6 +1,297 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
+        define("ChangesTracker", ['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS
+        factory(exports);
+    } else {
+        // Browser globals
+        var mod = {
+            exports: {}
+        };
+        var res = factory(mod.exports);
+        global.ChangesTracker = res ? res : mod.exports;
+    }
+})(this, function (exports) {
+
+'use strict';
+
+var NG_REMOVED = '$$MY_NG_REMOVED';
+
+function isArray(obj) {
+    if (Array.isArray) {
+        return Array.isArray(obj);
+    }
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
+function isObject(obj) {
+    var type = typeof obj;
+    return type === 'function' || type === 'object' && !!obj;
+}
+function isFunction(obj) {
+    return Object.prototype.toString.call(obj) === '[object ' + name + ']';
+}
+
+function extend(obj, prop, isDeep) {
+    var src, copyIsArray, copy, name, clone,
+        target = obj || {},
+        i = 1,
+        length = arguments.length,
+        deep = isDeep,
+        options = prop;
+
+    // Handle case when target is a string or something (possible in deep copy)
+    if ( typeof target !== "object" && !isFunction(target) ) {
+        target = {};
+    }
+
+    for ( name in options ) {
+        if (prop.hasOwnProperty(name)) {
+            src = target[ name ];
+            copy = options[ name ];
+
+            // Prevent never-ending loop
+            if ( target === copy ) {
+                continue;
+            }
+
+            // Recurse if we're merging plain objects or arrays
+            if ( deep && copy && (copyIsArray = isArray(copy)) ) {
+                if ( copyIsArray ) {
+                    copyIsArray = false;
+                    clone = src && isArray(src) ? src : [];
+
+                } else {
+                    clone = src ? src : {};
+                }
+
+                // Never move original objects, clone them
+                target[ name ] = extend( clone, copy, deep );
+
+                // Don't bring in undefined values
+            } else if ( copy !== undefined ) {
+                target[ name ] = copy;
+            }
+        }
+    }
+
+    return target;
+}
+
+function createElement(str) {
+    if (isObject(str)) {
+        return str;
+    }
+    var frag = document.createDocumentFragment();
+
+    var elem = document.createElement('div');
+    elem.innerHTML = str;
+
+    while (elem.childNodes[0]) {
+        frag.appendChild(elem.childNodes[0]);
+    }
+    return frag.childNodes[0];
+}
+
+function domInsert(element, parentElement, afterElement) {
+    // if for some reason the previous element was removed
+    // from the dom sometime before this code runs then let's
+    // just stick to using the parent element as the anchor
+
+    var parent = parentElement || afterElement.parentNode;
+
+    if (afterElement) {
+        if (afterElement && !afterElement.parentNode && !afterElement.previousElementSibling) {
+            afterElement = null;
+        }
+    }
+
+    element = createElement(element);
+
+    if (afterElement) {
+        afterElement.parentNode.insertBefore(element, afterElement.nextSibling);
+
+        //after(afterElement, element);
+    }
+    else {
+
+        parent.insertBefore(element, parent.firstChild);
+
+        //prepend(parent, element);
+    }
+
+    //afterElement ? afterElement.after(element) : parentElement.prepend(element);
+}
+
+var ChangesTracker = (function() {
+    function ChangesTracker(element, opts) {
+        this.opts = extend({}, this.defOpts);
+        this.opts = extend(this.opts, opts);
+
+        this.$element = element;
+
+        this.$startComment = null;
+
+        this.lastBlockMap = null;
+
+        this.init();
+    }
+
+    ChangesTracker.prototype.defOpts = {
+        debug: true,
+        trackById: 'id',
+        trackByIdFn: function(key, value, index, trackById) {
+            return value[trackById] + '_' + value['id'];
+        },
+        beforeAdd: function(data, callback) {
+            callback = callback || function() {};
+
+            var elem = createElement('<li>'+ data.id +'</li>');
+
+            callback(elem);
+        },
+        afterAdd: function(data, element){},
+        beforeRemove: function(data, element, callback) {
+            callback = callback || function () {};
+
+            callback();
+        },
+        afterRemove: function(data) {}
+    };
+
+    ChangesTracker.prototype.init = function() {
+        // clear
+        while (this.$element.firstChild) {
+            this.$element.removeChild(this.$element.firstChild);
+        }
+
+        // insert first anchor
+        this.$startComment = window.document.createComment('');
+        this.$element.appendChild(this.$startComment);
+
+        this.lastBlockMap = Object.create(null);
+    };
+
+    ChangesTracker.prototype.updateList = function(collection) {
+        var previousNode =  this.$startComment,
+            nextNode,
+            nextBlockMap = Object.create(null),
+            nextBlockOrder,
+            collectionLength,
+            index, key, value,
+            trackById,
+            block,
+            removed = [];
+
+        collectionLength = collection.length;
+        nextBlockOrder = new Array(collectionLength);
+
+        // locate existing items
+        for (index = 0; index < collectionLength; index++) {
+            key = index;
+            value = collection[key];
+            trackById = this.opts.trackByIdFn(key, value, index, this.opts.trackById);
+            if (this.lastBlockMap[trackById]) {
+                // found previously seen block
+                block = this.lastBlockMap[trackById];
+                delete this.lastBlockMap[trackById];
+                nextBlockMap[trackById] = block;
+                nextBlockOrder[index] = block;
+            } else if (nextBlockMap[trackById]) {
+                // if collision detected. restore lastBlockMap and throw an error
+                nextBlockOrder.forEach(function(block) {
+                    if (block && block.data) {
+                        this.lastBlockMap[block.id] = block;
+                    }
+                }.bind(this));
+                throw new Error('Duplicates in a repeater are not allowed');
+            } else {
+                // new never before seen block
+                nextBlockOrder[index] = {id: trackById, data: undefined, element: undefined};
+                nextBlockMap[trackById] = true;
+            }
+        }
+
+        // remove leftover items
+        for (var blockKey in this.lastBlockMap) {
+            block = this.lastBlockMap[blockKey];
+
+            //$animate.leave(elementsToRemove);
+            removed.push(block);
+
+            if (block.element.parentNode) {
+                // if the element was not removed yet because of pending animation, mark it as deleted
+                // so that we can ignore it later
+                block.element[NG_REMOVED] = true;
+            }
+        }
+
+        // moving/inserting
+        for (index = 0; index < collectionLength; index++) {
+            key = index;
+            value = collection[key];
+            block = nextBlockOrder[index];
+
+            if (block.data) {
+                // if we have already seen this object
+                nextNode = previousNode;
+
+                // skip nodes that are already pending removal via leave animation
+                do {
+                    nextNode = nextNode.nextSibling;
+                } while (nextNode && nextNode[NG_REMOVED]);
+
+                if (block.element != nextNode) {
+                    // existing item which got moved
+
+                    // $animate.move(getBlockNodes(block.clone), null, previousNode);
+                    domInsert(block.element, null, previousNode);
+                }
+                previousNode = block.element;
+            } else {
+                // new item which we don't know about
+                block.data = value;
+
+                this.opts.beforeAdd(block.data, function(elem) {
+                    // $animate.enter(clone, null, previousNode);
+                    domInsert(elem, null, previousNode);
+
+                    this.opts.afterAdd(block.data, elem);
+
+                    previousNode = elem;
+
+                    block.element = elem;
+                    nextBlockMap[block.id] = block;
+                }.bind(this));
+            }
+        }
+        this.lastBlockMap = nextBlockMap;
+
+        // real removing
+        for (var i = 0, l = removed.length; i < l; i++) {
+            var block = removed[i];
+            this.opts.beforeRemove(block.data, block.element, function(){
+                this.$element.removeChild(block.element);
+                this.opts.afterRemove(block.data);
+                block = block.data = block.element = null;
+            }.bind(this));
+        }
+        removed = null;
+    };
+
+    return ChangesTracker;
+})();
+
+// Export
+exports.ChangesTracker = ChangesTracker;
+
+return ChangesTracker;
+
+});
+(function (global, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
         define("LazyCarousel", ['exports', 'ES6Promise', 'events', 'utils', 'ChangesTracker'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
@@ -1238,13 +1529,22 @@ var KeyHandlerDecorator = function(base, options) {
     KeyHandlerDecorator.prototype._attachHandlers = function() {
         base.prototype._attachHandlers.apply(this, arguments);
 
-        document.addEventListener('keyup', this._keyHandler.bind(this), false);
+        document.addEventListener('keyup', this, false);
     };
 
     KeyHandlerDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        document.removeEventListener('keyup', this._keyHandler.bind(this), false);
+        document.removeEventListener('keyup', this, false);
+    };
+
+    KeyHandlerDecorator.prototype.handleEvent = function(event) {
+        switch(event.type) {
+            case 'keyup' : {
+                this._keyHandler(event);
+                break;
+            }
+        }
     };
 
     KeyHandlerDecorator.prototype._keyHandler = function(event) {
@@ -1260,6 +1560,10 @@ var KeyHandlerDecorator = function(base, options) {
             }
             this.slideTo(dir);
         }
+    };
+
+    KeyHandlerDecorator.prototype.deleteKeyHandlerDecorator = function() {
+        document.removeEventListener('keyup', this, false);
     };
 
     return KeyHandlerDecorator;
@@ -1281,7 +1585,7 @@ exports.KeyHandlerDecorator = KeyHandlerDecorator;
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel'], factory);
+        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'KeyHandlerDecorator', 'SwipeDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -1293,17 +1597,22 @@ exports.KeyHandlerDecorator = KeyHandlerDecorator;
         var res = factory(mod.exports,
             window.angular,
             window.utils,
-            window.LazyCarousel
+            window.LazyCarousel,
+            window.keyHandlerDecorator,
+            window.swipeDecorator
         );
         global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel) {
+})(this, function (exports, angular, utils, LazyCarousel_, _keyHandlerDecorator, _swipeDecorator) {
 
 'use strict';
 
 // Import
 
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
+
+var keyHandlerDecorator = _keyHandlerDecorator.keyHandlerDecorator;
+var swipeDecorator = _swipeDecorator.swipeDecorator;
 
 // Controller
 var MyLazyCarouselCtrl = (function() {
@@ -1347,7 +1656,6 @@ var MyLazyCarouselCtrl = (function() {
 
             $scope.$carousel = self.$scope;
             $scope.$isActive = false;
-            $scope.$isShowed = false;
 
             $scope.$watch('$carousel.active._id', function (newActiveId) {
                 $scope.$isActive = (newActiveId == item._id) ? true : false;
@@ -1358,10 +1666,6 @@ var MyLazyCarouselCtrl = (function() {
             $timeout(function(){
                 $scope.$digest();
             });
-
-            $timeout(function(){
-                $scope.$isShowed = true;
-            }, 500);
         });
     };
     MyLazyCarouselCtrl.prototype._removeItemPre = function(item, $item, callback) {
@@ -1388,7 +1692,7 @@ function MyLazyCarouselDirective($timeout) {
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            activeIndex: '=myLazyCarouselActive'
+            activeIndex: '=myLazyCarouselActive',
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -1408,6 +1712,10 @@ function MyLazyCarouselDirective($timeout) {
                 $scope._iid = iid++;
 
                 ctrl.init(element[0], transclude);
+
+                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
+                    ctrl.deleteKeyHandlerDecorator();
+                }
 
                 $scope.active = null;
                 $scope.nav = {
@@ -1473,296 +1781,5 @@ myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
 exports.myLazyCarouselModule = myLazyCarouselModule;
 
 return myLazyCarouselModule;
-
-});
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("ChangesTracker", ['exports'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        factory(exports);
-    } else {
-        // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports);
-        global.ChangesTracker = res ? res : mod.exports;
-    }
-})(this, function (exports) {
-
-'use strict';
-
-var NG_REMOVED = '$$MY_NG_REMOVED';
-
-function isArray(obj) {
-    if (Array.isArray) {
-        return Array.isArray(obj);
-    }
-    return Object.prototype.toString.call(obj) === '[object Array]';
-}
-function isObject(obj) {
-    var type = typeof obj;
-    return type === 'function' || type === 'object' && !!obj;
-}
-function isFunction(obj) {
-    return Object.prototype.toString.call(obj) === '[object ' + name + ']';
-}
-
-function extend(obj, prop, isDeep) {
-    var src, copyIsArray, copy, name, clone,
-        target = obj || {},
-        i = 1,
-        length = arguments.length,
-        deep = isDeep,
-        options = prop;
-
-    // Handle case when target is a string or something (possible in deep copy)
-    if ( typeof target !== "object" && !isFunction(target) ) {
-        target = {};
-    }
-
-    for ( name in options ) {
-        if (prop.hasOwnProperty(name)) {
-            src = target[ name ];
-            copy = options[ name ];
-
-            // Prevent never-ending loop
-            if ( target === copy ) {
-                continue;
-            }
-
-            // Recurse if we're merging plain objects or arrays
-            if ( deep && copy && (copyIsArray = isArray(copy)) ) {
-                if ( copyIsArray ) {
-                    copyIsArray = false;
-                    clone = src && isArray(src) ? src : [];
-
-                } else {
-                    clone = src ? src : {};
-                }
-
-                // Never move original objects, clone them
-                target[ name ] = extend( clone, copy, deep );
-
-                // Don't bring in undefined values
-            } else if ( copy !== undefined ) {
-                target[ name ] = copy;
-            }
-        }
-    }
-
-    return target;
-}
-
-function createElement(str) {
-    if (isObject(str)) {
-        return str;
-    }
-    var frag = document.createDocumentFragment();
-
-    var elem = document.createElement('div');
-    elem.innerHTML = str;
-
-    while (elem.childNodes[0]) {
-        frag.appendChild(elem.childNodes[0]);
-    }
-    return frag.childNodes[0];
-}
-
-function domInsert(element, parentElement, afterElement) {
-    // if for some reason the previous element was removed
-    // from the dom sometime before this code runs then let's
-    // just stick to using the parent element as the anchor
-
-    var parent = parentElement || afterElement.parentNode;
-
-    if (afterElement) {
-        if (afterElement && !afterElement.parentNode && !afterElement.previousElementSibling) {
-            afterElement = null;
-        }
-    }
-
-    element = createElement(element);
-
-    if (afterElement) {
-        afterElement.parentNode.insertBefore(element, afterElement.nextSibling);
-
-        //after(afterElement, element);
-    }
-    else {
-
-        parent.insertBefore(element, parent.firstChild);
-
-        //prepend(parent, element);
-    }
-
-    //afterElement ? afterElement.after(element) : parentElement.prepend(element);
-}
-
-var ChangesTracker = (function() {
-    function ChangesTracker(element, opts) {
-        this.opts = extend({}, this.defOpts);
-        this.opts = extend(this.opts, opts);
-
-        this.$element = element;
-
-        this.$startComment = null;
-
-        this.lastBlockMap = null;
-
-        this.init();
-    }
-
-    ChangesTracker.prototype.defOpts = {
-        debug: true,
-        trackById: 'id',
-        trackByIdFn: function(key, value, index, trackById) {
-            return value[trackById] + '_' + value['id'];
-        },
-        beforeAdd: function(data, callback) {
-            callback = callback || function() {};
-
-            var elem = createElement('<li>'+ data.id +'</li>');
-
-            callback(elem);
-        },
-        afterAdd: function(data, element){},
-        beforeRemove: function(data, element, callback) {
-            callback = callback || function () {};
-
-            callback();
-        },
-        afterRemove: function(data) {}
-    };
-
-    ChangesTracker.prototype.init = function() {
-        // clear
-        while (this.$element.firstChild) {
-            this.$element.removeChild(this.$element.firstChild);
-        }
-
-        // insert first anchor
-        this.$startComment = window.document.createComment('');
-        this.$element.appendChild(this.$startComment);
-
-        this.lastBlockMap = Object.create(null);
-    };
-
-    ChangesTracker.prototype.updateList = function(collection) {
-        var previousNode =  this.$startComment,
-            nextNode,
-            nextBlockMap = Object.create(null),
-            nextBlockOrder,
-            collectionLength,
-            index, key, value,
-            trackById,
-            block,
-            removed = [];
-
-        collectionLength = collection.length;
-        nextBlockOrder = new Array(collectionLength);
-
-        // locate existing items
-        for (index = 0; index < collectionLength; index++) {
-            key = index;
-            value = collection[key];
-            trackById = this.opts.trackByIdFn(key, value, index, this.opts.trackById);
-            if (this.lastBlockMap[trackById]) {
-                // found previously seen block
-                block = this.lastBlockMap[trackById];
-                delete this.lastBlockMap[trackById];
-                nextBlockMap[trackById] = block;
-                nextBlockOrder[index] = block;
-            } else if (nextBlockMap[trackById]) {
-                // if collision detected. restore lastBlockMap and throw an error
-                nextBlockOrder.forEach(function(block) {
-                    if (block && block.data) {
-                        this.lastBlockMap[block.id] = block;
-                    }
-                }.bind(this));
-                throw new Error('Duplicates in a repeater are not allowed');
-            } else {
-                // new never before seen block
-                nextBlockOrder[index] = {id: trackById, data: undefined, element: undefined};
-                nextBlockMap[trackById] = true;
-            }
-        }
-
-        // remove leftover items
-        for (var blockKey in this.lastBlockMap) {
-            block = this.lastBlockMap[blockKey];
-
-            //$animate.leave(elementsToRemove);
-            removed.push(block);
-
-            if (block.element.parentNode) {
-                // if the element was not removed yet because of pending animation, mark it as deleted
-                // so that we can ignore it later
-                block.element[NG_REMOVED] = true;
-            }
-        }
-
-        // moving/inserting
-        for (index = 0; index < collectionLength; index++) {
-            key = index;
-            value = collection[key];
-            block = nextBlockOrder[index];
-
-            if (block.data) {
-                // if we have already seen this object
-                nextNode = previousNode;
-
-                // skip nodes that are already pending removal via leave animation
-                do {
-                    nextNode = nextNode.nextSibling;
-                } while (nextNode && nextNode[NG_REMOVED]);
-
-                if (block.element != nextNode) {
-                    // existing item which got moved
-
-                    // $animate.move(getBlockNodes(block.clone), null, previousNode);
-                    domInsert(block.element, null, previousNode);
-                }
-                previousNode = block.element;
-            } else {
-                // new item which we don't know about
-                block.data = value;
-
-                this.opts.beforeAdd(block.data, function(elem) {
-                    // $animate.enter(clone, null, previousNode);
-                    domInsert(elem, null, previousNode);
-
-                    this.opts.afterAdd(block.data, elem);
-
-                    previousNode = elem;
-
-                    block.element = elem;
-                    nextBlockMap[block.id] = block;
-                }.bind(this));
-            }
-        }
-        this.lastBlockMap = nextBlockMap;
-
-        // real removing
-        for (var i = 0, l = removed.length; i < l; i++) {
-            var block = removed[i];
-            this.opts.beforeRemove(block.data, block.element, function(){
-                this.$element.removeChild(block.element);
-                this.opts.afterRemove(block.data);
-                block = block.data = block.element = null;
-            }.bind(this));
-        }
-        removed = null;
-    };
-
-    return ChangesTracker;
-})();
-
-// Export
-exports.ChangesTracker = ChangesTracker;
-
-return ChangesTracker;
 
 });

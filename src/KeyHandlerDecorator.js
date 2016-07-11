@@ -30,13 +30,22 @@ var KeyHandlerDecorator = function(base, options) {
     KeyHandlerDecorator.prototype._attachHandlers = function() {
         base.prototype._attachHandlers.apply(this, arguments);
 
-        document.addEventListener('keyup', this._keyHandler.bind(this), false);
+        document.addEventListener('keyup', this, false);
     };
 
     KeyHandlerDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        document.removeEventListener('keyup', this._keyHandler.bind(this), false);
+        document.removeEventListener('keyup', this, false);
+    };
+
+    KeyHandlerDecorator.prototype.handleEvent = function(event) {
+        switch(event.type) {
+            case 'keyup' : {
+                this._keyHandler(event);
+                break;
+            }
+        }
     };
 
     KeyHandlerDecorator.prototype._keyHandler = function(event) {
@@ -52,6 +61,10 @@ var KeyHandlerDecorator = function(base, options) {
             }
             this.slideTo(dir);
         }
+    };
+
+    KeyHandlerDecorator.prototype.deleteKeyHandlerDecorator = function() {
+        document.removeEventListener('keyup', this, false);
     };
 
     return KeyHandlerDecorator;

@@ -1,7 +1,7 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel'], factory);
+        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'KeyHandlerDecorator', 'SwipeDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
         factory(exports);
@@ -13,17 +13,22 @@
         var res = factory(mod.exports,
             window.angular,
             window.utils,
-            window.LazyCarousel
+            window.LazyCarousel,
+            window.keyHandlerDecorator,
+            window.swipeDecorator
         );
         global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel) {
+})(this, function (exports, angular, utils, LazyCarousel_, _keyHandlerDecorator, _swipeDecorator) {
 
 'use strict';
 
 // Import
 
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
+
+var keyHandlerDecorator = _keyHandlerDecorator.keyHandlerDecorator;
+var swipeDecorator = _swipeDecorator.swipeDecorator;
 
 // Controller
 var MyLazyCarouselCtrl = (function() {
@@ -103,7 +108,7 @@ function MyLazyCarouselDirective($timeout) {
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            activeIndex: '=myLazyCarouselActive'
+            activeIndex: '=myLazyCarouselActive',
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -123,6 +128,10 @@ function MyLazyCarouselDirective($timeout) {
                 $scope._iid = iid++;
 
                 ctrl.init(element[0], transclude);
+
+                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
+                    ctrl.deleteKeyHandlerDecorator();
+                }
 
                 $scope.active = null;
                 $scope.nav = {
