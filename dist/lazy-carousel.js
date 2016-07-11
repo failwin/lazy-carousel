@@ -1523,34 +1523,28 @@ exports.SwipeDecorator = SwipeDecorator;
 var KeyHandlerDecorator = function(base, options) {
     function KeyHandlerDecorator() {
         base.apply(this, arguments);
-    };
+        this.allowKeyHandlerDecorator = true;
+    }
     utils.inherits(KeyHandlerDecorator, base);
 
     KeyHandlerDecorator.prototype._attachHandlers = function() {
         base.prototype._attachHandlers.apply(this, arguments);
 
-        document.addEventListener('keyup', this, false);
+        document.addEventListener('keyup', this._keyHandler.bind(this), false);
     };
 
     KeyHandlerDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        document.removeEventListener('keyup', this, false);
-    };
-
-    KeyHandlerDecorator.prototype.handleEvent = function(event) {
-        switch(event.type) {
-            case 'keyup' : {
-                this._keyHandler(event);
-                break;
-            }
-        }
+        document.removeEventListener('keyup', this._keyHandler.bind(this), false);
     };
 
     KeyHandlerDecorator.prototype._keyHandler = function(event) {
         // > 39
         // < 37
-
+        if (!this.allowKeyHandlerDecorator) {
+            return;
+        }
         var keyCode = event.which || event.keyCode;
 
         if (keyCode == 39 || keyCode == 37) {
@@ -1562,8 +1556,8 @@ var KeyHandlerDecorator = function(base, options) {
         }
     };
 
-    KeyHandlerDecorator.prototype.deleteKeyHandlerDecorator = function() {
-        document.removeEventListener('keyup', this, false);
+    KeyHandlerDecorator.prototype.disableKeyHandlerDecorator = function() {
+        this.allowKeyHandlerDecorator = false;
     };
 
     return KeyHandlerDecorator;
@@ -1692,7 +1686,7 @@ function MyLazyCarouselDirective($timeout) {
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            activeIndex: '=myLazyCarouselActive',
+            activeIndex: '=myLazyCarouselActive'
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -1714,7 +1708,7 @@ function MyLazyCarouselDirective($timeout) {
                 ctrl.init(element[0], transclude);
 
                 if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
-                    ctrl.deleteKeyHandlerDecorator();
+                    ctrl.disableKeyHandlerDecorator();
                 }
 
                 $scope.active = null;

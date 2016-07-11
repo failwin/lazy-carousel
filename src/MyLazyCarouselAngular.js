@@ -108,7 +108,7 @@ function MyLazyCarouselDirective($timeout) {
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            activeIndex: '=myLazyCarouselActive',
+            activeIndex: '=myLazyCarouselActive'
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -130,7 +130,7 @@ function MyLazyCarouselDirective($timeout) {
                 ctrl.init(element[0], transclude);
 
                 if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
-                    ctrl.deleteKeyHandlerDecorator();
+                    ctrl.disableKeyHandlerDecorator();
                 }
 
                 $scope.active = null;
