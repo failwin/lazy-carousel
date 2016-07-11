@@ -36,25 +36,33 @@
     list-style: none;
 
     width: 300px;
-    height: 300px;
     /*line-height: 300px;*/
     text-align: center;
     font-size: 50px;
 
-    border: solid 1px black;
 }
-
 .lazy_carousel .item {
+    border: solid 1px black;
+    height: 300px;
+}
+.lazy_carousel.anim .item {
     opacity: 0;
 
     transition: opacity 1s;
 }
-.lazy_carousel .item.showed {
+.lazy_carousel.anim .item.showed {
     opacity: 1;
 }
 
 .lazy_carousel .item.active {
     color: red;
+}
+
+.fonticon-arrow-left:after {
+    content: 'Prev';
+}
+.fonticon-arrow-right:after {
+    content: 'Next';
 }
 
 @media (max-width: 700px) {
@@ -86,7 +94,7 @@
     </div>
 
     <div ng-app="demo" ng-controller="demoCtrl">
-        <div class="lazy_carousel" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">
+        <div class="lazy_carousel anim" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">
             <div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">
                 {{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}
                 <br />
@@ -98,13 +106,13 @@
         <br>
         <br>
 
-        <div class="lazy_carousel" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">
-            <div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">
-                {{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}
-                <br />
-                <a href="#" ng-click="$carousel.setActive($event, item)">Active</a>
-            </div>
-        </div>
+        <!--<div class="lazy_carousel anim" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">-->
+            <!--<div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">-->
+                <!--{{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}-->
+                <!--<br />-->
+                <!--<a href="#" ng-click="$carousel.setActive($event, item)">Active</a>-->
+            <!--</div>-->
+        <!--</div>-->
     </div>
 
     <script src="../lib/angular/angular.js"></script>

@@ -53,7 +53,7 @@ var SwipeDecorator = function(base, options) {
     utils.inherits(SwipeDecorator, base);
 
     SwipeDecorator.prototype.defOpts = utils.extend({
-        supportMouse: true,
+        supportMouse: false,
         supportTouch: true
     }, base.prototype.defOpts);
 
@@ -80,14 +80,15 @@ var SwipeDecorator = function(base, options) {
     SwipeDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        if (isMobile) {
+        if (this.opts.supportTouch) {
             // Touch
             this.$list.removeEventListener('touchstart', this, false);
             this.$list.removeEventListener('touchmove', this, false);
             this.$list.removeEventListener('touchend', this, false);
             this.$list.removeEventListener('touchcancel', this, false);
         }
-        else {
+
+        if (this.opts.supportMouse) {
             // Mouse
             this.$list.removeEventListener('mousedown', this, false);
             this.$list.removeEventListener('mousemove', this, false);

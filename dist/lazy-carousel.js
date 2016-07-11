@@ -185,7 +185,7 @@ var LazyCarousel = (function() {
             }
         }
 
-        if (this._count && visible >= this._count) {
+        if (this._count && visible * 3 >= this._count) {
             if (visible != this._visible) {
                 innerUpdate = true;
             }
@@ -196,9 +196,9 @@ var LazyCarousel = (function() {
         }
 
         this._addition = visible;
-        if (this._addition <= 0) {
-            this._addition = 1;
-        }
+        //if (this._addition <= 0) {
+        //    this._addition = 1;
+        //}
 
         if (this._isSimple) {
             this._addition = 0;
@@ -224,15 +224,36 @@ var LazyCarousel = (function() {
 
         var self = this;
 
+        var isFirstRun = false;
+        if (this._active === null) {
+            isFirstRun = true;
+        }
+
         this.items = list;
         this._count = this.items.length;
         this._active = 0;
 
+        this._calculateVisibility(this._holderWidth === 0 ? false : true);
+
         if (typeof _active !== 'undefined') {
-            this._active = this._normalizeIndex(_active, this._count);
+            this._active = this._normalizeIndex(_active, this._count, this._isSimple);
+
+            if(this._isSimple && isFirstRun && this._active >= Math.floor(this._count/2) + 1){
+                this._active = this._active - this._count;
+            }
         }
 
-        this._calculateVisibility(true);
+        // check max/min after removing/adding
+        var rightMax = this._getMaxSlideCount(1);
+        var leftMax = this._getMaxSlideCount(-1);
+        if (rightMax < 0) {
+            this._active = this._active + rightMax;
+        }
+        if (leftMax < 0) {
+            this._active = this._active - leftMax;
+        }
+
+        this.resize();
 
         this._updateVisible(true);
 
@@ -301,7 +322,7 @@ var LazyCarousel = (function() {
 
             // animate
             var time = _fast ? 0 : 300;
-            var animationPromise = this._animateOffset(left, time)
+            return this._animateOffset(left, time)
                 .then(function() {
                     this._isBusy = false;
 
@@ -316,8 +337,6 @@ var LazyCarousel = (function() {
                     return true;
                 }.bind(this));
 
-            resolve(animationPromise);
-
         }.bind(this));
     };
     LazyCarousel.prototype.slideToId = function(id) {
@@ -327,22 +346,34 @@ var LazyCarousel = (function() {
 
         return new Promise(function(resolve, reject) {
             var activeIndex = this._active,
-                newIndex = this._getItemIndexById(id, this._partialItems, '_id');
+                newIndex = this._getItemIndexById(id, this._partialItems, '_id', this._isSimple),
+                dir, count;
 
-            if (!this._isSimple) {
-                activeIndex = Math.floor(this._visible/2) + this._addition;
+            if (this._isSimple) {
+                dir = activeIndex > newIndex ? -1 : 1;
+
+                count = Math.abs(newIndex - activeIndex);
+
+                if (count > 0) {
+                    var slideToPromise = this.slideTo(dir, count);
+
+                    return resolve(slideToPromise);
+                }
             }
+            else {
+                activeIndex = Math.floor(this._visible/2) + this._addition;
 
-            var dir = newIndex - activeIndex;
+                dir = newIndex - activeIndex;
 
-            var count = Math.abs(dir);
+                count = Math.abs(dir);
 
-            dir = dir > 0 ? 1 : -1;
+                dir = dir > 0 ? 1 : -1;
 
-            if (newIndex >= 0 && count > 0) {
-                var slideToPromise = this.slideTo(dir, count);
+                if (newIndex >= 0 && count > 0) {
+                    var slideToPromise = this.slideTo(dir, count);
 
-                return resolve(slideToPromise);
+                    return resolve(slideToPromise);
+                }
             }
             resolve();
 
@@ -387,6 +418,10 @@ var LazyCarousel = (function() {
                     move($elem, offsetLeft, duration, resolve, this);
                 }
             }
+        }.bind(this))
+        .then(function() {
+            this._offsetLeft = offsetLeft;
+            return true;
         }.bind(this));
 
         function move($elem, to, duration, complete, self) {
@@ -456,6 +491,7 @@ var LazyCarousel = (function() {
         }
 
         var index = this._active || _index,
+            count = this._count,
             visible = this._visible,
             addition = this._addition,
             offsetLeft = 0;
@@ -464,13 +500,13 @@ var LazyCarousel = (function() {
             index = 0;
         }
         else {
-            index = this._normalizeIndex(index);
+            index = this._normalizeIndex(index, undefined, this._isSimple);
         }
 
         if (_isSimple) {
             offsetLeft = this._holderWidth/2 - this._itemWidth/2;
 
-            offsetLeft = offsetLeft - index * this._itemWidth;
+            offsetLeft = offsetLeft - ((Math.floor(count/2) + index) * this._itemWidth);
         }
         else {
             if (_isDir) {
@@ -500,13 +536,13 @@ var LazyCarousel = (function() {
 
         var count;
 
-        var active = this._normalizeIndex(this._active);
+        var active = this._normalizeIndex(this._active, undefined, this._isSimple);
         if (this._isSimple) {
             if (dir > 0) {
-                count = this._count - active - 1;
+                count = this._count -  Math.floor(this._count/2) - active - 1; //this._count - active - 1;
             }
             else {
-                count = Math.abs(active);
+                count = Math.floor(this._count/2) + active; //Math.abs(active);
             }
         }
         else {
@@ -541,16 +577,17 @@ var LazyCarousel = (function() {
             startIndex = active - Math.floor(count/2);
 
         if (isSimple) {
-            startIndex = 0;
+            startIndex = Math.ceil(globalListLength/2);
             count = globalListLength;
         }
 
         for (var i = startIndex, j = 0; j < count; i++, j++){
             var item = this._getItemByIndex(i, globalList);
 
-            var clearItem = utils.extend({}, item, true);
+            //var clearItem = utils.extend({}, item, true);
+            var clearItem = item;
 
-            clearItem._id = i;
+            clearItem._id = clearItem.id;
 
             list.push(clearItem);
         }
@@ -602,14 +639,14 @@ var LazyCarousel = (function() {
         }
 
         if (this._isSimple) {
-            if (this._normalizeIndex(this._active) <= 0) {
+            if (this._getMaxSlideCount(-1) <= 0) {
                 this._nav.prev = false;
             }
             else {
                 this._nav.prev = true;
             }
 
-            if (this._normalizeIndex(this._active) >= this._count - 1) {
+            if (this._getMaxSlideCount(1) <= 0) {
                 this._nav.next = false;
             }
             else {
@@ -680,21 +717,30 @@ var LazyCarousel = (function() {
 
         return false;
     };
-    LazyCarousel.prototype._getItemIndexById = function(id, _list, _key) {
+    LazyCarousel.prototype._getItemIndexById = function(id, _list, _key, _isSimple) {
         if (debug) {
             log('calls', 'LazyCarousel._getItemIndexById', id, _list, _key);
         }
 
+        var result = null;
+
         var list = _list || this.items,
             key = _key || 'id';
 
+
+
         for (var i = 0, c = list.length; i < c; i++){
             if (list[i][key] == id) {
-                return i;
+                result = i;
+                break;
             }
         }
 
-        return -1;
+        if (_isSimple) {
+            result = result - Math.floor(list.length/2);
+        }
+
+        return result;
     };
     LazyCarousel.prototype._getItemByIndex = function(index, _list, loop) {
         if (debug) {
@@ -726,7 +772,11 @@ var LazyCarousel = (function() {
 
         var index = globalIndex;
 
-        if (!this._isSimple) {
+        if (this._isSimple) {
+            index = Math.floor(this._count/2) + index;
+            loop = false;
+        }
+        else {
             index = this._addition + Math.floor(this._visible/2) + index - this._active + dir;
         }
 
@@ -806,9 +856,13 @@ var LazyCarousel = (function() {
         this.resize();
     };
 
-    LazyCarousel.prototype._normalizeIndex = function(_active, _count) {
+    LazyCarousel.prototype._normalizeIndex = function(_active, _count, _isSimple) {
         var active = this._active,
             count = this._count;
+
+        if (_isSimple) {
+            return _active;
+        }
 
         var newActive = 0;
 
@@ -831,7 +885,7 @@ var LazyCarousel = (function() {
             parts++;
             newActive = active - (count * parts * dir);
 
-            return this._normalizeIndex(newActive, count);
+            return this._normalizeIndex(newActive, count, _isSimple);
         }
         else {
             newActive = active - (count * parts * dir);
@@ -847,7 +901,6 @@ var LazyCarousel = (function() {
 
     return LazyCarousel;
 })();
-
 // Export
 exports.LazyCarousel = LazyCarousel;
 
@@ -909,7 +962,7 @@ var SwipeDecorator = function(base, options) {
     utils.inherits(SwipeDecorator, base);
 
     SwipeDecorator.prototype.defOpts = utils.extend({
-        supportMouse: true,
+        supportMouse: false,
         supportTouch: true
     }, base.prototype.defOpts);
 
@@ -936,14 +989,15 @@ var SwipeDecorator = function(base, options) {
     SwipeDecorator.prototype._detachHandlers = function() {
         base.prototype._detachHandlers.apply(this, arguments);
 
-        if (isMobile) {
+        if (this.opts.supportTouch) {
             // Touch
             this.$list.removeEventListener('touchstart', this, false);
             this.$list.removeEventListener('touchmove', this, false);
             this.$list.removeEventListener('touchend', this, false);
             this.$list.removeEventListener('touchcancel', this, false);
         }
-        else {
+
+        if (this.opts.supportMouse) {
             // Mouse
             this.$list.removeEventListener('mousedown', this, false);
             this.$list.removeEventListener('mousemove', this, false);
@@ -1255,6 +1309,8 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 var MyLazyCarouselCtrl = (function() {
     var $timeout;
 
+    var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
+
     function MyLazyCarouselCtrl($scope, _$timeout_) {
         $timeout = _$timeout_;
         this.$scope = $scope;
@@ -1359,10 +1415,10 @@ function MyLazyCarouselDirective($timeout) {
                     next: false
                 };
 
-                var innerActiveIndex = $scope.activeIndex || 0;
-
                 $scope.goTo = function ($event, dir) {
-                    $event.preventDefault();
+                    if ($event) {
+                        $event.preventDefault();
+                    }
                     ctrl.slideTo(parseInt(dir, 10));
                 };
 
@@ -1374,7 +1430,7 @@ function MyLazyCarouselDirective($timeout) {
                 };
 
                 $scope.$watch('items', function (newList) {
-                    ctrl.updateItems(newList || [], innerActiveIndex);
+                    ctrl.updateItems(newList || [], $scope.activeIndex);
                 });
 
                 //$scope.$watch('activeIndex', function (newActiveIndex) {
@@ -1389,7 +1445,7 @@ function MyLazyCarouselDirective($timeout) {
                         return;
                     }
 
-                    $scope.activeIndex = innerActiveIndex = data.activeIndex;
+                    $scope.activeIndex = data.activeIndex;
 
                     $timeout(function () {
                         $scope.active = item;

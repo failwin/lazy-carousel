@@ -29,6 +29,8 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 var MyLazyCarouselCtrl = (function() {
     var $timeout;
 
+    var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
+
     function MyLazyCarouselCtrl($scope, _$timeout_) {
         $timeout = _$timeout_;
         this.$scope = $scope;
@@ -128,10 +130,10 @@ function MyLazyCarouselDirective($timeout) {
                     next: false
                 };
 
-                var innerActiveIndex = $scope.activeIndex || 0;
-
                 $scope.goTo = function ($event, dir) {
-                    $event.preventDefault();
+                    if ($event) {
+                        $event.preventDefault();
+                    }
                     ctrl.slideTo(parseInt(dir, 10));
                 };
 
@@ -143,7 +145,7 @@ function MyLazyCarouselDirective($timeout) {
                 };
 
                 $scope.$watch('items', function (newList) {
-                    ctrl.updateItems(newList || [], innerActiveIndex);
+                    ctrl.updateItems(newList || [], $scope.activeIndex);
                 });
 
                 //$scope.$watch('activeIndex', function (newActiveIndex) {
@@ -158,7 +160,7 @@ function MyLazyCarouselDirective($timeout) {
                         return;
                     }
 
-                    $scope.activeIndex = innerActiveIndex = data.activeIndex;
+                    $scope.activeIndex = data.activeIndex;
 
                     $timeout(function () {
                         $scope.active = item;
