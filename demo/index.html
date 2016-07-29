@@ -46,7 +46,7 @@
     height: 300px;
 }
 .lazy_carousel.anim .item {
-    opacity: 0;
+    /*opacity: 0;*/
 
     transition: opacity 1s;
 }
@@ -94,7 +94,11 @@
     </div>
 
     <div ng-app="demo" ng-controller="demoCtrl">
-        <div class="lazy_carousel anim" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">
+        <div class="lazy_carousel anim"
+             my-lazy-carousel="carousel.items"
+             my-lazy-carousel-active="carousel.active"
+             item-as="item"
+             no-key-decorator="true">
             <div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">
                 {{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}
                 <br />

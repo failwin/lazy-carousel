@@ -76,7 +76,6 @@ var MyLazyCarouselCtrl = (function() {
 
             $scope.$carousel = self.$scope;
             $scope.$isActive = false;
-            $scope.$isShowed = false;
 
             $scope.$watch('$carousel.active._id', function (newActiveId) {
                 $scope.$isActive = (newActiveId == item._id) ? true : false;
@@ -87,10 +86,6 @@ var MyLazyCarouselCtrl = (function() {
             $timeout(function(){
                 $scope.$digest();
             });
-
-            $timeout(function(){
-                $scope.$isShowed = true;
-            }, 500);
         });
     };
     MyLazyCarouselCtrl.prototype._removeItemPre = function(item, $item, callback) {
@@ -137,6 +132,10 @@ function MyLazyCarouselDirective($timeout) {
                 $scope._iid = iid++;
 
                 ctrl.init(element[0], transclude);
+
+                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
+                    ctrl.disableKeyHandlerDecorator();
+                }
 
                 $scope.active = null;
                 $scope.nav = {

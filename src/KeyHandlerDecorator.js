@@ -24,7 +24,8 @@
 var KeyHandlerDecorator = function(base, options) {
     function KeyHandlerDecorator() {
         base.apply(this, arguments);
-    };
+        this.allowKeyHandlerDecorator = true;
+    }
     utils.inherits(KeyHandlerDecorator, base);
 
     KeyHandlerDecorator.prototype._attachHandlers = function() {
@@ -42,7 +43,9 @@ var KeyHandlerDecorator = function(base, options) {
     KeyHandlerDecorator.prototype._keyHandler = function(event) {
         // > 39
         // < 37
-
+        if (!this.allowKeyHandlerDecorator) {
+            return;
+        }
         var keyCode = event.which || event.keyCode;
 
         if (keyCode == 39 || keyCode == 37) {
@@ -52,6 +55,10 @@ var KeyHandlerDecorator = function(base, options) {
             }
             this.slideTo(dir);
         }
+    };
+
+    KeyHandlerDecorator.prototype.disableKeyHandlerDecorator = function() {
+        this.allowKeyHandlerDecorator = false;
     };
 
     return KeyHandlerDecorator;
