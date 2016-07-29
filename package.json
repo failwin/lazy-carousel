@@ -3,7 +3,10 @@
   "description": "Lazy Carousel",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "my-utils": "https://github.com/failwin/my-utils.git",
+    "es6-promise": "~3.0.2"
+  }
   "devDependencies": {
     "gulp": "~3.9.0",
     "gulp-clean": "~0.3.1",
