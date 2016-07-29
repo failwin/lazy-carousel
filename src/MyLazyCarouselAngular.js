@@ -1,32 +1,31 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'SwipeDecorator', 'KeyHandlerDecorator'], factory);
+        define("myLazyCarousel", ['angular', 'my-utils', 'LazyCarousel', 'swipeDecorator', 'keyHandlerDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(
+            require('angular'),
+            require('my-utils'),
+            require('./LazyCarousel.js'),
+            require('./swipeDecorator.js'),
+            require('./keyHandlerDecorator.js')
+        );
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports,
-            window.angular,
-            window.utils,
-            window.LazyCarousel,
-            window.swipeDecorator,
-            window.keyHandlerDecorator
+        global.myLazyCarouselModule = factory(
+            global.angular,
+            global.utils,
+            global.LazyCarousel,
+            global.swipeDecorator,
+            global.keyHandlerDecorator
         );
-        global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel_, SwipeDecorator, KeyHandlerDecorator) {
+})(this, function (angular, utils, LazyCarousel_, swipeDecorator, keyHandlerDecorator) {
 
 'use strict';
 
 // Import
-var swipeDecorator = SwipeDecorator.swipeDecorator;
-var keyHandlerDecorator = KeyHandlerDecorator.keyHandlerDecorator;
-
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
 // Controller
@@ -198,8 +197,6 @@ myLazyCarouselModule.directive('myLazyCarousel', MyLazyCarouselDirective);
 myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
 
 // Export
-exports.myLazyCarouselModule = myLazyCarouselModule;
-
 return myLazyCarouselModule;
 
 });

@@ -1,19 +1,15 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("ChangesTracker", ['exports'], factory);
+        define("ChangesTracker", [], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory();
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports);
-        global.ChangesTracker = res ? res : mod.exports;
+        global.ChangesTracker = factory();
     }
-})(this, function (exports) {
+})(this, function () {
 
 'use strict';
 
@@ -284,8 +280,6 @@ var ChangesTracker = (function() {
 })();
 
 // Export
-exports.ChangesTracker = ChangesTracker;
-
 return ChangesTracker;
 
 });

@@ -51,7 +51,8 @@ gulp.task('merge', function () {
             "LazyCarousel.js",
             "SwipeDecorator.js",
             "KeyHandlerDecorator.js",
-            "MyLazyCarouselAngular.js"
+            "MyLazyCarouselAngular.js",
+            "index.js"
         ]))
         .pipe(concat('lazy-carousel.js'))
         .pipe(gulp.dest('./dist'));

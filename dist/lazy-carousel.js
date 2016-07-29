@@ -1,19 +1,15 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("ChangesTracker", ['exports'], factory);
+        define("ChangesTracker", [], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory();
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports);
-        global.ChangesTracker = res ? res : mod.exports;
+        global.ChangesTracker = factory();
     }
-})(this, function (exports) {
+})(this, function () {
 
 'use strict';
 
@@ -139,10 +135,10 @@ var ChangesTracker = (function() {
     }
 
     ChangesTracker.prototype.defOpts = {
-        debug: true,
+        debug: false,
         trackById: 'id',
         trackByIdFn: function(key, value, index, trackById) {
-            return value[trackById] + '_' + value['id'];
+            return value[trackById];
         },
         beforeAdd: function(data, callback) {
             callback = callback || function() {};
@@ -284,32 +280,31 @@ var ChangesTracker = (function() {
 })();
 
 // Export
-exports.ChangesTracker = ChangesTracker;
-
 return ChangesTracker;
 
 });
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("LazyCarousel", ['exports', 'ES6Promise', 'events', 'utils', 'ChangesTracker'], factory);
+        define("LazyCarousel", ['es6-promise', 'events', 'my-utils', 'ChangesTracker'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(
+            require('es6-promise'),
+            require('events'),
+            require('my-utils'),
+            require('./ChangesTracker.js')
+        );
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports,
-            window.ES6Promise,
-            window.events,
-            window.utils,
-            window.ChangesTracker
+        global.LazyCarousel = factory(
+            global.ES6Promise,
+            global.events,
+            global.utils,
+            global.ChangesTracker
         );
-        global.LazyCarousel = res ? res : mod.exports;
     }
-})(this, function (exports, ES6Promise, events, utils, ChangesTracker) {
+})(this, function (ES6Promise, events, utils, ChangesTracker) {
 
 'use strict';
 
@@ -1195,29 +1190,21 @@ var LazyCarousel = (function() {
 })();
 
 // Export
-exports.LazyCarousel = LazyCarousel;
-
 return LazyCarousel;
 
 });
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("SwipeDecorator", ['exports', 'utils'], factory);
+        define("swipeDecorator", ['my-utils'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(require('my-utils'));
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        factory(mod.exports,
-            window.utils
-        );
-        global.swipeDecorator = mod.exports;
+        global.swipeDecorator = factory(global.utils);
     }
-})(this, function (exports, utils) {
+})(this, function (utils) {
 
 'use strict';
 
@@ -1493,8 +1480,8 @@ function swipeDecorator(options) {
 }
 
 // Export
-exports.swipeDecorator = swipeDecorator;
-exports.SwipeDecorator = SwipeDecorator;
+swipeDecorator.SwipeDecorator = SwipeDecorator;
+return swipeDecorator;
 
 });
 
@@ -1502,21 +1489,15 @@ exports.SwipeDecorator = SwipeDecorator;
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("KeyHandlerDecorator", ['exports', 'utils'], factory);
+        define("keyHandlerDecorator", ['my-utils'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(require('my-utils'));
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        factory(mod.exports,
-            window.utils
-        );
-        global.keyHandlerDecorator = mod.exports;
+        global.keyHandlerDecorator = factory(global.utils);
     }
-})(this, function (exports, utils) {
+})(this, function (utils) {
 
 'use strict';
 
@@ -1572,8 +1553,8 @@ function keyHandlerDecorator(options) {
 }
 
 // Export
-exports.keyHandlerDecorator = keyHandlerDecorator;
-exports.KeyHandlerDecorator = KeyHandlerDecorator;
+keyHandlerDecorator.KeyHandlerDecorator = KeyHandlerDecorator;
+return keyHandlerDecorator;
 
 });
 
@@ -1581,32 +1562,31 @@ exports.KeyHandlerDecorator = KeyHandlerDecorator;
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['exports', 'angular', 'utils', 'LazyCarousel', 'SwipeDecorator', 'KeyHandlerDecorator'], factory);
+        define("myLazyCarousel", ['angular', 'my-utils', 'LazyCarousel', 'swipeDecorator', 'keyHandlerDecorator'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(
+            require('angular'),
+            require('my-utils'),
+            require('./LazyCarousel.js'),
+            require('./swipeDecorator.js'),
+            require('./keyHandlerDecorator.js')
+        );
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports,
-            window.angular,
-            window.utils,
-            window.LazyCarousel,
-            window.swipeDecorator,
-            window.keyHandlerDecorator
+        global.myLazyCarouselModule = factory(
+            global.angular,
+            global.utils,
+            global.LazyCarousel,
+            global.swipeDecorator,
+            global.keyHandlerDecorator
         );
-        global.myLazyCarouselModule = res ? res : mod.exports;
     }
-})(this, function (exports, angular, utils, LazyCarousel_, SwipeDecorator, KeyHandlerDecorator) {
+})(this, function (angular, utils, LazyCarousel_, swipeDecorator, keyHandlerDecorator) {
 
 'use strict';
 
 // Import
-var swipeDecorator = SwipeDecorator.swipeDecorator;
-var keyHandlerDecorator = KeyHandlerDecorator.keyHandlerDecorator;
-
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
 // Controller
@@ -1778,8 +1758,45 @@ myLazyCarouselModule.directive('myLazyCarousel', MyLazyCarouselDirective);
 myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
 
 // Export
-exports.myLazyCarouselModule = myLazyCarouselModule;
-
 return myLazyCarouselModule;
+
+});
+
+(function (global, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define("myLazyCarousel", ['LazyCarousel', 'swipeDecorator', 'keyHandlerDecorator', 'myLazyCarousel'], factory);
+    } else if (typeof exports !== 'undefined') {
+        // CommonJS
+        module.exports = factory(
+            require('./LazyCarousel.js'),
+            require('./swipeDecorator.js'),
+            require('./keyHandlerDecorator.js'),
+            require('./MyLazyCarouselAngular.js')
+        );
+    } else {
+        // Browser globals
+        global._LazyCarousel = factory(
+            global.LazyCarousel,
+            global.swipeDecorator,
+            global.keyHandlerDecorator,
+            global.myLazyCarouselModule
+        );
+    }
+})(this, function (LazyCarousel, swipeDecorator, keyHandlerDecorator, myLazyCarouselModule) {
+
+'use strict';
+
+// Import
+
+// Export
+return {
+    LazyCarousel: LazyCarousel,
+    swipeDecorator: swipeDecorator,
+    SwipeDecorator: swipeDecorator.SwipeDecorator,
+    keyHandlerDecorator: keyHandlerDecorator,
+    KeyHandlerDecorator: keyHandlerDecorator.KeyHandlerDecorator,
+    myLazyCarouselModule: myLazyCarouselModule
+};
 
 });

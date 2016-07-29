@@ -1,24 +1,25 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("LazyCarousel", ['exports', 'ES6Promise', 'events', 'utils', 'ChangesTracker'], factory);
+        define("LazyCarousel", ['es6-promise', 'events', 'my-utils', 'ChangesTracker'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(
+            require('es6-promise'),
+            require('events'),
+            require('my-utils'),
+            require('./ChangesTracker.js')
+        );
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        var res = factory(mod.exports,
-            window.ES6Promise,
-            window.events,
-            window.utils,
-            window.ChangesTracker
+        global.LazyCarousel = factory(
+            global.ES6Promise,
+            global.events,
+            global.utils,
+            global.ChangesTracker
         );
-        global.LazyCarousel = res ? res : mod.exports;
     }
-})(this, function (exports, ES6Promise, events, utils, ChangesTracker) {
+})(this, function (ES6Promise, events, utils, ChangesTracker) {
 
 'use strict';
 
@@ -904,8 +905,6 @@ var LazyCarousel = (function() {
 })();
 
 // Export
-exports.LazyCarousel = LazyCarousel;
-
 return LazyCarousel;
 
 });

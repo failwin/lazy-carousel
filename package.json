@@ -4,9 +4,11 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "my-utils": "https://github.com/failwin/my-utils.git",
-    "es6-promise": "~3.0.2"
-  }
+    "angular": "~1.5.6",
+    "es6-promise": "~3.0.2",
+    "events": "^1.1.1",
+    "my-utils": "https://github.com/failwin/my-utils.git"
+  },
   "devDependencies": {
     "gulp": "~3.9.0",
     "gulp-clean": "~0.3.1",
@@ -21,7 +23,8 @@
     "karma-coverage": "~0.5.3",
     "karma-firefox-launcher": "~0.1.6",
     "karma-jasmine": "~0.3.6",
-    "map-stream": "0.0.6"
+    "map-stream": "0.0.6",
+    "angular-mocks": "~1.5.6"
   },
   "scripts": {
     "build": ".\\node_modules\\.bin\\gulp build",

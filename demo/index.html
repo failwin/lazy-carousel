@@ -119,9 +119,10 @@
         </div>
     </div>
 
-    <script src="../lib/angular/angular.js"></script>
-    <script src="../lib/my-utils/src/utils.js"></script>
-    <script src="../lib/es6-promise/promise.js"></script>
+    <script src="../node_modules/angular/angular.js"></script>
+    <script src="../node_modules/my-utils/src/utils.js"></script>
+    <script src="../node_modules/es6-promise/dist/es6-promise.js"></script>
+    
     <script src="../lib/events/events.js"></script>
 
     <script src="../src/ChangesTracker.js"></script>
@@ -138,8 +139,8 @@
     <script>
         (function(){
             var LazyCarousel = window.LazyCarousel,
-                keyHandlerDecorator = window.keyHandlerDecorator.keyHandlerDecorator,
-                swipeDecorator = window.swipeDecorator.swipeDecorator;
+                keyHandlerDecorator = window.keyHandlerDecorator,
+                swipeDecorator = window.swipeDecorator;
 
 
             var demo1Holder = document.getElementById("demo1");

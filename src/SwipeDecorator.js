@@ -1,21 +1,15 @@
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define("SwipeDecorator", ['exports', 'utils'], factory);
+        define("swipeDecorator", ['my-utils'], factory);
     } else if (typeof exports !== 'undefined') {
         // CommonJS
-        factory(exports);
+        module.exports = factory(require('my-utils'));
     } else {
         // Browser globals
-        var mod = {
-            exports: {}
-        };
-        factory(mod.exports,
-            window.utils
-        );
-        global.swipeDecorator = mod.exports;
+        global.swipeDecorator = factory(global.utils);
     }
-})(this, function (exports, utils) {
+})(this, function (utils) {
 
 'use strict';
 
@@ -291,8 +285,8 @@ function swipeDecorator(options) {
 }
 
 // Export
-exports.swipeDecorator = swipeDecorator;
-exports.SwipeDecorator = SwipeDecorator;
+swipeDecorator.SwipeDecorator = SwipeDecorator;
+return swipeDecorator;
 
 });
 
