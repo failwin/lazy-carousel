@@ -15,13 +15,14 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'lib/angular/angular.js',
-      'lib/angular-animate/angular-animate.js',
-      'lib/angular-mocks/angular-mocks.js',
-      'lib/my-utils/src/utils.js',
-      'lib/class-list/classList.js',
+      'node_modules/classlist.js/classList.js',
+      'node_modules/angular/angular.js',
+      'node_modules/angular-mocks/angular-mocks.js',
+      'node_modules/es6-promise/dist/es6-promise.js',
+      'node_modules/my-utils/src/utils.js',
+
       'lib/events/events.js',
-      'lib/es6-promise/promise.js',
+
       'src/ChangesTracker.js',
       'src/SwipeDecorator.js',
       'src/KeyHandlerDecorator.js',
