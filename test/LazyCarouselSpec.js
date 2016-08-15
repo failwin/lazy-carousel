@@ -61,7 +61,7 @@ function initCustomMatchers() {
     });
 }
 
-function render(str) {
+function getDOMItems(inst) {
 
 }
 
@@ -217,16 +217,54 @@ fdescribe('LazyCarousel', function(){
             expect(inst.addition).toBe(0);
         });
 
-        it('should generate partial list', function() {
+        it('should change active item', function() {
             var items = getFakeItems(10);
+
+            inst.init();
+
+            inst.updateItems(items, 2);
+
+            expect(inst.active).toBe(2);
+        });
+
+        it('should trigger _updateVisible', function() {
+            spyOn(inst, '_updateVisible');
+
+            var items = getFakeItems(10);
+
+            inst.init();
+
+            expect(inst._updateVisible).not.toHaveBeenCalled();
+
+            inst.updateItems(items, 2);
+
+            expect(inst._updateVisible).toHaveBeenCalled();
+        });
+    });
+
+
+    describe('_updateVisible', function(){
+        var inst, partialItems = [];
+
+        beforeEach(function() {
+            inst = createCarousel({noInit: true});
+            spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function() {
+                return {
+                    list: partialItems
+                };
+            });
+        });
+
+        it('should generate partial list', function() {
+            partialItems = getFakeItems(10);
 
             inst.init();
 
             expect(inst.partialItems.length).toBe(0);
 
-            inst.updateItems(items);
+            inst._updateVisible();
 
-            expect(inst.partialItems.length).not.toBe(0);
+            expect(inst.partialItems.length).toBe(10);
         });
 
         it('should trigger changesTracker update', function() {
@@ -241,15 +279,35 @@ fdescribe('LazyCarousel', function(){
             expect(inst.changesTracker.updateList).toHaveBeenCalled();
         });
 
-        it('should change active item', function() {
+        it('should render partial items', function() {
             var items = getFakeItems(10);
 
             inst.init();
 
-            inst.updateItems(items, 2);
+            inst.updateItems(items);
 
-            expect(inst.active).toBe(2);
+            expect(inst.isSimple).toBe(true);
+            expect(inst.$list.children.length).toBe(10);
         });
+    });
+
+    describe('slideToIndex', function() {
+
+    });
+
+    describe('slideToDir', function() {
+
+        it('', function() {
+            // init
+            // updateItems
+            // expect getPartialItems to have been called with
+            // slideToDir
+            // expect getPartialItems to have been called with
+        });
+    });
+
+    describe('resize event', function() {
+
     });
 
     describe('_addItemPre', function() {
@@ -507,35 +565,6 @@ fdescribe('LazyCarousel', function(){
 
                 res = normalizeIndex(-101, 10);
                 expect(res).toBe(9);
-            });
-        });
-
-        xdescribe('globalToPartialIndex/partialToGlobalIndex', function() {
-            var globalToPartialIndex = LazyCarousel.utils.globalToPartialIndex,
-                partialToGlobalIndex = LazyCarousel.utils.partialToGlobalIndex;
-
-            it('should be defined in utils', function() {
-                expect(globalToPartialIndex).toBeDefined();
-                expect(partialToGlobalIndex).toBeDefined();
-            });
-
-            describe('globalToPartialIndex', function() {
-
-                it('should return correct partial index', function() {
-                    var res;
-
-                    res = globalToPartialIndex(0, 11, 9);
-                    expect(res).toBe(4);
-
-                    res = globalToPartialIndex(0, 11, 3);
-                    expect(res).toBe(1);
-
-                    res = globalToPartialIndex(1, 11, 9);
-                    expect(res).toBe(5);
-
-                    res = globalToPartialIndex(1, 11, 3);
-                    expect(res).toBe(2);
-                });
             });
         });
 

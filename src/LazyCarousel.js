@@ -993,6 +993,12 @@ var LazyCarousel = (function() {
         this.changesTracker.updateList(this.partialItems);
     };
 
+    LazyCarousel.prototype.slideToIndex = function() {
+
+    };
+    LazyCarousel.prototype.slideToDir = function() {
+
+    };
 
     LazyCarousel.prototype._addItemPre = function(item, callback) {
         callback = callback || function(){};
