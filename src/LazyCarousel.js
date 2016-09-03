@@ -961,6 +961,10 @@ var LazyCarousel = (function() {
 
         this._attachHandlers();
 
+        this.resize();
+    };
+
+    LazyCarousel.prototype.resize = function() {
         this._fetchElementsSize();
     };
 
@@ -969,7 +973,7 @@ var LazyCarousel = (function() {
 
         this._fetchElementsSize();
 
-        var res = calculateVisible(this.holderWidth, this.itemWidth, this.items.length);
+        var res = LazyCarousel.utils.calculateVisible(this.holderWidth, this.itemWidth, this.items.length);
 
         this.isSimple = res.isSimple;
         this.visible = res.visible;
@@ -980,7 +984,7 @@ var LazyCarousel = (function() {
         this._updateVisible();
     };
     LazyCarousel.prototype._updateVisible = function() {
-        var partials =  getPartialItems(this.items,
+        var partials =  LazyCarousel.utils.getPartialItems(this.items,
                                         this.active,
                                         this.visible,
                                         this.addition,
@@ -1072,7 +1076,7 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._resizeHandler = function(event) {
-
+        this.resize();
     };
 
     LazyCarousel.prototype.destroy = function() {
