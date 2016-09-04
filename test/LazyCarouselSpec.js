@@ -1,6 +1,6 @@
-var helpers = window.__helpers;
-var utils = window.utils;
-var LazyCarousel = window.LazyCarousel;
+import utils from 'my-utils';
+import * as helpers from './helpers.js';
+import LazyCarousel from '../src/LazyCarousel.js';
 
 function triggerEvent(name, element) {
     var event;
@@ -64,16 +64,16 @@ fdescribe('LazyCarousel', function(){
     }
 
     beforeEach(function(done) {
-        baseStyles = helpers.injectCssByUrl('/base/src/base.css');
-        fixturesStyles = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
+        //baseStyles = helpers.injectCssByUrl('/base/src/base.css');
+        //fixturesStyles = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
 
         $holder = utils.appendElement(document.body, '<div id="test_holder"></div>');
 
         setTimeout(done, 20);
     });
     afterEach(function() {
-        baseStyles.remove();
-        fixturesStyles.remove();
+        //baseStyles.remove();
+        //fixturesStyles.remove();
 
         document.body.removeChild($holder);
     });

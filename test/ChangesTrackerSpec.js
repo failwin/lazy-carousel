@@ -1,6 +1,5 @@
-var utils = window.utils;
-
-var ChangesTracker = window.ChangesTracker;
+import utils from  'my-utils';
+import ChangesTracker from '../src/ChangesTracker.js';
 
 describe('ChangesTracker', function() {
 

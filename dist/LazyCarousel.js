@@ -7,7 +7,7 @@
 		exports["LazyCarousel"] = factory(require("es6-promise"), require("my-utils"), require("angular"));
 	else
 		root["LazyCarousel"] = factory(root["ES6Promise"], root["utils"], root["angular"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_8__, __WEBPACK_EXTERNAL_MODULE_11__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_5__, __WEBPACK_EXTERNAL_MODULE_11__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -72,7 +72,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _LazyCarousel2 = _interopRequireDefault(_LazyCarousel);
 
-	var _SwipeDecorator = __webpack_require__(7);
+	var _SwipeDecorator = __webpack_require__(8);
 
 	var _SwipeDecorator2 = _interopRequireDefault(_SwipeDecorator);
 
@@ -112,11 +112,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _events = __webpack_require__(4);
 
-	var _ChangesTracker = __webpack_require__(5);
+	var _myUtils = __webpack_require__(5);
+
+	var _myUtils2 = _interopRequireDefault(_myUtils);
+
+	var _ChangesTracker = __webpack_require__(6);
 
 	var _ChangesTracker2 = _interopRequireDefault(_ChangesTracker);
 
-	var _base = __webpack_require__(6);
+	var _base = __webpack_require__(7);
 
 	var _base2 = _interopRequireDefault(_base);
 
@@ -133,8 +137,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var LazyCarousel = function () {
 	    function LazyCarousel(elem, opts) {
-	        this.opts = utils.extend({}, this.defOpts);
-	        this.opts = utils.extend(this.opts, opts);
+	        this.opts = _myUtils2.default.extend({}, this.defOpts);
+	        this.opts = _myUtils2.default.extend(this.opts, opts);
 
 	        this.$events = null;
 
@@ -228,7 +232,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        callback = callback || function () {};
 
 	        var itemStr = this._getItemTemplate(item),
-	            $item = utils.createElement(itemStr);
+	            $item = _myUtils2.default.createElement(itemStr);
 
 	        callback($item);
 	    };
@@ -258,7 +262,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (item) {
 	            this.itemWidth = item.clientWidth;
 	        } else {
-	            item = utils.appendElement(this.$list, '<li class="item"></li>');
+	            item = _myUtils2.default.appendElement(this.$list, '<li class="item"></li>');
 	            this.itemWidth = item.clientWidth;
 	            this.$list.removeChild(item);
 	        }
@@ -767,6 +771,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 5 */
 /***/ function(module, exports) {
 
+	module.exports = __WEBPACK_EXTERNAL_MODULE_5__;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
@@ -1055,13 +1065,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = ChangesTracker;
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1072,7 +1082,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SwipeDecorator = SwipeDecorator;
 	exports.default = swipeDecorator;
 
-	var _myUtils = __webpack_require__(8);
+	var _myUtils = __webpack_require__(5);
 
 	var _myUtils2 = _interopRequireDefault(_myUtils);
 
@@ -1348,12 +1358,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 8 */
-/***/ function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_8__;
-
-/***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1365,7 +1369,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.KeyHandlerDecorator = KeyHandlerDecorator;
 	exports.default = keyHandlerDecorator;
 
-	var _myUtils = __webpack_require__(8);
+	var _myUtils = __webpack_require__(5);
 
 	var _myUtils2 = _interopRequireDefault(_myUtils);
 
@@ -1434,7 +1438,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _angular2 = _interopRequireDefault(_angular);
 
-	var _myUtils = __webpack_require__(8);
+	var _myUtils = __webpack_require__(5);
 
 	var _myUtils2 = _interopRequireDefault(_myUtils);
 
@@ -1442,7 +1446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _LazyCarousel2 = _interopRequireDefault(_LazyCarousel);
 
-	var _SwipeDecorator = __webpack_require__(7);
+	var _SwipeDecorator = __webpack_require__(8);
 
 	var _SwipeDecorator2 = _interopRequireDefault(_SwipeDecorator);
 

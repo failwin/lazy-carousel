@@ -1,7 +1,8 @@
-var utils = window.utils;
-var LazyCarousel = window.LazyCarousel;
-var swipeDecorator = window.swipeDecorator;
-var keyHandlerDecorator = window.keyHandlerDecorator;
+import utils from  'my-utils';
+import * as helpers from './helpers.js';
+import LazyCarousel from '../src/LazyCarousel.js';
+import swipeDecorator from '../src/decorators/SwipeDecorator.js';
+import keyHandlerDecorator from '../src/decorators/KeyHandlerDecorator.js';
 
 describe('MyLazyCarouselAngular', function() {
     var $compile, $rootScope, root;

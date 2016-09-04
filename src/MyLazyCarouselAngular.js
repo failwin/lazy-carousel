@@ -1,8 +1,9 @@
 import angular from 'angular';
 import utils from 'my-utils';
 import LazyCarousel_ from './LazyCarousel.js';
-import swipeDecorator from './SwipeDecorator.js';
-import keyHandlerDecorator from './KeyHandlerDecorator.js';
+
+import swipeDecorator from './decorators/SwipeDecorator.js';
+import keyHandlerDecorator from './decorators/KeyHandlerDecorator.js';
 
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 

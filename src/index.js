@@ -1,6 +1,6 @@
 import LazyCarousel from './LazyCarousel.js';
-import swipeDecorator, { SwipeDecorator } from './SwipeDecorator.js';
-import keyHandlerDecorator, { KeyHandlerDecorator } from './KeyHandlerDecorator.js';
+import swipeDecorator, { SwipeDecorator } from './decorators/SwipeDecorator.js';
+import keyHandlerDecorator, { KeyHandlerDecorator } from './decorators/KeyHandlerDecorator.js';
 import myLazyCarouselModule from './MyLazyCarouselAngular.js';
 
 

@@ -19,6 +19,26 @@ var entry = {
     LazyCarousel: ['./src/index.js']
 };
 
+/* output */
+
+var output = {
+    chunkFilename: '[name].js',
+    path: path.resolve('./dist'),
+    publicPath: '/dist/',
+    filename: '[name].js',
+    library: '[name]',
+    libraryTarget: 'umd'
+};
+
+if (isProd) {
+    output.filename = '[name].min.js'
+}
+
+if (isTest) {
+    delete output.library;
+    delete output.libraryTarget;
+}
+
 /* preLoaders */
 
 var preLoaders = [
@@ -97,17 +117,33 @@ if (isTest) {
     plugins = [];
 }
 
+/* externals */
+
+var externals = {
+    'es6-promise': {
+        root: "ES6Promise",
+        commonjs2: 'es6-promise',
+        commonjs: 'es6-promise',
+        amd: 'es6-promise'
+    },
+    'my-utils': {
+        root: "utils",
+        commonjs2: 'my-utils',
+        commonjs: 'my-utils',
+        amd: 'my-utils'
+    },
+    angular: 'angular'
+    //events: 'events'
+};
+
+if (isTest) {
+    externals = {};
+}
+
 module.exports = {
 	entry: entry,
 
-	output: {
-        chunkFilename: '[name].js',
-        path: path.resolve('./dist'),
-        publicPath: '/dist/',
-		filename: '[name]'+ (isProd ? '.min' : '') +'.js',
-        library: '[name]',
-        libraryTarget: 'umd'
-	},
+	output: output,
 
     debug: isDev,
     devtool: isDev ? (isTest ? 'inline-source-map' : 'cheap-source-map') : false,
@@ -151,20 +187,5 @@ module.exports = {
         failOnError: true
     },
 
-    externals: {
-        'es6-promise': {
-            root: "ES6Promise",
-            commonjs2: 'es6-promise',
-            commonjs: 'es6-promise',
-            amd: 'es6-promise'
-        },
-        'my-utils': {
-            root: "utils",
-            commonjs2: 'my-utils',
-            commonjs: 'my-utils',
-            amd: 'my-utils'
-        },
-        angular: 'angular'
-        //events: 'events'
-    }
+    externals: externals
 };

@@ -31,9 +31,9 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-        './tests/index.js': ['webpack', 'sourcemap'],
-        './tests/**/*.js': ['webpack', 'sourcemap'],
-        './js/**/*.spec.js': ['webpack', 'sourcemap']
+        './test/index.js': ['webpack', 'sourcemap'],
+        './test/**/*.js': ['webpack', 'sourcemap'],
+        //'./js/**/*.spec.js': ['webpack', 'sourcemap']
     },
 
 
@@ -69,7 +69,6 @@ module.exports = function(config) {
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
 
-    autoWatch: true,
     autoWatchBatchDelay: 1000,
 
     webpack: webpackConf,
