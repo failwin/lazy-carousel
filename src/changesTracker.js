@@ -1,18 +1,3 @@
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("ChangesTracker", [], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        module.exports = factory();
-    } else {
-        // Browser globals
-        global.ChangesTracker = factory();
-    }
-})(this, function () {
-
-'use strict';
-
 var NG_REMOVED = '$$MY_NG_REMOVED';
 
 function isArray(obj) {
@@ -211,6 +196,9 @@ var ChangesTracker = (function() {
 
         // remove leftover items
         for (var blockKey in this.lastBlockMap) {
+            if (!this.lastBlockMap.hasOwnProperty(blockKey)) {
+                continue;
+            }
             block = this.lastBlockMap[blockKey];
 
             //$animate.leave(elementsToRemove);
@@ -238,7 +226,7 @@ var ChangesTracker = (function() {
                     nextNode = nextNode.nextSibling;
                 } while (nextNode && nextNode[NG_REMOVED]);
 
-                if (block.element != nextNode) {
+                if (block.element !== nextNode) {
                     // existing item which got moved
 
                     // $animate.move(getBlockNodes(block.clone), null, previousNode);
@@ -249,7 +237,9 @@ var ChangesTracker = (function() {
                 // new item which we don't know about
                 block.data = value;
 
+                /*eslint-disable */
                 this.opts.beforeAdd(block.data, function(elem) {
+                /*eslint-enable */
                     // $animate.enter(clone, null, previousNode);
                     domInsert(elem, null, previousNode);
 
@@ -266,8 +256,10 @@ var ChangesTracker = (function() {
 
         // real removing
         for (var i = 0, l = removed.length; i < l; i++) {
-            var block = removed[i];
+            block = removed[i];
+            /*eslint-disable */
             this.opts.beforeRemove(block.data, block.element, function(){
+            /*eslint-enable */
                 this.$element.removeChild(block.element);
                 this.opts.afterRemove(block.data);
                 block = block.data = block.element = null;
@@ -279,7 +271,4 @@ var ChangesTracker = (function() {
     return ChangesTracker;
 })();
 
-// Export
-return ChangesTracker;
-
-});
+export default ChangesTracker;

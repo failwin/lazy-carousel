@@ -119,25 +119,16 @@
     <script src="../node_modules/es6-promise/dist/es6-promise.js"></script>
     <script src="../node_modules/my-utils/src/utils.js"></script>
 
-    <script src="../lib/events/events.js"></script>
-
-    <script src="../src/ChangesTracker.js"></script>
-    <script src="../src/KeyHandlerDecorator.js"></script>
-    <script src="../src/SwipeDecorator.js"></script>
-    <script src="../src/LazyCarousel.js"></script>
-    <script src="../src/MyLazyCarouselAngular.js"></script>
-
-    <!--<script src="../dist/lazy-carousel.js"></script>-->
-
+    <script src="../dist/LazyCarousel.js"></script>
 
     <script src="angular.js"></script>
 
     <script>
         (function(){
-            var LazyCarousel = window.LazyCarousel,
-                keyHandlerDecorator = window.keyHandlerDecorator,
-                swipeDecorator = window.swipeDecorator;
-
+            var LC = window.LazyCarousel;
+            var LazyCarousel = LC.default,
+                keyHandlerDecorator = LC.keyHandlerDecorator,
+                swipeDecorator = LC.swipeDecorator;
 
             var demo1Holder = document.getElementById("demo1");
 

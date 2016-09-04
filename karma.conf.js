@@ -1,5 +1,5 @@
-// Karma configuration
-// Generated on Wed May 25 2016 19:12:11 GMT+0300 (FLE Daylight Time)
+var webpack = require('karma-webpack'),
+    webpackConf = require('./webpack.config.js');
 
 module.exports = function(config) {
   config.set({
@@ -12,36 +12,28 @@ module.exports = function(config) {
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine'],
 
-
     // list of files / patterns to load in the browser
     files: [
-      'node_modules/classlist.js/classList.js',
-      'node_modules/angular/angular.js',
-      'node_modules/angular-mocks/angular-mocks.js',
-      'node_modules/es6-promise/dist/es6-promise.js',
-      'node_modules/my-utils/src/utils.js',
-
-      'lib/events/events.js',
-
-      'src/ChangesTracker.js',
-      'src/SwipeDecorator.js',
-      'src/KeyHandlerDecorator.js',
-      'src/LazyCarousel.js',
-      'src/MyLazyCarouselAngular.js',
-      { pattern: 'src/base.css', included: false },
-      'test/helpers.js',
-      { pattern: 'test/fixtures/**/*.css', included: false },
-      'test/**/*Spec.js'
+        './test/index.js'
     ],
 
     // list of files to exclude
     exclude: [
     ],
 
+    plugins: [
+        'karma-webpack',
+        'karma-sourcemap-loader',
+        'karma-jasmine',
+        'karma-firefox-launcher'
+    ],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+        './tests/index.js': ['webpack', 'sourcemap'],
+        './tests/**/*.js': ['webpack', 'sourcemap'],
+        './js/**/*.spec.js': ['webpack', 'sourcemap']
     },
 
 
@@ -75,6 +67,17 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: false,
+
+    autoWatch: true,
+    autoWatchBatchDelay: 1000,
+
+    webpack: webpackConf,
+    webpackServer: {
+        noInfo: true
+    },
+    webpackMiddleware: {
+        noInfo: true
+    }
   })
-}
+};

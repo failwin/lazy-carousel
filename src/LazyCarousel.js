@@ -1,31 +1,9 @@
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("LazyCarousel", ['es6-promise', 'events', 'my-utils', 'ChangesTracker'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        module.exports = factory(
-            require('es6-promise'),
-            require('events'),
-            require('my-utils'),
-            require('./ChangesTracker.js')
-        );
-    } else {
-        // Browser globals
-        global.LazyCarousel = factory(
-            global.ES6Promise,
-            global.events,
-            global.utils,
-            global.ChangesTracker
-        );
-    }
-})(this, function (ES6Promise, events, utils, ChangesTracker) {
+import { Promise } from  'es6-promise';
+import { EventEmitter } from 'events';
 
-'use strict';
+import ChangesTracker from './ChangesTracker.js';
 
-// Import
-var Promise = ES6Promise.Promise;
-var EventEmitter = events.EventEmitter;
+import styles from './base.css';
 
 var debug = false;
 var logLevel = ['calls', 'calls res']; // 'calls', 'calls res'
@@ -252,12 +230,14 @@ function calculateVisible(holderWidth, itemWidth, count) {
     };
 }
 
-function getItemInfoById(id, list, _key) {
-    var list = list || [],
+function getItemInfoById(id, _list, _key) {
+    var list = _list || [],
         key = _key || 'id';
 
     for (var i = 0, c = list.length; i < c; i++){
+        /*eslint-disable */
         if (list[i][key] == id) {
+        /*eslint-enable */
             return {
                 index: i,
                 data: list[i]
@@ -289,7 +269,7 @@ function normalizeIndex(index, count) {
 
 function globalToPartialIndex(offset, globalCount, partialCount, _isSimple) {
     if (_isSimple) {
-
+        var a = 1;
     }
     else {
 
@@ -330,7 +310,7 @@ function getPartialItems(list, index, visible, addition, isSimple) {
 
     if (isSimple) {
         // shift list into right by 1
-        if (beforeHalf == afterHalf) {
+        if (beforeHalf === afterHalf) {
             beforeHalf--;
             afterHalf++;
         }
@@ -365,6 +345,5 @@ LazyCarousel.utils = {
     partialToGlobalIndex: partialToGlobalIndex,
     getPartialItems: getPartialItems
 };
-return LazyCarousel;
 
-});
+export default LazyCarousel;

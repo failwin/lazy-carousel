@@ -1,21 +1,6 @@
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("keyHandlerDecorator", ['my-utils'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        module.exports = factory(require('my-utils'));
-    } else {
-        // Browser globals
-        global.keyHandlerDecorator = factory(global.utils);
-    }
-})(this, function (utils) {
+import utils from 'my-utils';
 
-'use strict';
-
-// Import
-
-var KeyHandlerDecorator = function(base, options) {
+export function KeyHandlerDecorator(base, options) {
     function KeyHandlerDecorator() {
         base.apply(this, arguments);
         this.allowKeyHandlerDecorator = true;
@@ -42,9 +27,9 @@ var KeyHandlerDecorator = function(base, options) {
         }
         var keyCode = event.which || event.keyCode;
 
-        if (keyCode == 39 || keyCode == 37) {
+        if (keyCode === 39 || keyCode === 37) {
             var dir = 1;
-            if (keyCode == 37) {
+            if (keyCode === 37) {
                 dir = -1;
             }
             this.slideTo(dir);
@@ -56,17 +41,11 @@ var KeyHandlerDecorator = function(base, options) {
     };
 
     return KeyHandlerDecorator;
-};
+}
 
-function keyHandlerDecorator(options) {
+export default function keyHandlerDecorator(options) {
     return function(target) {
         return KeyHandlerDecorator(target, options);
     }
 }
-
-// Export
-keyHandlerDecorator.KeyHandlerDecorator = KeyHandlerDecorator;
-return keyHandlerDecorator;
-
-});
 

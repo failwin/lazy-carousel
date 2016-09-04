@@ -1,19 +1,4 @@
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("swipeDecorator", ['my-utils'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        module.exports = factory(require('my-utils'));
-    } else {
-        // Browser globals
-        global.swipeDecorator = factory(global.utils);
-    }
-})(this, function (utils) {
-
-'use strict';
-
-// Import
+import utils from 'my-utils';
 
 //function debugStr(str, replace){
 //    var elem = document.getElementById('console');
@@ -23,7 +8,7 @@
 //    utils.appendElement(elem, str + '<br />');
 //}
 
-var SwipeDecorator = function(base, options) {
+export function SwipeDecorator(base, options) {
     function SwipeDecorator() {
         base.apply(this, arguments);
 
@@ -43,7 +28,7 @@ var SwipeDecorator = function(base, options) {
 
         this.swipe._targetCount = 0;
         this.swipe._dir = 1;
-    };
+    }
     utils.inherits(SwipeDecorator, base);
 
     SwipeDecorator.prototype.defOpts = utils.extend({
@@ -146,7 +131,7 @@ var SwipeDecorator = function(base, options) {
             if (swipeDir === null) {
                 return;
             }
-            else if (swipeDir == 'up' || swipeDir == 'down') {
+            else if (swipeDir === 'up' || swipeDir === 'down') {
                 this.swipe._isActive = false;
                 return;
             }
@@ -276,17 +261,10 @@ var SwipeDecorator = function(base, options) {
     };
 
     return SwipeDecorator;
-};
+}
 
-function swipeDecorator(options) {
+export default function swipeDecorator(options) {
     return function(target) {
         return SwipeDecorator(target, options);
     }
 }
-
-// Export
-swipeDecorator.SwipeDecorator = SwipeDecorator;
-return swipeDecorator;
-
-});
-

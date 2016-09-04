@@ -136,7 +136,7 @@ var LazyCarousel = (function() {
 
         this._holderWidth = _holderWidth || this.$wrapper.clientWidth;
 
-        if (typeof _itemWidth != 'undefined') {
+        if (typeof _itemWidth !== 'undefined') {
             this._itemWidth = _itemWidth;
         }
         else if (this.$list.firstChild && this.$list.firstChild.tagName === 'LI') {
@@ -182,13 +182,13 @@ var LazyCarousel = (function() {
 
         if (this._count && visible >= this._count + 1) {
             visible = this._count;
-            if (visible != this._visible) {
+            if (visible !== this._visible) {
                 innerUpdate = true;
             }
         }
 
         if (this._count && visible * 3 >= this._count) {
-            if (visible != this._visible) {
+            if (visible !== this._visible) {
                 innerUpdate = true;
             }
             this._isSimple = true;
@@ -213,7 +213,7 @@ var LazyCarousel = (function() {
         if (noUpdate) {
             this._visible = visible;
         }
-        else if (visible != this._visible || innerUpdate) {
+        else if (visible !== this._visible || innerUpdate) {
             this._visible = visible;
             this._updateVisible();
         }
@@ -293,7 +293,7 @@ var LazyCarousel = (function() {
             this._isBusy = true;
 
             var count = 0;
-            if (typeof _count == 'undefined') {
+            if (typeof _count === 'undefined') {
                 count = 1;
             }
             else {
@@ -372,7 +372,7 @@ var LazyCarousel = (function() {
                 dir = dir > 0 ? 1 : -1;
 
                 if (newIndex >= 0 && count > 0) {
-                    var slideToPromise = this.slideTo(dir, count);
+                    slideToPromise = this.slideTo(dir, count);
 
                     return resolve(slideToPromise);
                 }
@@ -464,7 +464,7 @@ var LazyCarousel = (function() {
                 var delta = opts.easing(progress);
                 opts.step(delta);
 
-                if (progress == 1) {
+                if (progress === 1) {
                     clearInterval(id);
                     opts.complete();
                 }
@@ -685,7 +685,7 @@ var LazyCarousel = (function() {
         }
         this._active = active;
 
-        var active = this._getPartialItemByIndex(this._active, _div);
+        active = this._getPartialItemByIndex(this._active, _div);
         //this._getItemById(this._active, this._partialItems, '_id');
 
         if (active){
@@ -712,7 +712,7 @@ var LazyCarousel = (function() {
 
 
         for (var i = 0, c = list.length; i < c; i++){
-            if (list[i][key] == id) {
+            if (list[i][key] === id) {
                 return list[i];
             }
         }
@@ -732,7 +732,7 @@ var LazyCarousel = (function() {
 
 
         for (var i = 0, c = list.length; i < c; i++){
-            if (list[i][key] == id) {
+            if (list[i][key] === id) {
                 result = i;
                 break;
             }
@@ -868,15 +868,15 @@ var LazyCarousel = (function() {
 
         var newActive = 0;
 
-        if (typeof _active != 'undefined') {
+        if (typeof _active !== 'undefined') {
             active = _active;
         }
 
-        if (typeof _count != 'undefined') {
+        if (typeof _count !== 'undefined') {
             count = _count;
         }
 
-        if (count == 0) {
+        if (count === 0) {
             return 0;
         }
 

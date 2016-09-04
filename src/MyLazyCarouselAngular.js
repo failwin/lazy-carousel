@@ -1,31 +1,9 @@
-(function (global, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define("myLazyCarousel", ['angular', 'my-utils', 'LazyCarousel', 'swipeDecorator', 'keyHandlerDecorator'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // CommonJS
-        module.exports = factory(
-            require('angular'),
-            require('my-utils'),
-            require('./LazyCarousel.js'),
-            require('./swipeDecorator.js'),
-            require('./keyHandlerDecorator.js')
-        );
-    } else {
-        // Browser globals
-        global.myLazyCarouselModule = factory(
-            global.angular,
-            global.utils,
-            global.LazyCarousel,
-            global.swipeDecorator,
-            global.keyHandlerDecorator
-        );
-    }
-})(this, function (angular, utils, LazyCarousel_, swipeDecorator, keyHandlerDecorator) {
+import angular from 'angular';
+import utils from 'my-utils';
+import LazyCarousel_ from './LazyCarousel.js';
+import swipeDecorator from './SwipeDecorator.js';
+import keyHandlerDecorator from './KeyHandlerDecorator.js';
 
-'use strict';
-
-// Import
 var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
 // Controller
@@ -77,7 +55,9 @@ var MyLazyCarouselCtrl = (function() {
             $scope.$isActive = false;
 
             $scope.$watch('$carousel.active._id', function (newActiveId) {
+                /*eslint-disable */
                 $scope.$isActive = (newActiveId == item._id) ? true : false;
+                /*eslint-enable */
             });
 
             angular.element($item).append(elem);
@@ -168,9 +148,11 @@ function MyLazyCarouselDirective($timeout) {
 
                 ctrl.$events.on('activeChange', function (data) {
                     var item = data.item;
+                    /*eslint-disable */
                     if ($scope.active && item && $scope.active._id == item._id) {
                         return;
                     }
+                    /*eslint-enable */
 
                     $scope.activeIndex = data.activeIndex;
 
@@ -197,6 +179,4 @@ myLazyCarouselModule.directive('myLazyCarousel', MyLazyCarouselDirective);
 myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
 
 // Export
-return myLazyCarouselModule;
-
-});
+export default myLazyCarouselModule;
