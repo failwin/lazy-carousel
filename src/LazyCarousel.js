@@ -96,6 +96,7 @@ var LazyCarousel = (function() {
         this.active = _active || 0;
 
         this._updateVisible();
+        this._centerList();
     };
     LazyCarousel.prototype._updateVisible = function() {
         var partials =  LazyCarousel.utils.getPartialItems(this.items,
@@ -121,7 +122,7 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._setOffset = function(offsetLeft, _save) {
-        this.$list.style['left'] = offsetLeft + 'px';
+        this.$list.style.left = offsetLeft + 'px';
 
         if (_save){
             this.offsetLeft = offsetLeft;
@@ -131,8 +132,39 @@ var LazyCarousel = (function() {
         return this.offsetLeft;
     };
 
-    LazyCarousel.prototype._calculateOffset = function(activeIndex) {
+    LazyCarousel.prototype._calculateOffset = function(_offset) {
+        var offsetLeft;
 
+        var leftItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
+
+        if (leftItemsCount < 0) {
+            return this.offsetLeft;
+        }
+        // TODO:
+
+        offsetLeft = this.holderWidth/2 - this.itemWidth/2 - (leftItemsCount * this.itemWidth);
+
+        //if (this.isSimple) {
+        //    offsetLeft = this._holderWidth/2 - this._itemWidth/2;
+        //
+        //    offsetLeft = offsetLeft - ((Math.floor(count/2) + index) * this._itemWidth);
+        //}
+        //else {
+        //    if (_isDir) {
+        //        var dir = _index;
+        //        offsetLeft = this._offsetLeft - (dir * this._itemWidth);
+        //    }
+        //    else {
+        //        index = _index || 0; // element at the center
+        //
+        //        offsetLeft = this._holderWidth/2 - this._itemWidth/2;
+        //
+        //        offsetLeft = offsetLeft - (addition + Math.floor(visible/2) + index) * this._itemWidth;
+        //
+        //    }
+        //}
+
+        return offsetLeft;
     };
 
     LazyCarousel.prototype.slideToIndex = function() {
@@ -153,9 +185,20 @@ var LazyCarousel = (function() {
         var newIndex = this.active + (dir * count);
         newIndex = LazyCarousel.utils.normalizeIndex(newIndex, this.items.length);
 
-        // TODO: animate
+        return this._animateOffset(newIndex, _fast)
+        .then(function() {
+            this.active = newIndex;
+            this._updateVisible();
+            this._centerList();
+        }.bind(this));
+    };
 
-        this.active = newIndex;
+    LazyCarousel.prototype._animateOffset = function(newIndex, _fast) {
+        return new Promise(function(resolve, reject) {
+            var self = this;
+
+            resolve();
+        }.bind(this));
     };
 
     LazyCarousel.prototype._getMaxSlideCount = function(dir) {
@@ -328,11 +371,14 @@ function normalizeIndex(index, count) {
     return newActive;
 }
 
-function globalToPartialIndex(globalIndex, globalCount, partialCount, _isSimple) {
-    var partialIndex,
+function globalToPartialIndex(index, startIndex, globalCount, partialCount, _isSimple) {
+    var partialIndex = -1,
         beforeHalf,
         afterHalf,
-        normalIndex;
+        normalIndex,
+        afterArr = [],
+        beforeArr = [],
+        arr;
 
     // take before/after count
     beforeHalf = Math.floor(partialCount/2);
@@ -346,46 +392,72 @@ function globalToPartialIndex(globalIndex, globalCount, partialCount, _isSimple)
         }
     }
 
-    //// collect after items
-    //for(var i = index, k = 0; k < afterHalf; i++, k++) {
-    //    normalIndex = normalizeIndex(i, globalCount);
-    //    afterHalfArr.push(list[normalIndex]);
-    //}
-    //
-    //// collect before items
-    //for(var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
-    //    normalIndex = normalizeIndex(j, globalCount);
-    //    beforeHalfArr.push(list[normalIndex]);
-    //}
-
-
-    if (_isSimple) {
-        if (globalIndex > afterHalf) {
-            globalIndex = afterHalf - globalIndex;
-            console.log(globalIndex);
-        }
-        partialIndex = beforeHalf + globalIndex;
-
+    // collect after items
+    for(var i = startIndex, k = 0; k < afterHalf; i++, k++) {
+        normalIndex = normalizeIndex(i, globalCount);
+        afterArr.push(normalIndex);
     }
-    else {
 
-        if (globalIndex > afterHalf) {
-            partialIndex = beforeHalf - ((afterHalf - globalIndex) + globalCount - partialCount)
-
-            //var dif = globalCount - partialCount;
-            //var a = afterHalf - globalIndex;
-            //console.log(a, dif, beforeHalf);
-        }
-        else {
-            partialIndex = beforeHalf + globalIndex;
-        }
-
+    // collect before items
+    for(var j = startIndex - 1, l = 0; l < beforeHalf; j--, l++) {
+        normalIndex = normalizeIndex(j, globalCount);
+        beforeArr.push(normalIndex);
     }
+
+    arr = beforeArr.reverse().concat(afterArr);
+
+    //console.log(arr);
+
+    arr.forEach(function(ii, partInd){
+        if (ii === index) {
+            partialIndex = partInd;
+        }
+    });
 
     return partialIndex;
 }
-function partialToGlobalIndex(index, globalCount, _isSimple) {
+function partialToGlobalIndex(index, startIndex, globalCount, partialCount, _isSimple) {
+    var globalIndex = -1,
+        beforeHalf,
+        afterHalf,
+        normalIndex,
+        afterArr = [],
+        beforeArr = [],
+        arr;
 
+    // take before/after count
+    beforeHalf = Math.floor(partialCount/2);
+    afterHalf = partialCount - beforeHalf;
+
+    if (_isSimple) {
+        // shift list into right by 1
+        if (beforeHalf === afterHalf) {
+            beforeHalf--;
+            afterHalf++;
+        }
+    }
+
+    // collect after items
+    for(var i = startIndex, k = 0; k < afterHalf; i++, k++) {
+        normalIndex = normalizeIndex(i, globalCount);
+        afterArr.push(normalIndex);
+    }
+
+    // collect before items
+    for(var j = startIndex - 1, l = 0; l < beforeHalf; j--, l++) {
+        normalIndex = normalizeIndex(j, globalCount);
+        beforeArr.push(normalIndex);
+    }
+
+    arr = beforeArr.reverse().concat(afterArr);
+
+    //console.log(arr);
+
+    if (typeof arr[index] !== 'undefined') {
+        globalIndex = arr[index];
+    }
+
+    return globalIndex;
 }
 
 function getPartialItems(list, index, visible, addition, isSimple) {

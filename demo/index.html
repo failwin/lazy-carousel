@@ -131,10 +131,7 @@
                 swipeDecorator = LC.swipeDecorator;
 
             var demo1Holder = document.getElementById("demo1");
-
-            var LazyCarouselWithKeysAndSwipe = swipeDecorator({})(keyHandlerDecorator({})(LazyCarousel));
-
-            var demo1 = new LazyCarouselWithKeysAndSwipe(demo1Holder, {debug: true});
+            var demo1 = new LazyCarousel(demo1Holder, {debug: true});
 
             demo1._getItemTemplate = function(item) {
                 return '<li class="item" data-id="'+ item.id +'">'+ item.id +'</li>';

@@ -310,7 +310,8 @@ fdescribe('LazyCarousel', function(){
         var inst,
             elem,
             items,
-            partialItems = [];
+            partialItems = [],
+            animatePromise;
 
         beforeEach(function() {
             var html =  '<div id="testCarousel">' +
@@ -330,6 +331,10 @@ fdescribe('LazyCarousel', function(){
                 };
             });
 
+            spyOn(inst, '_animateOffset').and.callFake(function(){
+                return Promise.resolve();
+            });
+
             items = getFakeItems(10);
             partialItems = getFakeItems([1,2,3,4,5]);
 
@@ -341,37 +346,78 @@ fdescribe('LazyCarousel', function(){
 
         });
 
-        it('should check maximum offset', function() {
+        it('should check maximum offset', function(done) {
             spyOn(inst, '_getMaxSlideCount');
 
-            inst.slideToDir(1);
+            inst.slideToDir(1)
+            .then(function(){
+                expect(inst._getMaxSlideCount).toHaveBeenCalled();
+                expect(inst._getMaxSlideCount).toHaveBeenCalledWith(1);
 
-            expect(inst._getMaxSlideCount).toHaveBeenCalled();
-            expect(inst._getMaxSlideCount).toHaveBeenCalledWith(1);
+                done();
+            });
         });
 
-        it('should update active index', function() {
+        it('should update active index', function(done) {
             expect(inst.active).toBe(0);
 
-            inst.slideToDir(1);
+            inst.slideToDir(1)
+            .then(function(){
+                expect(inst.active).toBe(1);
 
-            expect(inst.active).toBe(1);
+                done();
+            });
         });
 
-        it('should update active index for negative dir', function() {
+        it('should update active index for negative dir', function(done) {
             expect(inst.active).toBe(0);
 
-            inst.slideToDir(-1);
+            inst.slideToDir(-1)
+            .then(function(){
+                expect(inst.active).toBe(items.length - 1);
 
-            expect(inst.active).toBe(items.length - 1);
+                done();
+            });
         });
 
-        xit('should ask for new items with new offset', function() {
+        it('should ask for new items with new offset', function(done) {
             LazyCarousel.utils.getPartialItems.calls.reset();
 
-            inst.slideToDir(1);
+            inst.slideToDir(1)
+            .then(function(){
+                expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalled();
+                expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalledWith(
+                    items,
+                    1,
+                    jasmine.any(Number),
+                    jasmine.any(Number),
+                    jasmine.any(Boolean)
+                );
 
-            expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalled();
+                done();
+            });
+        });
+
+        it('should trigger items update', function(done) {
+            spyOn(inst, '_updateVisible');
+
+            inst.slideToDir(1)
+            .then(function(){
+                expect(inst._updateVisible).toHaveBeenCalled();
+
+                done();
+            });
+        });
+
+        it('should trigger list centering', function(done) {
+            spyOn(inst, '_centerList');
+
+            inst.slideToDir(1)
+            .then(function(){
+                expect(inst._centerList).toHaveBeenCalled();
+
+                done();
+            });
         });
     });
 
@@ -575,7 +621,7 @@ fdescribe('LazyCarousel', function(){
 
             var expectedOffset = getOffsetLeft(
                 inst.itemWidth,
-                inst.itemWidth,
+                inst.itemWidth
             );
 
             expect(inst.isSimple).toBe(true);
@@ -739,47 +785,154 @@ fdescribe('LazyCarousel', function(){
             });
         });
 
-        xdescribe('globalToPartialIndex/partialToGlobalIndex', function() {
-            var globalToPartialIndex = LazyCarousel.utils.globalToPartialIndex,
-                partialToGlobalIndex = LazyCarousel.utils.partialToGlobalIndex;
+        describe('globalToPartialIndex/partialToGlobalIndex', function() {
+            var partialToGlobalIndex = LazyCarousel.utils.partialToGlobalIndex,
+                isSimple;
+
+            beforeEach(function(){
+                isSimple = false;
+            });
 
             it('should be defined in utils', function() {
-                expect(globalToPartialIndex).toBeDefined();
                 expect(partialToGlobalIndex).toBeDefined();
             });
 
-            describe('globalToPartialIndex', function() {
-                var isSimple = false;
+            it('should return correct global index', function() {
+                var res;
+
+                res = partialToGlobalIndex(0, 0, 11, 9, isSimple);
+                expect(res).toBe(7);
+
+                res = partialToGlobalIndex(0, 0, 11, 3, isSimple);
+                expect(res).toBe(10);
+
+                res = partialToGlobalIndex(1, 0, 11, 9, isSimple);
+                expect(res).toBe(8);
+
+                res = partialToGlobalIndex(1, 0, 11, 3, isSimple);
+                expect(res).toBe(0);
+
+                res = partialToGlobalIndex(8, 0, 11, 9, isSimple);
+                expect(res).toBe(4);
+
+                res = partialToGlobalIndex(7, 0, 11, 9, isSimple);
+                expect(res).toBe(3);
+            });
+
+            it('should return -1 if index not found in global', function() {
+                var res;
+
+                res = partialToGlobalIndex(9, 0, 11, 9, isSimple);
+                expect(res).toBe(-1);
+
+                res = partialToGlobalIndex(13, 0, 11, 9, isSimple);
+                expect(res).toBe(-1);
+            });
+
+            fdescribe('simple mode', function(){
+
+                beforeEach(function(){
+                    isSimple = true;
+                });
 
                 it('should return correct partial index', function() {
                     var res;
 
-                    res = globalToPartialIndex(0, 11, 9, isSimple);
+                    res = partialToGlobalIndex(0, 0, 11, 11, isSimple);
+                    expect(res).toBe(6);
+
+                    res = partialToGlobalIndex(1, 0, 11, 11, isSimple);
+                    expect(res).toBe(7);
+
+                    res = partialToGlobalIndex(9, 0, 11, 11, isSimple);
                     expect(res).toBe(4);
 
-                    res = globalToPartialIndex(0, 11, 3, isSimple);
-                    expect(res).toBe(1);
-
-                    res = globalToPartialIndex(1, 11, 9, isSimple);
+                    res = partialToGlobalIndex(10, 0, 11, 11, isSimple);
                     expect(res).toBe(5);
 
-                    res = globalToPartialIndex(1, 11, 3, isSimple);
-                    expect(res).toBe(2);
+                });
 
-                //    res = globalToPartialIndex(11, 11, 9, isSimple);
-                //    expect(res).toBe(3);
-                //
-                //    res = globalToPartialIndex(10, 11, 9, isSimple);
-                //    expect(res).toBe(2);
+                it('should return -1 if not partial range', function() {
+                    var res;
 
+                    res = partialToGlobalIndex(20, 0, 11, 11, isSimple);
+                    expect(res).toBe(-1);
+                });
+            });
 
+        });
 
-                    //res = globalToPartialIndex(11, 11, 9, isSimple);
-                    //expect(res).toBe(3);
-                //
-                //    res = globalToPartialIndex(10, 11, 9, isSimple);
-                //    expect(res).toBe(2);
+        describe('globalToPartialIndex', function() {
+            var globalToPartialIndex = LazyCarousel.utils.globalToPartialIndex,
+                isSimple;
 
+            beforeEach(function(){
+                isSimple = false;
+            });
+
+            it('should be defined in utils', function() {
+                expect(globalToPartialIndex).toBeDefined();
+            });
+
+            it('should return correct partial index', function() {
+                var res;
+
+                res = globalToPartialIndex(0, 0, 11, 9, isSimple);
+                expect(res).toBe(4);
+
+                res = globalToPartialIndex(0, 0, 11, 3, isSimple);
+                expect(res).toBe(1);
+
+                res = globalToPartialIndex(1, 0, 11, 9, isSimple);
+                expect(res).toBe(5);
+
+                res = globalToPartialIndex(1, 0, 11, 3, isSimple);
+                expect(res).toBe(2);
+
+                res = globalToPartialIndex(9, 0, 11, 9, isSimple);
+                expect(res).toBe(2);
+
+                res = globalToPartialIndex(10, 0, 11, 9, isSimple);
+                expect(res).toBe(3);
+
+            });
+
+            it('should return -1 if index not found in partial', function() {
+                var res;
+
+                res = globalToPartialIndex(5, 0, 11, 9, isSimple);
+                expect(res).toBe(-1);
+
+            });
+
+            describe('simple mode', function(){
+
+                beforeEach(function(){
+                    isSimple = true;
+                });
+
+                it('should return correct partial index', function() {
+                    var res;
+
+                    res = globalToPartialIndex(0, 0, 11, 11, isSimple);
+                    expect(res).toBe(5);
+
+                    res = globalToPartialIndex(1, 0, 11, 11, isSimple);
+                    expect(res).toBe(6);
+
+                    res = globalToPartialIndex(9, 0, 11, 11, isSimple);
+                    expect(res).toBe(3);
+
+                    res = globalToPartialIndex(10, 0, 11, 11, isSimple);
+                    expect(res).toBe(4);
+
+                });
+
+                it('should return not -1 for simple mode', function() {
+                    var res;
+
+                    res = globalToPartialIndex(5, 0, 11, 11, isSimple);
+                    expect(res).not.toBe(-1);
                 });
             });
         });
