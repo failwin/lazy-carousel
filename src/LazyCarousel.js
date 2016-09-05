@@ -40,6 +40,7 @@ var LazyCarousel = (function() {
 
         this.holderWidth = null;
         this.itemWidth = null;
+        this.offsetLeft = 0;
 
         this.changesTracker = null;
 
@@ -78,6 +79,7 @@ var LazyCarousel = (function() {
     LazyCarousel.prototype.resize = function() {
         this._fetchElementsSize();
         this._updateVisible();
+        this._centerList();
     };
 
     LazyCarousel.prototype.updateItems = function(items, _active) {
@@ -108,12 +110,70 @@ var LazyCarousel = (function() {
 
         this.changesTracker.updateList(this.partialItems);
     };
+    LazyCarousel.prototype._centerList = function() {
+        var active = this.active,
+            visible = this.visible,
+            addition = this.addition;
+
+        var offsetLeft = this._calculateOffset(this.active);
+
+        this._setOffset(offsetLeft, true);
+    };
+
+    LazyCarousel.prototype._setOffset = function(offsetLeft, _save) {
+        this.$list.style['left'] = offsetLeft + 'px';
+
+        if (_save){
+            this.offsetLeft = offsetLeft;
+        }
+    };
+    LazyCarousel.prototype._getOffset = function() {
+        return this.offsetLeft;
+    };
+
+    LazyCarousel.prototype._calculateOffset = function(activeIndex) {
+
+    };
 
     LazyCarousel.prototype.slideToIndex = function() {
 
     };
-    LazyCarousel.prototype.slideToDir = function() {
+    LazyCarousel.prototype.slideToDir = function(dir, _count, _fast) {
+        var count = 1;
+        if (typeof _count === 'number') {
+            count = _count;
+        }
 
+        var maxCount = this._getMaxSlideCount(dir);
+
+        if (count > maxCount) {
+            count = maxCount;
+        }
+
+        var newIndex = this.active + (dir * count);
+        newIndex = LazyCarousel.utils.normalizeIndex(newIndex, this.items.length);
+
+        // TODO: animate
+
+        this.active = newIndex;
+    };
+
+    LazyCarousel.prototype._getMaxSlideCount = function(dir) {
+        var count;
+
+        if (this.isSimple) {
+            if (dir > 0) {
+                count = this.items.length - this.active - 1;
+            }
+            else {
+                count = this.active;
+            }
+        }
+        else {
+            count = this.visible;
+        }
+
+        return count;
     };
 
     LazyCarousel.prototype._addItemPre = function(item, callback) {
@@ -268,14 +328,61 @@ function normalizeIndex(index, count) {
     return newActive;
 }
 
-function globalToPartialIndex(offset, globalCount, partialCount, _isSimple) {
+function globalToPartialIndex(globalIndex, globalCount, partialCount, _isSimple) {
+    var partialIndex,
+        beforeHalf,
+        afterHalf,
+        normalIndex;
+
+    // take before/after count
+    beforeHalf = Math.floor(partialCount/2);
+    afterHalf = partialCount - beforeHalf;
+
     if (_isSimple) {
-        var a = 1;
+        // shift list into right by 1
+        if (beforeHalf === afterHalf) {
+            beforeHalf--;
+            afterHalf++;
+        }
+    }
+
+    //// collect after items
+    //for(var i = index, k = 0; k < afterHalf; i++, k++) {
+    //    normalIndex = normalizeIndex(i, globalCount);
+    //    afterHalfArr.push(list[normalIndex]);
+    //}
+    //
+    //// collect before items
+    //for(var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
+    //    normalIndex = normalizeIndex(j, globalCount);
+    //    beforeHalfArr.push(list[normalIndex]);
+    //}
+
+
+    if (_isSimple) {
+        if (globalIndex > afterHalf) {
+            globalIndex = afterHalf - globalIndex;
+            console.log(globalIndex);
+        }
+        partialIndex = beforeHalf + globalIndex;
+
     }
     else {
 
-        return normalizeIndex(index, globalCount);
+        if (globalIndex > afterHalf) {
+            partialIndex = beforeHalf - ((afterHalf - globalIndex) + globalCount - partialCount)
+
+            //var dif = globalCount - partialCount;
+            //var a = afterHalf - globalIndex;
+            //console.log(a, dif, beforeHalf);
+        }
+        else {
+            partialIndex = beforeHalf + globalIndex;
+        }
+
     }
+
+    return partialIndex;
 }
 function partialToGlobalIndex(index, globalCount, _isSimple) {
 
@@ -291,7 +398,8 @@ function getPartialItems(list, index, visible, addition, isSimple) {
         afterHalf,
         afterHalfArr = [],
         beforeHalfArr = [],
-        normalIndex;
+        normalIndex,
+        item;
 
 
     if (!list || !list.length) {
@@ -320,13 +428,17 @@ function getPartialItems(list, index, visible, addition, isSimple) {
     // collect after items
     for(var i = index, k = 0; k < afterHalf; i++, k++) {
         normalIndex = normalizeIndex(i, globalCount);
-        afterHalfArr.push(list[normalIndex]);
+        item = list[normalIndex];
+        item.__i = normalIndex; // global index
+        afterHalfArr.push(item);
     }
 
     // collect before items
     for(var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
         normalIndex = normalizeIndex(j, globalCount);
-        beforeHalfArr.push(list[normalIndex]);
+        item = list[normalIndex];
+        item.__i = normalIndex; // global index
+        beforeHalfArr.push(item);
     }
 
     res.list = beforeHalfArr.reverse().concat(afterHalfArr);
