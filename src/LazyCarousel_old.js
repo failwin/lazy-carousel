@@ -426,50 +426,7 @@ var LazyCarousel = (function() {
             return true;
         }.bind(this));
 
-        function move($elem, to, duration, complete, self) {
-            var transformProperty = self._transformProperty,
-                translateZ = self._translateZ,
-                from = self._offsetLeft,
-                delta = to - from;
 
-            animate({
-                duration: duration,
-                step: function(progress) {
-                    var curOffsetLeft = from + delta * progress;
-                    $elem.style[transformProperty] = 'translateX('+ curOffsetLeft +'px) ' + translateZ;
-                },
-                complete: complete
-            });
-        }
-
-        function animate(opts) {
-            var start = Date.now();
-
-            opts.easing = opts.easing || function(p) {
-                return p;
-            };
-
-            opts.duration = opts.duration || 300;
-
-            opts.complete = opts.complete || function(){};
-
-            var id = setInterval(function() {
-                var timePassed = Date.now() - start;
-                var progress = timePassed / opts.duration;
-
-                if (progress > 1) {
-                    progress = 1;
-                }
-
-                var delta = opts.easing(progress);
-                opts.step(delta);
-
-                if (progress === 1) {
-                    clearInterval(id);
-                    opts.complete();
-                }
-            }, opts.delay || 10);
-        }
     };
 
     LazyCarousel.prototype._centerList = function() {

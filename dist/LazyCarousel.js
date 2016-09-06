@@ -162,6 +162,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.itemWidth = null;
 	        this.offsetLeft = 0;
 
+	        this._transformProperty = '';
+	        this._translateZ = '';
+
 	        this.changesTracker = null;
 
 	        if (!this.opts.noInit) {
@@ -190,6 +193,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            beforeRemove: this._removeItemPre.bind(this),
 	            afterRemove: this._removeItemPost.bind(this)
 	        });
+
+	        this._transformProperty = _myUtils2.default.getPrefixedStyleValue('transform');
+	        this._translateZ = _myUtils2.default.supportsPerspective() ? 'translateZ(0)' : '';
 
 	        this._attachHandlers();
 
@@ -232,13 +238,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            visible = this.visible,
 	            addition = this.addition;
 
-	        var offsetLeft = this._calculateOffset(this.active);
+	        var offsetLeft = this._calculateOffset();
 
 	        this._setOffset(offsetLeft, true);
 	    };
 
 	    LazyCarousel.prototype._setOffset = function (offsetLeft, _save) {
-	        this.$list.style.left = offsetLeft + 'px';
+	        this.$list.style[this._transformProperty] = 'translateX(' + offsetLeft + 'px) ' + this._translateZ;
 
 	        if (_save) {
 	            this.offsetLeft = offsetLeft;
@@ -249,36 +255,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    LazyCarousel.prototype._calculateOffset = function (_offset) {
-	        var offsetLeft;
+	        var offsetLeft, leftItemsCount;
 
-	        var leftItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
+	        if (this.isSimple) {
+	            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+	        } else {
+	            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
+	        }
 
 	        if (leftItemsCount < 0) {
 	            return this.offsetLeft;
 	        }
-	        // TODO:
 
 	        offsetLeft = this.holderWidth / 2 - this.itemWidth / 2 - leftItemsCount * this.itemWidth;
 
-	        //if (this.isSimple) {
-	        //    offsetLeft = this._holderWidth/2 - this._itemWidth/2;
-	        //
-	        //    offsetLeft = offsetLeft - ((Math.floor(count/2) + index) * this._itemWidth);
-	        //}
-	        //else {
-	        //    if (_isDir) {
-	        //        var dir = _index;
-	        //        offsetLeft = this._offsetLeft - (dir * this._itemWidth);
-	        //    }
-	        //    else {
-	        //        index = _index || 0; // element at the center
-	        //
-	        //        offsetLeft = this._holderWidth/2 - this._itemWidth/2;
-	        //
-	        //        offsetLeft = offsetLeft - (addition + Math.floor(visible/2) + index) * this._itemWidth;
-	        //
-	        //    }
-	        //}
+	        if (_offset) {
+	            offsetLeft -= _offset * this.itemWidth;
+	        }
 
 	        return offsetLeft;
 	    };
@@ -292,6 +285,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var maxCount = this._getMaxSlideCount(dir);
 
+	        console.log('maxCount - ' + maxCount);
+
 	        if (count > maxCount) {
 	            count = maxCount;
 	        }
@@ -299,23 +294,99 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var newIndex = this.active + dir * count;
 	        newIndex = LazyCarousel.utils.normalizeIndex(newIndex, this.items.length);
 
-	        return this._animateOffset(newIndex, _fast).then(function () {
+	        return this._animateOffset(dir * count, _fast).then(function () {
 	            this.active = newIndex;
 	            this._updateVisible();
 	            this._centerList();
 	        }.bind(this));
 	    };
 
-	    LazyCarousel.prototype._animateOffset = function (newIndex, _fast) {
+	    LazyCarousel.prototype._animateOffset = function (offset, _fast) {
 	        return new _es6Promise.Promise(function (resolve, reject) {
 	            var self = this;
 
+	            var distOffset = this._calculateOffset(offset),
+	                duration = 500;
+
+	            console.log('offset - ' + offset);
+	            console.log('from - ' + this.offsetLeft);
+	            console.log('to - ' + distOffset);
+
+	            if (_fast) {
+	                this._setOffset(distOffset);
+	                resolve();
+	            } else {
+	                //if (utils.supportsTransitions()) {
+	                //    // css3 transition
+	                //    utils.animateCss(this.$list,
+	                //        {
+	                //            'transform' : 'translateX('+ distOffset +'px) ' + this._translateZ
+	                //        },
+	                //        {
+	                //            duration : duration,
+	                //            onComplete : resolve
+	                //        }
+	                //    );
+	                //}
+	                //else {
+	                //
+	                //}
+	                move(this.$list, distOffset, duration, resolve, this);
+	            }
+
 	            resolve();
 	        }.bind(this));
+
+	        function move($elem, to, duration, complete, self) {
+	            var transformProperty = self._transformProperty,
+	                translateZ = self._translateZ,
+	                from = self.offsetLeft,
+	                delta = to - from;
+
+	            animate({
+	                duration: duration,
+	                step: function step(progress) {
+	                    var curOffsetLeft = from + delta * progress;
+	                    $elem.style[transformProperty] = 'translateX(' + curOffsetLeft + 'px) ' + translateZ;
+	                },
+	                complete: complete
+	            });
+	        }
+
+	        function animate(opts) {
+	            var start = Date.now();
+
+	            opts.easing = opts.easing || function (p) {
+	                return p;
+	            };
+
+	            opts.duration = opts.duration || 300;
+
+	            opts.complete = opts.complete || function () {};
+
+	            var id = setInterval(function () {
+	                var timePassed = Date.now() - start;
+	                var progress = timePassed / opts.duration;
+
+	                if (progress > 1) {
+	                    progress = 1;
+	                }
+
+	                var delta = opts.easing(progress);
+	                opts.step(delta);
+
+	                if (progress === 1) {
+	                    clearInterval(id);
+	                    opts.complete();
+	                }
+	            }, opts.delay || 10);
+	        }
 	    };
 
 	    LazyCarousel.prototype._getMaxSlideCount = function (dir) {
 	        var count;
+
+	        // TODO: test
 
 	        if (this.isSimple) {
 	            if (dir > 0) {
