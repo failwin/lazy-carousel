@@ -16,7 +16,8 @@ var vendorPackages = Object.keys(pkg.dependencies);
 /* entry */
 
 var entry = {
-    LazyCarousel: ['./src/index.js']
+    LazyCarousel: ['./src/index.js'],
+    MyNgLazyCarousel: ['./src/indexAngular.js']
 };
 
 /* output */

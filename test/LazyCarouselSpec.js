@@ -111,80 +111,6 @@ describe('LazyCarousel', function(){
         });
     });
 
-    describe('resize', function() {
-        var inst;
-
-        beforeEach(function() {
-            inst = createCarousel({});
-        });
-
-        afterEach(function() {
-
-        });
-
-        it('should trigger "_fetchElementsSize" function', function() {
-            inst.init();
-
-            spyOn(inst, '_fetchElementsSize');
-
-            inst.resize();
-
-            expect(inst._fetchElementsSize).toHaveBeenCalled();
-        });
-
-        it('should trigger "_updateVisible" function', function() {
-            inst.init();
-
-            spyOn(inst, '_updateVisible');
-
-            inst.resize();
-
-            expect(inst._updateVisible).toHaveBeenCalled();
-        });
-
-        it('should trigger "_centerList" function', function() {
-            inst.init();
-
-            spyOn(inst, '_centerList');
-
-            inst.resize();
-
-            expect(inst._centerList).toHaveBeenCalled();
-        });
-
-        describe('resize calls', function() {
-            beforeEach(function() {
-                spyOn(inst, 'resize');
-            });
-
-            it('should be called immediately on init', function() {
-                inst.init();
-
-                expect(inst.resize).toHaveBeenCalled();
-            });
-
-            it('should be called on resize event', function() {
-                inst.init();
-
-                simulateEvent.simulate(window, 'resize');
-
-                expect(inst.resize).toHaveBeenCalled();
-            });
-
-            it('should not be called after destroy', function() {
-                inst.init();
-
-                inst.resize.calls.reset();
-
-                inst.destroy();
-
-                simulateEvent.simulate(window, 'resize');
-
-                expect(inst.resize).not.toHaveBeenCalled();
-            });
-        });
-    });
-
     describe('updateItems', function() {
         var inst,
             elem,
@@ -278,8 +204,6 @@ describe('LazyCarousel', function(){
             animatePromise = new Promise(function(resolve) {
                 window.setTimeout(resolve, 10);
             });
-
-
         });
 
         afterEach(function() {
@@ -436,6 +360,391 @@ describe('LazyCarousel', function(){
             });
         });
 
+    });
+
+    describe('slideToIndex', function() {
+        var inst,
+            elem,
+            items,
+            animatePromise;
+
+        beforeEach(function() {
+            elem = createElement(createCarousel.html);
+            inst = createCarousel({}, elem);
+
+            spyOn(inst, '_animateOffset').and.callFake(function(){
+                return animatePromise;
+            });
+
+            animatePromise = new Promise(function(resolve) {
+                window.setTimeout(resolve, 10);
+            });
+
+            inst.init();
+        });
+
+        afterEach(function() {
+
+        });
+
+        describe('simple mode', function() {
+            beforeEach(function(){
+                items = getFakeItems(10);
+                inst.updateItems(items);
+
+                expect(inst.isSimple).toBe(true);
+            });
+
+            it('should slide to appropriate index', function(done) {
+
+                inst.slideToIndex(1)
+                .then(function(){
+                    expect(inst.active).toBe(1);
+                })
+                .then(function(){
+                    return inst.slideToIndex(3);
+                })
+                .then(function(){
+                    expect(inst.active).toBe(3);
+                })
+                .then(function(){
+                    return inst.slideToIndex(9);
+                })
+                .then(function(){
+                    expect(inst.active).toBe(9);
+                })
+                .then(function(){
+                    done();
+                });
+            });
+
+            it('should ignore index which does not exit in partial list', function(done) {
+
+                inst.slideToIndex(1)
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        return inst.slideToIndex(10);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        done();
+                    });
+            });
+        });
+
+        describe('complex mode', function() {
+            beforeEach(function(){
+                items = getFakeItems(50);
+                inst.updateItems(items);
+
+                expect(inst.isSimple).toBe(false);
+            });
+
+            it('should slide to appropriate index', function(done) {
+
+                inst.slideToIndex(1)
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        return inst.slideToIndex(3);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(3);
+                    })
+                    .then(function(){
+                        return inst.slideToIndex(49);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(49);
+                    })
+                    .then(function(){
+                        done();
+                    });
+            });
+
+            it('should ignore index which does not exit in partial list', function(done) {
+
+                inst.slideToIndex(1)
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        return inst.slideToIndex(25);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        done();
+                    });
+            });
+        });
+
+    });
+
+    describe('events', function(){
+
+        describe('activeChange', function(){
+            var inst,
+                items,
+                log,
+                animateFn;
+
+            beforeEach(function(){
+                inst = createCarousel({});
+                items = getFakeItems(10);
+                log = [];
+
+                inst.$events.on('activeChange', function(data) {
+                    log.push(data.active);
+                });
+
+                spyOn(inst, '_animateOffset').and.callFake(function(){
+                    return animateFn();
+                });
+
+                animateFn = function(){
+                    return new Promise(function(resolve) {
+                        window.setTimeout(resolve, 10);
+                    });
+                };
+
+                inst.init();
+            });
+
+            it('should fire "activeChange" after "updateItems" call', function(){
+                inst.updateItems(items);
+
+                expect(log).toEqual([0]);
+            });
+
+            it('should fire "activeChange" after "updateItems" call with some init value', function(){
+                inst.updateItems(items, 3);
+
+                expect(log).toEqual([3]);
+            });
+
+            it('should fire "activeChange" after "slideToDir" call', function(done){
+                inst.updateItems(items);
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(log).toEqual([0, 1]);
+                        done();
+                    });
+            });
+
+            it('should fire "activeChange" before "_animateOffset" if CSS transition supports', function(done) {
+                inst.updateItems(items);
+
+                spyOn(utils, 'supportsTransitions').and.callFake(function(){
+                    return true;
+                });
+
+                animateFn = function(){
+                    log.push('animation');
+                    return new Promise(function(resolve) {
+                        window.setTimeout(resolve, 10);
+                    });
+                };
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(log).toEqual([0, 1, 'animation']);
+                        done();
+                    });
+            });
+
+            it('should fire "activeChange" after "_animateOffset" if CSS transition not supports', function(done){
+                inst.updateItems(items);
+
+                spyOn(utils, 'supportsTransitions').and.callFake(function(){
+                    return false;
+                });
+
+                animateFn = function(){
+                    log.push('animation');
+                    return new Promise(function(resolve) {
+                        window.setTimeout(resolve, 10);
+                    });
+                };
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(log).toEqual([0, 'animation', 1]);
+                        done();
+                    });
+            });
+        });
+
+        describe('navChange', function(){
+            var inst,
+                items,
+                log,
+                animatePromise;
+
+            beforeEach(function() {
+                inst = createCarousel({});
+                items = getFakeItems(3);
+                log = [];
+
+                inst.$events.on('navChange', function(data) {
+                    log.push(data);
+                });
+
+                spyOn(inst, '_animateOffset').and.callFake(function(){
+                    return animatePromise;
+                });
+
+                animatePromise =  new Promise(function(resolve) {
+                    window.setTimeout(resolve, 10);
+                });
+
+                inst.init();
+            });
+
+            it('should fire "navChange" after "resize" call', function() {
+                inst.updateItems(items);
+
+                inst.resize();
+
+                expect(log).toEqual([{
+                    prev: true,
+                    next: true
+                }]);
+            });
+
+            it('should not fire "navChange" if options did not changed', function() {
+                inst.updateItems(items);
+
+                inst.resize();
+                inst.resize();
+                inst.resize();
+
+                expect(log).toEqual([{
+                    prev: true,
+                    next: true
+                }]);
+            });
+
+            it('should fire "navChange" after "updateItems" call', function() {
+                inst.updateItems(items);
+
+                expect(log).toEqual([{
+                    prev: true,
+                    next: true
+                }]);
+            });
+
+            it('should fire "navChange" after "slideToDir" call', function(done){
+                inst.updateItems(items);
+
+                inst.slideToDir(1)
+                .then(function(){
+                    expect(log).toEqual([
+                        {
+                            prev: true,
+                            next: true
+                        },
+                        {
+                            prev: true,
+                            next: false
+                        }
+                    ]);
+
+                    done();
+                });
+            });
+        });
+    });
+
+    describe('resize', function() {
+        var inst;
+
+        beforeEach(function() {
+            inst = createCarousel({});
+        });
+
+        afterEach(function() {
+
+        });
+
+        it('should trigger "_fetchElementsSize" function', function() {
+            inst.init();
+
+            spyOn(inst, '_fetchElementsSize');
+
+            inst.resize();
+
+            expect(inst._fetchElementsSize).toHaveBeenCalled();
+        });
+
+        it('should trigger "_calculateVisibility" function', function() {
+            inst.init();
+
+            spyOn(inst, '_calculateVisibility');
+
+            inst.resize();
+
+            expect(inst._calculateVisibility).toHaveBeenCalled();
+        });
+
+        it('should trigger "_updateVisible" function', function() {
+            inst.init();
+
+            spyOn(inst, '_updateVisible');
+
+            inst.resize();
+
+            expect(inst._updateVisible).toHaveBeenCalled();
+        });
+
+        it('should trigger "_centerList" function', function() {
+            inst.init();
+
+            spyOn(inst, '_centerList');
+
+            inst.resize();
+
+            expect(inst._centerList).toHaveBeenCalled();
+        });
+
+        describe('resize calls', function() {
+            beforeEach(function() {
+                spyOn(inst, 'resize');
+            });
+
+            it('should be called immediately on init', function() {
+                inst.init();
+
+                expect(inst.resize).toHaveBeenCalled();
+            });
+
+            it('should be called on resize event', function() {
+                inst.init();
+
+                simulateEvent.simulate(window, 'resize');
+
+                expect(inst.resize).toHaveBeenCalled();
+            });
+
+            it('should not be called after destroy', function() {
+                inst.init();
+
+                inst.resize.calls.reset();
+
+                inst.destroy();
+
+                simulateEvent.simulate(window, 'resize');
+
+                expect(inst.resize).not.toHaveBeenCalled();
+            });
+        });
     });
 
 
@@ -1210,6 +1519,13 @@ describe('LazyCarousel', function(){
                     res = globalToPartialIndex(1, 0, 5, 5, isSimple);
                     expect(res).toBe(3);
 
+                });
+
+                it('should return correct partial index with some offset', function() {
+                    var res;
+
+                    res = globalToPartialIndex(10, 0, 11, 11, isSimple);
+                    expect(res).toBe(4);
                 });
 
                 it('should return not -1 for simple mode', function() {

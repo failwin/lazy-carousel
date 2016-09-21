@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("es6-promise"), require("my-utils"));
+		module.exports = factory(require("es6-promise"), require("my-utils"), require("angular"));
 	else if(typeof define === 'function' && define.amd)
-		define(["es6-promise", "my-utils"], factory);
+		define(["es6-promise", "my-utils", "angular"], factory);
 	else if(typeof exports === 'object')
-		exports["LazyCarousel"] = factory(require("es6-promise"), require("my-utils"));
+		exports["MyNgLazyCarousel"] = factory(require("es6-promise"), require("my-utils"), require("angular"));
 	else
-		root["LazyCarousel"] = factory(root["ES6Promise"], root["utils"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_5__) {
+		root["MyNgLazyCarousel"] = factory(root["ES6Promise"], root["utils"], root["angular"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_5__, __WEBPACK_EXTERNAL_MODULE_12__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -54,46 +54,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(1);
+	module.exports = __webpack_require__(10);
 
 
 /***/ },
-/* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.KeyHandlerDecorator = exports.keyHandlerDecorator = exports.SwipeDecorator = exports.swipeDecorator = undefined;
-
-	var _LazyCarousel = __webpack_require__(2);
-
-	var _LazyCarousel2 = _interopRequireDefault(_LazyCarousel);
-
-	var _SwipeDecorator = __webpack_require__(8);
-
-	var _SwipeDecorator2 = _interopRequireDefault(_SwipeDecorator);
-
-	var _KeyHandlerDecorator = __webpack_require__(9);
-
-	var _KeyHandlerDecorator2 = _interopRequireDefault(_KeyHandlerDecorator);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = _LazyCarousel2.default;
-	exports.swipeDecorator = _SwipeDecorator2.default;
-	exports.SwipeDecorator = _SwipeDecorator.SwipeDecorator;
-	exports.keyHandlerDecorator = _KeyHandlerDecorator2.default;
-	exports.KeyHandlerDecorator = _KeyHandlerDecorator.KeyHandlerDecorator;
-
-	//export default from './LazyCarousel.js';
-	//export swipeDecorator, { SwipeDecorator } from './SwipeDecorator.js';
-	//export keyHandlerDecorator, { KeyHandlerDecorator } from './KeyHandlerDecorator.js';
-	//export myLazyCarouselModule from './MyLazyCarouselAngular.js';
-
-/***/ },
+/* 1 */,
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1729,8 +1694,252 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	}
 
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.KeyHandlerDecorator = exports.keyHandlerDecorator = exports.SwipeDecorator = exports.swipeDecorator = exports.LazyCarousel = undefined;
+
+	var _LazyCarousel = __webpack_require__(2);
+
+	var _LazyCarousel2 = _interopRequireDefault(_LazyCarousel);
+
+	var _SwipeDecorator = __webpack_require__(8);
+
+	var _SwipeDecorator2 = _interopRequireDefault(_SwipeDecorator);
+
+	var _KeyHandlerDecorator = __webpack_require__(9);
+
+	var _KeyHandlerDecorator2 = _interopRequireDefault(_KeyHandlerDecorator);
+
+	var _MyLazyCarouselAngular = __webpack_require__(11);
+
+	var _MyLazyCarouselAngular2 = _interopRequireDefault(_MyLazyCarouselAngular);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	exports.default = _MyLazyCarouselAngular2.default;
+	exports.LazyCarousel = _LazyCarousel2.default;
+	exports.swipeDecorator = _SwipeDecorator2.default;
+	exports.SwipeDecorator = _SwipeDecorator.SwipeDecorator;
+	exports.keyHandlerDecorator = _KeyHandlerDecorator2.default;
+	exports.KeyHandlerDecorator = _KeyHandlerDecorator.KeyHandlerDecorator;
+
+	//export default from './LazyCarousel.js';
+	//export swipeDecorator, { SwipeDecorator } from './SwipeDecorator.js';
+	//export keyHandlerDecorator, { KeyHandlerDecorator } from './KeyHandlerDecorator.js';
+	//export myLazyCarouselModule from './MyLazyCarouselAngular.js';
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _angular = __webpack_require__(12);
+
+	var _angular2 = _interopRequireDefault(_angular);
+
+	var _myUtils = __webpack_require__(5);
+
+	var _myUtils2 = _interopRequireDefault(_myUtils);
+
+	var _LazyCarousel = __webpack_require__(2);
+
+	var _LazyCarousel2 = _interopRequireDefault(_LazyCarousel);
+
+	var _SwipeDecorator = __webpack_require__(8);
+
+	var _SwipeDecorator2 = _interopRequireDefault(_SwipeDecorator);
+
+	var _KeyHandlerDecorator = __webpack_require__(9);
+
+	var _KeyHandlerDecorator2 = _interopRequireDefault(_KeyHandlerDecorator);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var myLazyCarouselModule = _angular2.default.module('myLazyCarousel', []);
+
+	// Controller
+	var MyLazyCarouselCtrl = function () {
+	    var $timeout;
+
+	    var LazyCarousel = (0, _KeyHandlerDecorator2.default)()((0, _SwipeDecorator2.default)()(_LazyCarousel2.default));
+
+	    function MyLazyCarouselCtrl($scope, _$timeout_) {
+	        $timeout = _$timeout_;
+	        this.$scope = $scope;
+	        this._itemScopeAs = 'item';
+
+	        LazyCarousel.call(this, null, {
+	            noInit: true,
+	            changesTrackerOpts: {
+	                trackById: '_id',
+	                trackByIdFn: function trackByIdFn(key, value, index, trackById) {
+	                    return value[trackById];
+	                }
+	            }
+	        });
+	    }
+	    MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
+	    _myUtils2.default.inherits(MyLazyCarouselCtrl, LazyCarousel);
+
+	    MyLazyCarouselCtrl.prototype.init = function (elem, _transclude) {
+	        this._transclude = _transclude;
+
+	        LazyCarousel.prototype.init.call(this, elem);
+	    };
+
+	    MyLazyCarouselCtrl.prototype._transclude = function ($scope, callback) {
+	        callback = callback || function () {};
+	        callback(false);
+	    };
+	    MyLazyCarouselCtrl.prototype._addItemPost = function (item, $item) {
+	        // compile
+
+	        var itemAs = this.$scope.itemAs || this._itemScopeAs;
+
+	        var childScope = this.$scope.$parent.$new();
+
+	        var self = this;
+	        this._transclude(childScope, function (elem, $scope) {
+	            $scope[itemAs] = item;
+
+	            $scope.$carousel = self.$scope;
+	            $scope.$isActive = false;
+
+	            $scope.$watch('$carousel.active._id', function (newActiveId) {
+	                /*eslint-disable */
+	                $scope.$isActive = newActiveId == item._id ? true : false;
+	                /*eslint-enable */
+	            });
+
+	            _angular2.default.element($item).append(elem);
+
+	            $timeout(function () {
+	                $scope.$digest();
+	            });
+	        });
+	    };
+	    MyLazyCarouselCtrl.prototype._removeItemPre = function (item, $item, callback) {
+	        // destroy
+	        var $scope = _angular2.default.element($item).children().scope();
+	        $scope.$destroy();
+
+	        callback();
+	    };
+	    MyLazyCarouselCtrl.prototype._getItemTemplate = function (item) {
+	        return '<li class="lc-item" data-id="' + item._id + '"></li>';
+	    };
+
+	    return MyLazyCarouselCtrl;
+	}();
+
+	// Directive
+	function MyLazyCarouselDirective($timeout) {
+	    var iid = 1;
+
+	    return {
+	        restrict: 'EA',
+	        transclude: true,
+	        scope: {
+	            items: '=myLazyCarousel',
+	            itemAs: '@itemAs',
+	            activeIndex: '=myLazyCarouselActive'
+	        },
+	        template: '<div class="lc-list_holder">' + '   <ul class="lc-list"></ul>' + '</div>' + '<div class="nav_holder" ng-class="{has_prev: nav.prev, has_next: nav.next}">' + '   <a href="#/prev" ng-click="goTo($event, -1)" class="nav_link prev">' + '       <span class="fonticon fonticon-arrow-left"></span>' + '   </a>' + '   <a href="#/next" ng-click="goTo($event, 1)" class="nav_link next" >' + '       <span class="fonticon fonticon-arrow-right"></span>' + '   </a>' + '</div>',
+	        controller: 'myLazyCarouselCtrl',
+	        compile: function compile(tElement, tAttrs) {
+
+	            return function ($scope, element, attrs, ctrl, transclude) {
+	                $scope._iid = iid++;
+
+	                ctrl.init(element[0], transclude);
+
+	                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
+	                    ctrl.disableKeyHandlerDecorator();
+	                }
+
+	                $scope.active = null;
+	                $scope.nav = {
+	                    prev: false,
+	                    next: false
+	                };
+
+	                $scope.goTo = function ($event, dir) {
+	                    if ($event) {
+	                        $event.preventDefault();
+	                    }
+	                    ctrl.slideTo(parseInt(dir, 10));
+	                };
+
+	                $scope.setActive = function ($event, item) {
+	                    if ($event) {
+	                        $event.preventDefault();
+	                    }
+	                    ctrl.slideToId(item._id);
+	                };
+
+	                $scope.$watch('items', function (newList) {
+	                    ctrl.updateItems(newList || [], $scope.activeIndex);
+	                });
+
+	                //$scope.$watch('activeIndex', function (newActiveIndex) {
+	                //    innerActiveIndex = $scope.activeIndex;
+	                //});
+
+	                $scope.$on('$destroy', ctrl.destroy.bind(ctrl));
+
+	                ctrl.$events.on('activeChange', function (data) {
+	                    var item = data.item;
+	                    /*eslint-disable */
+	                    if ($scope.active && item && $scope.active._id == item._id) {
+	                        return;
+	                    }
+	                    /*eslint-enable */
+
+	                    $scope.activeIndex = data.activeIndex;
+
+	                    $timeout(function () {
+	                        $scope.active = item;
+	                    });
+	                });
+
+	                ctrl.$events.on('navChange', function (nav) {
+	                    $timeout(function () {
+	                        $scope.nav.prev = nav.prev;
+	                        $scope.nav.next = nav.next;
+	                    });
+	                });
+	            };
+	        }
+	    };
+	}
+	MyLazyCarouselDirective.$inject = ['$timeout'];
+
+	myLazyCarouselModule.directive('myLazyCarousel', MyLazyCarouselDirective);
+	myLazyCarouselModule.controller('myLazyCarouselCtrl', MyLazyCarouselCtrl);
+
+	// Export
+	exports.default = myLazyCarouselModule;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_12__;
+
 /***/ }
 /******/ ])
 });
 ;
-//# sourceMappingURL=LazyCarousel.js.map
+//# sourceMappingURL=MyNgLazyCarousel.js.map

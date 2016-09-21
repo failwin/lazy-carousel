@@ -1,9 +1,11 @@
 import LazyCarousel from './LazyCarousel.js';
 import swipeDecorator, { SwipeDecorator } from './decorators/SwipeDecorator.js';
 import keyHandlerDecorator, { KeyHandlerDecorator } from './decorators/KeyHandlerDecorator.js';
+import myLazyCarouselModule from './MyLazyCarouselAngular.js';
 
-export default LazyCarousel;
-export { swipeDecorator, SwipeDecorator, keyHandlerDecorator, KeyHandlerDecorator };
+
+export default myLazyCarouselModule;
+export { LazyCarousel, swipeDecorator, SwipeDecorator, keyHandlerDecorator, KeyHandlerDecorator };
 
 
 //export default from './LazyCarousel.js';

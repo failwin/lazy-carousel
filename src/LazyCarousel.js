@@ -28,6 +28,11 @@ var LazyCarousel = (function() {
 
         this.active = 0;
 
+        this.nav = {
+            prev: false,
+            next: false
+        };
+
         this.isSimple = null;
         this.visible = 0;
         this.addition = 0;
@@ -52,6 +57,8 @@ var LazyCarousel = (function() {
             beforeRemove: this._removeItemPre.bind(this),
             afterRemove: this._removeItemPost.bind(this)
         });
+
+        this._isBusy = false;
     }
 
     LazyCarousel.prototype.defOpts = {
@@ -82,6 +89,8 @@ var LazyCarousel = (function() {
         this._calculateVisibility();
         this._updateVisible();
         this._centerList();
+
+        this._notifyNavChange();
     };
 
     LazyCarousel.prototype.updateItems = function(items, _active) {
@@ -92,6 +101,9 @@ var LazyCarousel = (function() {
         this._calculateVisibility();
         this._updateVisible();
         this._centerList();
+
+        this._notifyActiveChange(this.active, true);
+        this._notifyNavChange();
     };
     LazyCarousel.prototype._fetchElementsSize = function() {
         if (!this.$list || !this.$listHolder) {
@@ -159,6 +171,28 @@ var LazyCarousel = (function() {
         this._setOffset(offsetLeft, true);
     };
 
+    LazyCarousel.prototype._notifyActiveChange = function(active, _force){
+        if (this.active !== active || _force) {
+            this.$events.emit('activeChange', {
+                active: active
+            });
+        }
+    };
+    LazyCarousel.prototype._notifyNavChange = function() {
+        var hasNext = this._getMaxSlideCount(1) > 0 ? true : false,
+            hasPrev = this._getMaxSlideCount(-1) > 0 ? true : false;
+
+        if (this.nav.prev !== hasPrev || this.nav.next !== hasNext) {
+            this.nav.prev = hasPrev;
+            this.nav.next = hasNext;
+
+            this.$events.emit('navChange', {
+                prev: this.nav.prev,
+                next: this.nav.next
+            });
+        }
+    };
+
     LazyCarousel.prototype._setOffset = function(offsetLeft, _save) {
         this.$list.style[this._transformProperty] = 'translateX('+ offsetLeft +'px) ' + this._translateZ;
 
@@ -194,13 +228,35 @@ var LazyCarousel = (function() {
         return offsetLeft;
     };
 
-    LazyCarousel.prototype.slideToIndex = function() {
+    LazyCarousel.prototype.slideToIndex = function(index) {
+        var curPos = LazyCarousel.utils.globalToPartialIndex(this.active,
+                                                            0,
+                                                            this.items.length,
+                                                            this.partialItems.length,
+                                                            this.isSimple);
 
+        var destPos = LazyCarousel.utils.globalToPartialIndex(index,
+                                                            0,
+                                                            this.items.length,
+                                                            this.partialItems.length,
+                                                            this.isSimple);
+        if (curPos < 0 || destPos < 0) {
+            return Promise.resolve();
+        }
+
+        var dir = destPos > curPos ? 1 : -1,
+            count = Math.abs(destPos - curPos);
+
+        return this.slideToDir(dir, count);
     };
     LazyCarousel.prototype.slideToDir = function(dir, _count, _fast) {
         var count = 1;
         if (typeof _count === 'number') {
             count = _count;
+        }
+
+        if (this._isBusy) {
+            return Promise.reject();
         }
 
         var maxCount = this._getMaxSlideCount(dir);
@@ -212,13 +268,28 @@ var LazyCarousel = (function() {
         var newIndex = this.active + (dir * count);
         newIndex = LazyCarousel.utils.normalizeIndex(newIndex, this.items.length);
 
+        if (newIndex === this.active) {
+            return Promise.resolve();
+        }
+
         var fromOffset = this._getOffset(),
             toOffset = this._calculateOffset(dir * count),
             duration = _fast ? 0 : 500;
 
+        this._isBusy = true;
+
+        if (utils.supportsTransitions()) {
+            this._notifyActiveChange(newIndex);
+        }
+
         return this._animateOffset(fromOffset, toOffset, duration)
         .then(function() {
+            if (!utils.supportsTransitions()) {
+                this._notifyActiveChange(newIndex);
+            }
+            this._isBusy = false;
             this.active = newIndex;
+            this._notifyNavChange();
             this._setOffset(toOffset, true);
             this._updateVisible();
             this._centerList();
@@ -240,23 +311,21 @@ var LazyCarousel = (function() {
                 resolve();
             }
             else {
-                move(this.$list, to, from, duration, resolve);
-
-                //if (utils.supportsTransitions()) {
-                //    // css3 transition
-                //    utils.animateCss(this.$list,
-                //        {
-                //            'transform' : 'translateX('+ distOffset +'px) ' + this._translateZ
-                //        },
-                //        {
-                //            duration : duration,
-                //            onComplete : resolve
-                //        }
-                //    );
-                //}
-                //else {
-                //    move(this.$list, distOffset, duration, resolve, this);
-                //}
+                if (utils.supportsTransitions()) {
+                    // css3 transition
+                    utils.animateCss(this.$list,
+                        {
+                            'transform' : 'translateX('+ to +'px) ' + this._translateZ
+                        },
+                        {
+                            duration : duration,
+                            onComplete : resolve
+                        }
+                    );
+                }
+                else {
+                    move(this.$list, to, from, duration, resolve);
+                }
             }
         }.bind(this));
 
