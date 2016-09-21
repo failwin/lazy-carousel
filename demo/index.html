@@ -131,7 +131,7 @@
                 swipeDecorator = LC.swipeDecorator;
 
             var demo1Holder = document.getElementById("demo1");
-            var demo1 = new LazyCarousel(demo1Holder, {debug: true});
+            var demo1 = LazyCarousel.create(demo1Holder);
 
             demo1._getItemTemplate = function(item) {
                 return '<li class="item" data-id="'+ item.id +'">'+ item.id +'</li>';
@@ -149,7 +149,25 @@
                 {id: 9},
                 {id: 10},
                 {id: 11},
-                {id: 12}
+                {id: 12},
+                {id: 13},
+                {id: 14},
+                {id: 15},
+                {id: 16},
+                {id: 17},
+                {id: 18},
+                {id: 19},
+                {id: 20},
+                {id: 21},
+                {id: 22},
+                {id: 23},
+                {id: 24},
+                {id: 25},
+                {id: 26},
+                {id: 27},
+                {id: 28},
+                {id: 29},
+                {id: 30}
             ]);
 
             window.demo1 = demo1;

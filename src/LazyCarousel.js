@@ -20,7 +20,7 @@ var LazyCarousel = (function() {
         this.opts = utils.extend({}, this.defOpts);
         this.opts = utils.extend(this.opts, opts);
 
-        this.$events = null;
+        this.$events = new this.opts.EventEmitter();
 
         this.$holder = elem;
         this.$list = null;
@@ -45,16 +45,19 @@ var LazyCarousel = (function() {
         this._transformProperty = '';
         this._translateZ = '';
 
-        this.changesTracker = null;
-
-        if (!this.opts.noInit) {
-            this.init();
-        }
+        this.changesTracker = new this.opts.ChangesTracker(this.$list, {
+            trackById: this.opts.uniquKeyProp,
+            beforeAdd: this._addItemPre.bind(this),
+            afterAdd: this._addItemPost.bind(this),
+            beforeRemove: this._removeItemPre.bind(this),
+            afterRemove: this._removeItemPost.bind(this)
+        });
     }
 
     LazyCarousel.prototype.defOpts = {
-        noInit: false,
-        uniquKeyProp: 'id'
+        uniquKeyProp: 'id',
+        EventEmitter: EventEmitter,
+        ChangesTracker: ChangesTracker
     };
 
     LazyCarousel.prototype.init = function(_elem) {
@@ -64,18 +67,10 @@ var LazyCarousel = (function() {
         this.$list = this.$holder.querySelector('ul');
         this.$listHolder = this.$list ? this.$list.parentNode : null;
 
-        this.$events = new EventEmitter();
-
-        this.changesTracker = new ChangesTracker(this.$list, {
-            trackById: this.opts.uniquKeyProp,
-            beforeAdd: this._addItemPre.bind(this),
-            afterAdd: this._addItemPost.bind(this),
-            beforeRemove: this._removeItemPre.bind(this),
-            afterRemove: this._removeItemPost.bind(this)
-        });
-
         this._transformProperty = utils.getPrefixedStyleValue('transform');
         this._translateZ = utils.supportsPerspective() ? 'translateZ(0)' : '';
+
+        this.changesTracker.init(this.$list);
 
         this._attachHandlers();
 
@@ -84,25 +79,62 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype.resize = function() {
         this._fetchElementsSize();
+        this._calculateVisibility();
         this._updateVisible();
         this._centerList();
     };
 
     LazyCarousel.prototype.updateItems = function(items, _active) {
         this.items = (items && items.length) ?  items : [];
-
-        this._fetchElementsSize();
-
-        var res = LazyCarousel.utils.calculateVisible(this.holderWidth, this.itemWidth, this.items.length);
-
-        this.isSimple = res.isSimple;
-        this.visible = res.visible;
-        this.addition = res.addition;
-
         this.active = _active || 0;
 
+        this._fetchElementsSize();
+        this._calculateVisibility();
         this._updateVisible();
         this._centerList();
+    };
+    LazyCarousel.prototype._fetchElementsSize = function() {
+        if (!this.$list || !this.$listHolder) {
+            return;
+        }
+
+        this.holderWidth = this.$listHolder ? this.$listHolder.clientWidth : null;
+
+        var item = this.$list ? this.$list.querySelector('li') : null;
+
+        if (item) {
+            this.itemWidth = item.clientWidth;
+        }
+        else {
+            item = utils.appendElement(this.$list, '<li class="item"></li>');
+            this.itemWidth = item.clientWidth;
+            this.$list.removeChild(item);
+        }
+    };
+    LazyCarousel.prototype._calculateVisibility = function() {
+        var isSimple = true,
+            visible = 0,
+            addition = 0,
+            count = this.items.length;
+
+        visible = Math.floor(this.holderWidth/this.itemWidth) + 1;
+        if (visible % 2 === 0) {    // 0 2 4 6
+            visible++;              // 1 3 5 7
+        }
+
+        visible = Math.min(count, visible);
+
+        if (3 * visible >= count) {
+            isSimple = true;
+        }
+        else {
+            isSimple = false;
+            addition = visible;
+        }
+
+        this.isSimple = isSimple;
+        this.visible = visible;
+        this.addition = addition;
     };
     LazyCarousel.prototype._updateVisible = function() {
         var partials =  LazyCarousel.utils.getPartialItems(this.items,
@@ -150,7 +182,7 @@ var LazyCarousel = (function() {
         }
 
         if (leftItemsCount < 0) {
-            return this.offsetLeft;
+            return this._getOffset();
         }
 
         offsetLeft = this.holderWidth/2 - this.itemWidth/2 - (leftItemsCount * this.itemWidth);
@@ -173,8 +205,6 @@ var LazyCarousel = (function() {
 
         var maxCount = this._getMaxSlideCount(dir);
 
-        console.log('maxCount - ' + maxCount);
-
         if (count > maxCount) {
             count = maxCount;
         }
@@ -182,30 +212,36 @@ var LazyCarousel = (function() {
         var newIndex = this.active + (dir * count);
         newIndex = LazyCarousel.utils.normalizeIndex(newIndex, this.items.length);
 
-        return this._animateOffset(dir * count, _fast)
+        var fromOffset = this._getOffset(),
+            toOffset = this._calculateOffset(dir * count),
+            duration = _fast ? 0 : 500;
+
+        return this._animateOffset(fromOffset, toOffset, duration)
         .then(function() {
             this.active = newIndex;
+            this._setOffset(toOffset, true);
             this._updateVisible();
             this._centerList();
-        }.bind(this));
+        }.bind(this))
+        .catch(function(error){
+            console.error(error);
+        });
     };
 
-    LazyCarousel.prototype._animateOffset = function(offset, _fast) {
+    LazyCarousel.prototype._animateOffset = function(from, to, duration) {
+        var transformProperty = this._transformProperty,
+            translateZ = this._translateZ;
+
         return new Promise(function(resolve, reject) {
             var self = this;
 
-            var distOffset = this._calculateOffset(offset),
-                duration = 500;
-
-            console.log('offset - ' + offset);
-            console.log('from - ' + this.offsetLeft);
-            console.log('to - ' + distOffset);
-
-            if (_fast) {
-                this._setOffset(distOffset);
+            if (!duration) {
+                this._setOffset(to);
                 resolve();
             }
             else {
+                move(this.$list, to, from, duration, resolve);
+
                 //if (utils.supportsTransitions()) {
                 //    // css3 transition
                 //    utils.animateCss(this.$list,
@@ -219,19 +255,13 @@ var LazyCarousel = (function() {
                 //    );
                 //}
                 //else {
-                //
+                //    move(this.$list, distOffset, duration, resolve, this);
                 //}
-                move(this.$list, distOffset, duration, resolve, this);
             }
-
-            resolve();
         }.bind(this));
 
-        function move($elem, to, duration, complete, self) {
-            var transformProperty = self._transformProperty,
-                translateZ = self._translateZ,
-                from = self.offsetLeft,
-                delta = to - from;
+        function move($elem, to, from, duration, complete, self) {
+            var delta = to - from;
 
             animate({
                 duration: duration,
@@ -279,11 +309,13 @@ var LazyCarousel = (function() {
         // TODO: test
 
         if (this.isSimple) {
+            var leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+
             if (dir > 0) {
-                count = this.items.length - this.active - 1;
+                count = this.items.length - leftItemsCount - 1;
             }
             else {
-                count = this.active;
+                count = leftItemsCount;
             }
         }
         else {
@@ -317,25 +349,6 @@ var LazyCarousel = (function() {
     LazyCarousel.prototype._getItemTemplate = function(item) {
         var idKey = this.opts.uniquKeyProp;
         return '<li class="item" data-id="'+ item[idKey] +'">'+ item[idKey] +'</li>';
-    };
-
-    LazyCarousel.prototype._fetchElementsSize = function() {
-        if (!this.$list || !this.$listHolder) {
-            return;
-        }
-
-        this.holderWidth = this.$listHolder ? this.$listHolder.clientWidth : null;
-
-        var item = this.$list ? this.$list.querySelector('li') : null;
-
-        if (item) {
-            this.itemWidth = item.clientWidth;
-        }
-        else {
-            item = utils.appendElement(this.$list, '<li class="item"></li>');
-            this.itemWidth = item.clientWidth;
-            this.$list.removeChild(item);
-        }
     };
 
     LazyCarousel.prototype._attachHandlers = function() {
@@ -378,35 +391,14 @@ var LazyCarousel = (function() {
         this._detachHandlers();
     };
 
+    LazyCarousel.create = function(elem, opts){
+        var inst = new LazyCarousel(elem, opts);
+        inst.init();
+        return inst;
+    };
+
     return LazyCarousel;
 })();
-
-function calculateVisible(holderWidth, itemWidth, count) {
-    var isSimple = true,
-        visible = 0,
-        addition = 0;
-
-    visible = Math.floor(holderWidth/itemWidth) + 1;
-    if (visible % 2 === 0) {    // 0 2 4 6
-        visible++;              // 1 3 5 7
-    }
-
-    visible = Math.min(count, visible);
-
-    if (3 * visible >= count) {
-        isSimple = true;
-    }
-    else {
-        isSimple = false;
-        addition = visible;
-    }
-
-    return {
-        isSimple: isSimple,
-        visible: visible,
-        addition: addition
-    };
-}
 
 function getItemInfoById(id, _list, _key) {
     var list = _list || [],
@@ -557,6 +549,7 @@ function getPartialItems(list, index, visible, addition, isSimple) {
 
     if (isSimple) {
         count = globalCount;
+        index = 0;
     }
 
     // take before/after count
@@ -575,7 +568,6 @@ function getPartialItems(list, index, visible, addition, isSimple) {
     for(var i = index, k = 0; k < afterHalf; i++, k++) {
         normalIndex = normalizeIndex(i, globalCount);
         item = list[normalIndex];
-        item.__i = normalIndex; // global index
         afterHalfArr.push(item);
     }
 
@@ -583,7 +575,6 @@ function getPartialItems(list, index, visible, addition, isSimple) {
     for(var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
         normalIndex = normalizeIndex(j, globalCount);
         item = list[normalIndex];
-        item.__i = normalIndex; // global index
         beforeHalfArr.push(item);
     }
 
@@ -597,7 +588,6 @@ function getPartialItems(list, index, visible, addition, isSimple) {
 
 // Export
 LazyCarousel.utils = {
-    calculateVisible: calculateVisible,
     getItemInfoById: getItemInfoById,
     normalizeIndex: normalizeIndex,
     globalToPartialIndex: globalToPartialIndex,

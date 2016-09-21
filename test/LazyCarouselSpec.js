@@ -1,28 +1,11 @@
 import utils from 'my-utils';
+import simulateEvent from 'simulate-event';
+
 import * as helpers from './helpers.js';
+
 import LazyCarousel from '../src/LazyCarousel.js';
 
-function triggerEvent(name, element) {
-    var event;
-
-    if (document.createEvent) {
-        event = document.createEvent("HTMLEvents");
-        event.initEvent(name, true, true);
-    } else {
-        event = document.createEventObject();
-        event.eventType = name;
-    }
-
-    event.eventName = name;
-
-    if (document.createEvent) {
-        element.dispatchEvent(event);
-    } else {
-        element.fireEvent("on" + event.eventType, event);
-    }
-}
-
-fdescribe('LazyCarousel', function(){
+describe('LazyCarousel', function(){
     var $holder,
         baseStyles,
         fixturesStyles;
@@ -64,43 +47,17 @@ fdescribe('LazyCarousel', function(){
         return res;
     }
 
-    function getFakePartialItems(items, _uniqueKeyProp) {
-        var res,
-            obj,
-            key = _uniqueKeyProp || 'id';
-
-        if (utils.isArray(items)) {
-            res = items.map(function(val) {
-                obj = {};
-                obj[key] = val;
-                obj.__i = val; // global index
-                return obj;
-            });
-        }
-        else {
-            res = [];
-            for (var i = 0; i < items; i++) {
-                obj = {};
-                obj[key] = i;
-                obj.__i = i; // global index
-                res.push(obj);
-            }
-        }
-
-        return res;
-    }
-
     beforeEach(function(done) {
-        //baseStyles = helpers.injectCssByUrl('/base/src/base.css');
-        //fixturesStyles = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
+        baseStyles = helpers.injectCssByUrl('/base/src/base.css');
+        fixturesStyles = helpers.injectCssByUrl('/base/test/fixtures/css/main.css');
 
         $holder = utils.appendElement(document.body, '<div id="test_holder"></div>');
 
         setTimeout(done, 20);
     });
     afterEach(function() {
-        //baseStyles.remove();
-        //fixturesStyles.remove();
+        baseStyles.remove();
+        fixturesStyles.remove();
 
         document.body.removeChild($holder);
     });
@@ -112,32 +69,17 @@ fdescribe('LazyCarousel', function(){
             expect(LazyCarousel).toBeDefined();
         });
 
-        it('should make initialization initially', function() {
-            spyOn(LazyCarousel.prototype, 'init');
-
-            inst = createCarousel({});
-
-            expect(LazyCarousel.prototype.init).toHaveBeenCalled();
-        });
-
-        it('should be possible to postpone initialization', function() {
-            spyOn(LazyCarousel.prototype, 'init');
-
-            inst = createCarousel({noInit: true});
-
-            expect(LazyCarousel.prototype.init).not.toHaveBeenCalled();
-        });
-
         it('should keep reference to root element', function() {
-            var elem = createElement('<div id="testCarousel"></div>');
-            inst = createCarousel({noInit: true}, elem);
+            var elem = createElement(createCarousel.html);
+            inst = createCarousel({}, elem);
+            inst.init();
 
             expect(inst.$holder).toBe(elem);
         });
 
         it('should keep reference to root element after init', function() {
             var elem = createElement('<div id="testCarousel"><ul></ul></div>');
-            inst = createCarousel({noInit: true}, null);
+            inst = createCarousel({}, null);
 
             expect(inst.$holder).not.toBeDefined();
 
@@ -147,7 +89,7 @@ fdescribe('LazyCarousel', function(){
         });
 
         it('should find list element', function() {
-            inst = createCarousel({noInit: true}, null);
+            inst = createCarousel({}, null);
 
             expect(inst.$list).toBe(null);
 
@@ -158,7 +100,7 @@ fdescribe('LazyCarousel', function(){
         });
 
         it('should find list parent element', function() {
-            inst = createCarousel({noInit: true}, null);
+            inst = createCarousel({}, null);
 
             expect(inst.$listHolder).toBe(null);
 
@@ -173,7 +115,7 @@ fdescribe('LazyCarousel', function(){
         var inst;
 
         beforeEach(function() {
-            inst = createCarousel({noInit: true});
+            inst = createCarousel({});
         });
 
         afterEach(function() {
@@ -224,7 +166,7 @@ fdescribe('LazyCarousel', function(){
             it('should be called on resize event', function() {
                 inst.init();
 
-                triggerEvent('resize', window);
+                simulateEvent.simulate(window, 'resize');
 
                 expect(inst.resize).toHaveBeenCalled();
             });
@@ -236,7 +178,7 @@ fdescribe('LazyCarousel', function(){
 
                 inst.destroy();
 
-                triggerEvent('resize', window);
+                simulateEvent.simulate(window, 'resize');
 
                 expect(inst.resize).not.toHaveBeenCalled();
             });
@@ -252,7 +194,7 @@ fdescribe('LazyCarousel', function(){
         beforeEach(function() {
             elem = createElement(createCarousel.html);
 
-            inst = createCarousel({noInit: true}, elem);
+            inst = createCarousel({}, elem);
 
             items = getFakeItems(10);
             partialItems = getFakeItems(5);
@@ -317,7 +259,7 @@ fdescribe('LazyCarousel', function(){
 
         beforeEach(function() {
             elem = createElement(createCarousel.html);
-            inst = createCarousel({noInit: true}, elem);
+            inst = createCarousel({}, elem);
 
             spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
                 return {
@@ -333,94 +275,167 @@ fdescribe('LazyCarousel', function(){
 
             items = getFakeItems(10);
             partialItems = getFakeItems([1,2,3,4,5]);
-            animatePromise = Promise.resolve();
+            animatePromise = new Promise(function(resolve) {
+                window.setTimeout(resolve, 10);
+            });
 
-            inst.init();
-            inst.updateItems(items);
+
         });
 
         afterEach(function() {
 
         });
 
-        it('should check maximum offset', function(done) {
-            spyOn(inst, '_getMaxSlideCount');
+        describe('simple mode', function() {
+            beforeEach(function(){
+                inst.init();
+                inst.updateItems(items);
 
-            inst.slideToDir(1)
-            .then(function(){
-                expect(inst._getMaxSlideCount).toHaveBeenCalled();
-                expect(inst._getMaxSlideCount).toHaveBeenCalledWith(1);
+                expect(inst.isSimple).toBe(true);
+            });
 
-                done();
+            it('should check maximum offset', function(done) {
+                spyOn(inst, '_getMaxSlideCount');
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst._getMaxSlideCount).toHaveBeenCalled();
+                        expect(inst._getMaxSlideCount).toHaveBeenCalledWith(1);
+
+                        done();
+                    });
+            });
+
+            it('should update active index', function(done) {
+                expect(inst.active).toBe(0);
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        return inst.slideToDir(1);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(2);
+                    })
+                    .then(function(){
+                        done();
+                    })
+            });
+
+            it('should update active index for negative dir', function(done) {
+                expect(inst.active).toBe(0);
+
+                inst.slideToDir(-1)
+                    .then(function(){
+                        expect(inst.active).toBe(items.length - 1);
+
+                        done();
+                    });
             });
         });
 
-        it('should update active index', function(done) {
-            expect(inst.active).toBe(0);
+        describe('complex mode', function() {
+            beforeEach(function(){
+                items = getFakeItems(30);
+                partialItems = getFakeItems([1,2,3,4,5,6,7,8,9]);
 
-            inst.slideToDir(1)
-            .then(function(){
-                expect(inst.active).toBe(1);
+                inst.init();
+                inst.updateItems(items);
 
-                done();
+                expect(inst.isSimple).toBe(false);
+            });
+
+            it('should check maximum offset', function(done) {
+                spyOn(inst, '_getMaxSlideCount');
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst._getMaxSlideCount).toHaveBeenCalled();
+                        expect(inst._getMaxSlideCount).toHaveBeenCalledWith(1);
+
+                        done();
+                    });
+            });
+
+            it('should update active index', function(done) {
+                expect(inst.active).toBe(0);
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst.active).toBe(1);
+                    })
+                    .then(function(){
+                        return inst.slideToDir(1);
+                    })
+                    .then(function(){
+                        expect(inst.active).toBe(2);
+                    })
+                    .then(function(){
+                        done();
+                    })
+            });
+
+            it('should update active index for negative dir', function(done) {
+                expect(inst.active).toBe(0);
+
+                inst.slideToDir(-1)
+                    .then(function(){
+                        expect(inst.active).toBe(items.length - 1);
+
+                        done();
+                    });
             });
         });
 
-        it('should update active index for negative dir', function(done) {
-            expect(inst.active).toBe(0);
+        describe('comunacation', function(){
+            beforeEach(function(){
+                inst.init();
+                inst.updateItems(items);
+            });
 
-            inst.slideToDir(-1)
-            .then(function(){
-                expect(inst.active).toBe(items.length - 1);
+            it('should ask for new items with new offset', function(done) {
+                LazyCarousel.utils.getPartialItems.calls.reset();
 
-                done();
+                inst.slideToDir(1, 3)
+                    .then(function(){
+                        expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalled();
+                        expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalledWith(
+                            items,
+                            3,
+                            jasmine.any(Number),
+                            jasmine.any(Number),
+                            jasmine.any(Boolean)
+                        );
+
+                        done();
+                    });
+            });
+
+            it('should trigger items update', function(done) {
+                spyOn(inst, '_updateVisible');
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst._updateVisible).toHaveBeenCalled();
+
+                        done();
+                    });
+            });
+
+            it('should trigger list centering', function(done) {
+                spyOn(inst, '_centerList');
+
+                inst.slideToDir(1)
+                    .then(function(){
+                        expect(inst._centerList).toHaveBeenCalled();
+
+                        done();
+                    });
             });
         });
 
-        it('should ask for new items with new offset', function(done) {
-            LazyCarousel.utils.getPartialItems.calls.reset();
-
-            inst.slideToDir(1)
-            .then(function(){
-                expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalled();
-                expect(LazyCarousel.utils.getPartialItems).toHaveBeenCalledWith(
-                    items,
-                    1,
-                    jasmine.any(Number),
-                    jasmine.any(Number),
-                    jasmine.any(Boolean)
-                );
-
-                done();
-            });
-        });
-
-        it('should trigger items update', function(done) {
-            spyOn(inst, '_updateVisible');
-
-            inst.slideToDir(1)
-            .then(function(){
-                expect(inst._updateVisible).toHaveBeenCalled();
-
-                done();
-            });
-        });
-
-        it('should trigger list centering', function(done) {
-            spyOn(inst, '_centerList');
-
-            inst.slideToDir(1)
-            .then(function(){
-                expect(inst._centerList).toHaveBeenCalled();
-
-                done();
-            });
-        });
-
-        describe('animation', function() {
-
-
-        });
     });
 
 
@@ -435,7 +450,7 @@ fdescribe('LazyCarousel', function(){
 
             helpers.injectCss(styles);
 
-            inst = createCarousel({noInit: true}, '<div id="testCarousel" style="width: 1000px;"><div><ul></ul></div></div>');
+            inst = createCarousel({}, '<div id="testCarousel" style="width: 1000px;"><div><ul></ul></div></div>');
         });
 
         afterEach(function() {
@@ -463,12 +478,82 @@ fdescribe('LazyCarousel', function(){
         });
     });
 
+    describe('_calculateVisibility', function() {
+        var inst,
+            holderWidth,
+            itemWidth,
+            items = [];
+
+        beforeEach(function() {
+            inst = createCarousel({});
+
+            spyOn(inst, '_fetchElementsSize').and.callFake(function(){
+                this.holderWidth = holderWidth;
+                this.itemWidth = itemWidth;
+            });
+
+            inst.init();
+        });
+
+        it('should return simple mode', function() {
+            holderWidth = 1000;
+            itemWidth = 100;
+            items = getFakeItems(2);
+
+            inst.updateItems(items);
+
+            expect(inst.isSimple).toBe(true);
+            expect(inst.visible).toBe(2);
+            expect(inst.addition).toBe(0);
+        });
+
+        it('should return complex mode', function() {
+            holderWidth = 1000;
+            itemWidth = 100;
+            items = getFakeItems(50);
+
+            inst.updateItems(items);
+
+            expect(inst.isSimple).toBe(false);
+        });
+
+        it('should return odd visible count in complex mode', function() {
+            holderWidth = 1000;
+            itemWidth = 100;
+            items = getFakeItems(50);
+
+            inst.updateItems(items);
+
+            expect(inst.isSimple).toBe(false);
+            expect(inst.visible).toBe(11);
+
+            holderWidth = 1100;
+
+            inst.updateItems(items);
+
+            expect(inst.isSimple).toBe(false);
+            expect(inst.visible).toBe(13);
+        });
+
+        it('should return correct addition items count', function() {
+            holderWidth = 1000;
+            itemWidth = 100;
+            items = getFakeItems(50);
+
+            inst.updateItems(items);
+
+            expect(inst.isSimple).toBe(false);
+            expect(inst.visible).toBe(11);
+            expect(inst.addition).toBe(11);
+        });
+    });
+
     describe('_updateVisible', function() {
         var inst,
             partialItems = [];
 
         beforeEach(function() {
-            inst = createCarousel({noInit: true});
+            inst = createCarousel({});
 
             spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
                 return {
@@ -485,10 +570,9 @@ fdescribe('LazyCarousel', function(){
         });
 
         it('should trigger changesTracker call', function() {
-            inst.init();
-
             spyOn(inst.changesTracker, 'updateList').and.callThrough();
 
+            inst.init();
             inst._updateVisible();
 
             expect(inst.changesTracker.updateList).toHaveBeenCalled();
@@ -514,6 +598,35 @@ fdescribe('LazyCarousel', function(){
         });
     });
 
+    describe('_centerList', function() {
+        var inst,
+            items;
+
+        beforeEach(function() {
+            inst = createCarousel({});
+
+            items = getFakeItems(10);
+        });
+
+        it('should be called immediately after init', function() {
+            spyOn(inst, '_centerList');
+
+            inst.init();
+
+            expect(inst._centerList).toHaveBeenCalled();
+        });
+
+        it('should be called after items update', function() {
+            inst.init();
+
+            spyOn(inst, '_centerList');
+
+            inst.updateItems(items);
+
+            expect(inst._centerList).toHaveBeenCalled();
+        });
+    });
+
     describe('_getItemTemplate', function() {
         var inst,
             elem,
@@ -524,7 +637,7 @@ fdescribe('LazyCarousel', function(){
             items = getFakeItems(10);
 
             elem = createElement(createCarousel.html);
-            inst = createCarousel({noInit: true}, elem);
+            inst = createCarousel({}, elem);
 
             spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
                 return {
@@ -579,32 +692,116 @@ fdescribe('LazyCarousel', function(){
         });
     });
 
-    describe('_centerList', function() {
+    describe('_getMaxSlideCount', function() {
         var inst,
-            items;
+            elem,
+            items,
+            holderWidth = 1000,
+            itemWidth = 200,
+            partialItems = [];
 
         beforeEach(function() {
-            inst = createCarousel({noInit: true});
+            elem = createElement(createCarousel.html);
+
+            inst = createCarousel({}, elem);
+
+            spyOn(inst, '_fetchElementsSize').and.callFake(function(){
+                this.holderWidth = holderWidth;
+                this.itemWidth = itemWidth;
+            });
+
+            spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
+                return {
+                    list: partialItems,
+                    _partialItemsBefore: 0,
+                    _partialItemsAfter: 0
+                };
+            });
 
             items = getFakeItems(10);
+            partialItems = getFakeItems(5);
+
+
         });
 
-        it('should be called immediately after init', function() {
-            spyOn(inst, '_centerList');
+        describe('infinite mode', function() {
 
-            inst.init();
+            beforeEach(function() {
+                items = getFakeItems(30);
+                partialItems = getFakeItems(5);
 
-            expect(inst._centerList).toHaveBeenCalled();
+                inst.init();
+            });
+
+            it('should be infinite mode', function() {
+                inst.updateItems(items);
+
+                expect(inst.isSimple).toBe(false);
+            });
+
+            it('should return visible count', function() {
+                inst.updateItems(items);
+
+                var res = inst._getMaxSlideCount(1);
+
+                expect(res).toBe(inst.visible);
+            });
+
+            it('should return visible count for negativ direction', function() {
+                inst.updateItems(items);
+
+                var res = inst._getMaxSlideCount(-1);
+
+                expect(res).toBe(inst.visible);
+            });
         });
 
-        it('should be called after items update', function() {
-            inst.init();
+        describe('simple mode', function() {
 
-            spyOn(inst, '_centerList');
+            beforeEach(function() {
+                items = getFakeItems(5);
+                partialItems = getFakeItems(5);
 
-            inst.updateItems(items);
+                inst.init();
+            });
 
-            expect(inst._centerList).toHaveBeenCalled();
+            it('should be infinite mode', function() {
+                inst.updateItems(items);
+
+                expect(inst.isSimple).toBe(true);
+            });
+
+            it('should return half of length', function() {
+                inst.updateItems(items);
+
+                var res = inst._getMaxSlideCount(1);
+
+                expect(res).toBe(2);
+            });
+
+            it('should return half of length in case negative direction', function() {
+                inst.updateItems(items);
+
+                var res = inst._getMaxSlideCount(-1);
+
+                expect(res).toBe(2);
+            });
+
+            it('should return return correct value in case some offset', function() {
+                inst.updateItems(items, 1);
+
+                var res = inst._getMaxSlideCount(1);
+
+                expect(res).toBe(1);
+            });
+
+            it('should return return correct value in case some offset for negative direction', function() {
+                inst.updateItems(items, 4);
+
+                var res = inst._getMaxSlideCount(-1);
+
+                expect(res).toBe(1);
+            });
         });
     });
 
@@ -627,7 +824,7 @@ fdescribe('LazyCarousel', function(){
         beforeEach(function() {
             elem = createElement(createCarousel.html);
 
-            inst = createCarousel({noInit: true}, elem);
+            inst = createCarousel({}, elem);
 
             spyOn(inst, '_fetchElementsSize').and.callFake(function(){
                 this.holderWidth = holderWidth;
@@ -710,7 +907,7 @@ fdescribe('LazyCarousel', function(){
                 inst.init();
             });
 
-            it('should be infinite mode', function() {
+            it('should be simple mode', function() {
                 inst.updateItems(items);
 
                 expect(inst.isSimple).toBeTruthy();
@@ -774,134 +971,8 @@ fdescribe('LazyCarousel', function(){
         });
     });
 
-    describe('_getMaxSlideCount', function() {
-        var inst,
-            elem,
-            items,
-            holderWidth = 1000,
-            itemWidth = 200,
-            partialItems = [];
-
-        beforeEach(function() {
-            elem = createElement(createCarousel.html);
-
-            inst = createCarousel({noInit: true}, elem);
-
-            spyOn(inst, '_fetchElementsSize').and.callFake(function(){
-                this.holderWidth = holderWidth;
-                this.itemWidth = itemWidth;
-            });
-
-            spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
-                return {
-                    list: partialItems,
-                    _partialItemsBefore: 0,
-                    _partialItemsAfter: 0
-                };
-            });
-
-            items = getFakeItems(10);
-            partialItems = getFakeItems(5);
-
-
-        });
-
-        describe('infinite mode', function() {
-
-            beforeEach(function() {
-                items = getFakeItems(30);
-                partialItems = getFakeItems(5);
-
-                inst.init();
-            });
-
-            it('should be infinite mode', function() {
-                inst.updateItems(items);
-
-                expect(inst.isSimple).toBe(false);
-            });
-        });
-
-        describe('simple mode', function() {
-
-            beforeEach(function() {
-                items = getFakeItems(5);
-                partialItems = getFakeItems(5);
-
-                inst.init();
-            });
-
-            it('should be infinite mode', function() {
-                inst.updateItems(items);
-
-                expect(inst.isSimple).toBe(true);
-            });
-        });
-    });
-
 
     describe('utils', function() {
-        describe('calculateVisible', function() {
-            var calculateVisible = LazyCarousel.utils.calculateVisible;
-
-            it('should be defined in utils', function() {
-                expect(calculateVisible).toBeDefined();
-            });
-
-            it('should return simple mode', function() {
-                var res;
-
-                res = calculateVisible(1000, 100, 1);
-
-                expect(res.isSimple).toBe(true);
-                expect(res.visible).toBe(1);
-                expect(res.addition).toBe(0);
-
-                res = calculateVisible(1000, 100, 2);
-
-                expect(res.isSimple).toBe(true);
-                expect(res.visible).toBe(2);
-                expect(res.addition).toBe(0);
-
-                res = calculateVisible(1000, 100, 3);
-
-                expect(res.isSimple).toBe(true);
-                expect(res.visible).toBe(3);
-                expect(res.addition).toBe(0);
-            });
-
-            it('should return complex mode', function() {
-                var res;
-
-                res = calculateVisible(1000, 100, 50);
-
-                expect(res.isSimple).toBe(false);
-            });
-
-            it('should return odd visible count in complex mode', function() {
-                var res;
-
-                res = calculateVisible(1000, 100, 50);
-
-                expect(res.isSimple).toBe(false);
-                expect(res.visible).toBe(11);
-
-                res = calculateVisible(1100, 100, 50);
-
-                expect(res.isSimple).toBe(false);
-                expect(res.visible).toBe(13);
-            });
-
-            it('should return correct addition items count', function() {
-                var res;
-
-                res = calculateVisible(1000, 100, 50);
-
-                expect(res.isSimple).toBe(false);
-                expect(res.visible).toBe(11);
-                expect(res.addition).toBe(11);
-            });
-        });
 
         describe('getItemInfoById', function() {
             var getItemInfoById = LazyCarousel.utils.getItemInfoById;
@@ -1169,52 +1240,38 @@ fdescribe('LazyCarousel', function(){
                     expect(res.after.length).toBe(3);
                     expect(res.before.length).toBe(2);
 
-                    expect(res.after).toEqual(getFakePartialItems([0, 1, 2]));
-                    expect(res.before).toEqual(getFakePartialItems([3, 4]));
+                    expect(res.after).toEqual(getFakeItems([0, 1, 2]));
+                    expect(res.before).toEqual(getFakeItems([3, 4]));
 
-                    expect(res.list).toEqual(getFakePartialItems([3, 4, 0, 1, 2]));
+                    expect(res.list).toEqual(getFakeItems([3, 4, 0, 1, 2]));
+                });
+
+                it('should return the same partials items in case of some offset', function() {
+                    var items = getFakeItems([0, 1, 2, 3, 4]);
+
+                    var res = getPartialItems(items, 1, 6, addition, isSimple);
+
+                    expect(res.after.length).toBe(3);
+                    expect(res.before.length).toBe(2);
+
+                    expect(res.after).toEqual(getFakeItems([0, 1, 2]));
+                    expect(res.before).toEqual(getFakeItems([3, 4]));
+
+                    expect(res.list).toEqual(getFakeItems([3, 4, 0, 1, 2]));
                 });
 
                 it('should return partials items for even count', function() {
-                    var items = getFakePartialItems([0, 1, 2, 3, 4, 5]);
+                    var items = getFakeItems([0, 1, 2, 3, 4, 5]);
 
                     var res = getPartialItems(items, 0, 6, addition, isSimple);
 
                     expect(res.after.length).toBe(4);
                     expect(res.before.length).toBe(2);
 
-                    expect(res.after).toEqual(getFakePartialItems([0, 1, 2, 3]));
-                    expect(res.before).toEqual(getFakePartialItems([4, 5]));
+                    expect(res.after).toEqual(getFakeItems([0, 1, 2, 3]));
+                    expect(res.before).toEqual(getFakeItems([4, 5]));
 
-                    expect(res.list).toEqual(getFakePartialItems([4, 5, 0, 1, 2, 3]));
-                });
-
-                it('should return partials items with some offset', function() {
-                    var items = getFakeItems([0, 1, 2, 3, 4, 5]);
-
-                    var res = getPartialItems(items, 1, 6, addition, isSimple);
-
-                    expect(res.after.length).toBe(4);
-                    expect(res.before.length).toBe(2);
-
-                    expect(res.after).toEqual(getFakePartialItems([1, 2, 3, 4]));
-                    expect(res.before).toEqual(getFakePartialItems([5, 0]));
-
-                    expect(res.list).toEqual(getFakePartialItems([5, 0, 1, 2, 3, 4]));
-                });
-
-                it('should return partials items with some big offset', function() {
-                    var items = getFakeItems([0, 1, 2, 3, 4, 5]);
-
-                    var res = getPartialItems(items, 5, 6, addition, isSimple);
-
-                    expect(res.after.length).toBe(4);
-                    expect(res.before.length).toBe(2);
-
-                    expect(res.after).toEqual(getFakePartialItems([5, 0, 1, 2]));
-                    expect(res.before).toEqual(getFakePartialItems([3, 4]));
-
-                    expect(res.list).toEqual(getFakePartialItems([3, 4, 5, 0, 1, 2]));
+                    expect(res.list).toEqual(getFakeItems([4, 5, 0, 1, 2, 3]));
                 });
             });
 
@@ -1229,10 +1286,10 @@ fdescribe('LazyCarousel', function(){
                     expect(res.after.length).toBe(2);
                     expect(res.before.length).toBe(1);
 
-                    expect(res.after).toEqual(getFakePartialItems([0, 1]));
-                    expect(res.before).toEqual(getFakePartialItems([4]));
+                    expect(res.after).toEqual(getFakeItems([0, 1]));
+                    expect(res.before).toEqual(getFakeItems([4]));
 
-                    expect(res.list).toEqual(getFakePartialItems([4, 0, 1]));
+                    expect(res.list).toEqual(getFakeItems([4, 0, 1]));
                 });
 
                 it('should return partials for a lot items', function() {
@@ -1243,10 +1300,10 @@ fdescribe('LazyCarousel', function(){
                     expect(res.after.length).toBe(8);
                     expect(res.before.length).toBe(7);
 
-                    expect(res.after).toEqual(getFakePartialItems([0, 1, 2, 3, 4, 5, 6, 7]));
-                    expect(res.before).toEqual(getFakePartialItems([43, 44, 45, 46, 47, 48, 49]));
+                    expect(res.after).toEqual(getFakeItems([0, 1, 2, 3, 4, 5, 6, 7]));
+                    expect(res.before).toEqual(getFakeItems([43, 44, 45, 46, 47, 48, 49]));
 
-                    expect(res.list).toEqual(getFakePartialItems([43, 44, 45, 46, 47, 48, 49, 0, 1, 2, 3, 4, 5, 6, 7]));
+                    expect(res.list).toEqual(getFakeItems([43, 44, 45, 46, 47, 48, 49, 0, 1, 2, 3, 4, 5, 6, 7]));
                 });
 
                 it('should return partials for a lot items with some offset', function() {
@@ -1257,10 +1314,10 @@ fdescribe('LazyCarousel', function(){
                     expect(res.after.length).toBe(8);
                     expect(res.before.length).toBe(7);
 
-                    expect(res.after).toEqual(getFakePartialItems([20, 21, 22, 23, 24, 25, 26, 27]));
-                    expect(res.before).toEqual(getFakePartialItems([13, 14, 15, 16, 17, 18, 19]));
+                    expect(res.after).toEqual(getFakeItems([20, 21, 22, 23, 24, 25, 26, 27]));
+                    expect(res.before).toEqual(getFakeItems([13, 14, 15, 16, 17, 18, 19]));
 
-                    expect(res.list).toEqual(getFakePartialItems([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]));
+                    expect(res.list).toEqual(getFakeItems([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]));
                 });
             });
         });

@@ -116,7 +116,9 @@ var ChangesTracker = (function() {
 
         this.lastBlockMap = null;
 
-        this.init();
+        if (element) {
+            this.init();
+        }
     }
 
     ChangesTracker.prototype.defOpts = {
@@ -141,7 +143,10 @@ var ChangesTracker = (function() {
         afterRemove: function(data) {}
     };
 
-    ChangesTracker.prototype.init = function() {
+    ChangesTracker.prototype.init = function(_element) {
+        if (_element) {
+            this.$element = _element;
+        }
         // clear
         while (this.$element.firstChild) {
             this.$element.removeChild(this.$element.firstChild);
@@ -196,7 +201,7 @@ var ChangesTracker = (function() {
 
         // remove leftover items
         for (var blockKey in this.lastBlockMap) {
-            if (!this.lastBlockMap.hasOwnProperty(blockKey)) {
+            if (this.lastBlockMap.hasOwnProperty && !this.lastBlockMap.hasOwnProperty(blockKey)) {
                 continue;
             }
             block = this.lastBlockMap[blockKey];

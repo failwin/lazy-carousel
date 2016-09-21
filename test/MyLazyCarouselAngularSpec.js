@@ -4,7 +4,7 @@ import LazyCarousel from '../src/LazyCarousel.js';
 import swipeDecorator from '../src/decorators/SwipeDecorator.js';
 import keyHandlerDecorator from '../src/decorators/KeyHandlerDecorator.js';
 
-describe('MyLazyCarouselAngular', function() {
+xdescribe('MyLazyCarouselAngular', function() {
     var $compile, $rootScope, root;
 
     beforeEach(function() {
