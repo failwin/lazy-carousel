@@ -1,6 +1,6 @@
 import angular from 'angular';
 import utils from 'my-utils';
-import LazyCarousel_ from './LazyCarousel.js';
+import LazyCarousel from './LazyCarousel.js';
 
 import swipeDecorator from './decorators/SwipeDecorator.js';
 import keyHandlerDecorator from './decorators/KeyHandlerDecorator.js';
@@ -9,13 +9,12 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
 // Controller
 var MyLazyCarouselCtrl = (function() {
-    var $timeout;
+    //var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
 
-    var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
-
-    function MyLazyCarouselCtrl($scope, _$timeout_) {
-        $timeout = _$timeout_;
+    function MyLazyCarouselCtrl($scope, $timeout) {
         this.$scope = $scope;
+        this.$timeout = $timeout;
+
         this._itemScopeAs = 'item';
 
         LazyCarousel.call(this, null, {
@@ -51,21 +50,9 @@ var MyLazyCarouselCtrl = (function() {
         var self = this;
         this._transclude(childScope, function(elem, $scope){
             $scope[itemAs] = item;
-
             $scope.$carousel = self.$scope;
-            $scope.$isActive = false;
-
-            $scope.$watch('$carousel.active._id', function (newActiveId) {
-                /*eslint-disable */
-                $scope.$isActive = (newActiveId == item._id) ? true : false;
-                /*eslint-enable */
-            });
 
             angular.element($item).append(elem);
-
-            $timeout(function(){
-                $scope.$digest();
-            });
         });
     };
     MyLazyCarouselCtrl.prototype._removeItemPre = function(item, $item, callback) {
@@ -84,89 +71,67 @@ var MyLazyCarouselCtrl = (function() {
 
 // Directive
 function MyLazyCarouselDirective($timeout) {
-    var iid = 1;
-
     return {
         restrict: 'EA',
         transclude: true,
         scope: {
             items: '=myLazyCarousel',
             itemAs: '@itemAs',
-            activeIndex: '=myLazyCarouselActive'
+            initActive: '@myLazyCarouselActive',
+            onReady: '&myLazyCarouselOnReady',
+            onActiveChange: '&myLazyCarouselOnActiveChange'
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
-                    '</div>' +
-                    '<div class="nav_holder" ng-class="{has_prev: nav.prev, has_next: nav.next}">' +
-                    '   <a href="#/prev" ng-click="goTo($event, -1)" class="nav_link prev">' +
-                    '       <span class="fonticon fonticon-arrow-left"></span>' +
-                    '   </a>' +
-                    '   <a href="#/next" ng-click="goTo($event, 1)" class="nav_link next" >' +
-                    '       <span class="fonticon fonticon-arrow-right"></span>' +
-                    '   </a>' +
                     '</div>',
         controller: 'myLazyCarouselCtrl',
         compile: function(tElement, tAttrs) {
 
             return function ($scope, element, attrs, ctrl, transclude) {
-                $scope._iid = iid++;
-
                 ctrl.init(element[0], transclude);
 
-                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
-                    ctrl.disableKeyHandlerDecorator();
-                }
-
-                $scope.active = null;
+                $scope.activeIndex = parseInt($scope.initActive, 10) || 0;
+                $scope.activeId = null;
                 $scope.nav = {
                     prev: false,
                     next: false
                 };
 
-                $scope.goTo = function ($event, dir) {
-                    if ($event) {
-                        $event.preventDefault();
-                    }
-                    ctrl.slideTo(parseInt(dir, 10));
+                $scope.slideToDir = function (dir, _count, _fast) {
+                    ctrl.slideToDir(dir, _count, _fast);
                 };
 
-                $scope.setActive = function($event, item) {
-                    if ($event) {
-                        $event.preventDefault();
-                    }
-                    ctrl.slideToId(item._id);
+                $scope.slideToIndex = function (index) {
+                    ctrl.slideToIndex(index);
                 };
 
                 $scope.$watch('items', function (newList) {
                     ctrl.updateItems(newList || [], $scope.activeIndex);
                 });
 
-                //$scope.$watch('activeIndex', function (newActiveIndex) {
-                //    innerActiveIndex = $scope.activeIndex;
-                //});
-
                 $scope.$on('$destroy', ctrl.destroy.bind(ctrl));
 
                 ctrl.$events.on('activeChange', function (data) {
-                    var item = data.item;
-                    /*eslint-disable */
-                    if ($scope.active && item && $scope.active._id == item._id) {
-                        return;
-                    }
-                    /*eslint-enable */
+                    $scope.$evalAsync(function(){
+                        $scope.activeIndex = data.index;
+                        $scope.activeId = data.id;
 
-                    $scope.activeIndex = data.activeIndex;
-
-                    $timeout(function () {
-                        $scope.active = item;
+                        $scope.onActiveChange({
+                            index: $scope.activeIndex,
+                            id: $scope.activeId
+                        });
                     });
                 });
 
                 ctrl.$events.on('navChange', function (nav) {
-                    $timeout(function () {
+                    $scope.$evalAsync(function(){
                         $scope.nav.prev = nav.prev;
                         $scope.nav.next = nav.next;
                     });
+                });
+
+                $scope.onReady({
+                    $carousel: $scope
                 });
             };
 

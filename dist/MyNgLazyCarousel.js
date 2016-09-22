@@ -107,6 +107,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.$listHolder = null;
 
 	        this.active = 0;
+	        this.activeId = 0;
 
 	        this.nav = {
 	            prev: false,
@@ -131,7 +132,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._translateZ = '';
 
 	        this.changesTracker = new this.opts.ChangesTracker(this.$list, {
-	            trackById: this.opts.uniquKeyProp,
+	            trackById: this.opts.uniqueKeyProp,
 	            beforeAdd: this._addItemPre.bind(this),
 	            afterAdd: this._addItemPost.bind(this),
 	            beforeRemove: this._removeItemPre.bind(this),
@@ -142,7 +143,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    LazyCarousel.prototype.defOpts = {
-	        uniquKeyProp: 'id',
+	        uniqueKeyProp: 'id',
 	        EventEmitter: _events.EventEmitter,
 	        ChangesTracker: _ChangesTracker2.default
 	    };
@@ -248,9 +249,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LazyCarousel.prototype._notifyActiveChange = function (active, _force) {
 	        if (this.active !== active || _force) {
-	            this.$events.emit('activeChange', {
-	                active: active
-	            });
+	            var activeItem = this.items[active];
+	            if (activeItem) {
+	                this.$events.emit('activeChange', {
+	                    index: active,
+	                    id: activeItem[this.opts.uniqueKeyProp]
+	                });
+	            }
 	        }
 	    };
 	    LazyCarousel.prototype._notifyNavChange = function () {
@@ -468,8 +473,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    LazyCarousel.prototype._removeItemPost = function ($item) {};
 
 	    LazyCarousel.prototype._getItemTemplate = function (item) {
-	        var idKey = this.opts.uniquKeyProp;
-	        return '<li class="item" data-id="' + item[idKey] + '">' + item[idKey] + '</li>';
+	        var idKey = this.opts.uniqueKeyProp;
+	        return '<li class="lc-item" data-id="' + item[idKey] + '">' + item[idKey] + '</li>';
 	    };
 
 	    LazyCarousel.prototype._attachHandlers = function () {
@@ -1771,16 +1776,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Controller
 	var MyLazyCarouselCtrl = function () {
-	    var $timeout;
+	    //var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
 
-	    var LazyCarousel = (0, _KeyHandlerDecorator2.default)()((0, _SwipeDecorator2.default)()(_LazyCarousel2.default));
-
-	    function MyLazyCarouselCtrl($scope, _$timeout_) {
-	        $timeout = _$timeout_;
+	    function MyLazyCarouselCtrl($scope, $timeout) {
 	        this.$scope = $scope;
+	        this.$timeout = $timeout;
+
 	        this._itemScopeAs = 'item';
 
-	        LazyCarousel.call(this, null, {
+	        _LazyCarousel2.default.call(this, null, {
 	            noInit: true,
 	            changesTrackerOpts: {
 	                trackById: '_id',
@@ -1791,12 +1795,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 	    }
 	    MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
-	    _myUtils2.default.inherits(MyLazyCarouselCtrl, LazyCarousel);
+	    _myUtils2.default.inherits(MyLazyCarouselCtrl, _LazyCarousel2.default);
 
 	    MyLazyCarouselCtrl.prototype.init = function (elem, _transclude) {
 	        this._transclude = _transclude;
 
-	        LazyCarousel.prototype.init.call(this, elem);
+	        _LazyCarousel2.default.prototype.init.call(this, elem);
 	    };
 
 	    MyLazyCarouselCtrl.prototype._transclude = function ($scope, callback) {
@@ -1813,21 +1817,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var self = this;
 	        this._transclude(childScope, function (elem, $scope) {
 	            $scope[itemAs] = item;
-
 	            $scope.$carousel = self.$scope;
-	            $scope.$isActive = false;
-
-	            $scope.$watch('$carousel.active._id', function (newActiveId) {
-	                /*eslint-disable */
-	                $scope.$isActive = newActiveId == item._id ? true : false;
-	                /*eslint-enable */
-	            });
 
 	            _angular2.default.element($item).append(elem);
-
-	            $timeout(function () {
-	                $scope.$digest();
-	            });
 	        });
 	    };
 	    MyLazyCarouselCtrl.prototype._removeItemPre = function (item, $item, callback) {
@@ -1846,79 +1838,65 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Directive
 	function MyLazyCarouselDirective($timeout) {
-	    var iid = 1;
-
 	    return {
 	        restrict: 'EA',
 	        transclude: true,
 	        scope: {
 	            items: '=myLazyCarousel',
 	            itemAs: '@itemAs',
-	            activeIndex: '=myLazyCarouselActive'
+	            initActive: '@myLazyCarouselActive',
+	            onReady: '&myLazyCarouselOnReady',
+	            onActiveChange: '&myLazyCarouselOnActiveChange'
 	        },
-	        template: '<div class="lc-list_holder">' + '   <ul class="lc-list"></ul>' + '</div>' + '<div class="nav_holder" ng-class="{has_prev: nav.prev, has_next: nav.next}">' + '   <a href="#/prev" ng-click="goTo($event, -1)" class="nav_link prev">' + '       <span class="fonticon fonticon-arrow-left"></span>' + '   </a>' + '   <a href="#/next" ng-click="goTo($event, 1)" class="nav_link next" >' + '       <span class="fonticon fonticon-arrow-right"></span>' + '   </a>' + '</div>',
+	        template: '<div class="lc-list_holder">' + '   <ul class="lc-list"></ul>' + '</div>',
 	        controller: 'myLazyCarouselCtrl',
 	        compile: function compile(tElement, tAttrs) {
 
 	            return function ($scope, element, attrs, ctrl, transclude) {
-	                $scope._iid = iid++;
-
 	                ctrl.init(element[0], transclude);
 
-	                if (attrs.noKeyDecorator && attrs.noKeyDecorator === 'true') {
-	                    ctrl.disableKeyHandlerDecorator();
-	                }
-
-	                $scope.active = null;
+	                $scope.activeIndex = parseInt($scope.initActive, 10) || 0;
+	                $scope.activeId = null;
 	                $scope.nav = {
 	                    prev: false,
 	                    next: false
 	                };
 
-	                $scope.goTo = function ($event, dir) {
-	                    if ($event) {
-	                        $event.preventDefault();
-	                    }
-	                    ctrl.slideTo(parseInt(dir, 10));
+	                $scope.slideToDir = function (dir, _count, _fast) {
+	                    ctrl.slideToDir(dir, _count, _fast);
 	                };
 
-	                $scope.setActive = function ($event, item) {
-	                    if ($event) {
-	                        $event.preventDefault();
-	                    }
-	                    ctrl.slideToId(item._id);
+	                $scope.slideToIndex = function (index) {
+	                    ctrl.slideToIndex(index);
 	                };
 
 	                $scope.$watch('items', function (newList) {
 	                    ctrl.updateItems(newList || [], $scope.activeIndex);
 	                });
 
-	                //$scope.$watch('activeIndex', function (newActiveIndex) {
-	                //    innerActiveIndex = $scope.activeIndex;
-	                //});
-
 	                $scope.$on('$destroy', ctrl.destroy.bind(ctrl));
 
 	                ctrl.$events.on('activeChange', function (data) {
-	                    var item = data.item;
-	                    /*eslint-disable */
-	                    if ($scope.active && item && $scope.active._id == item._id) {
-	                        return;
-	                    }
-	                    /*eslint-enable */
+	                    $scope.$evalAsync(function () {
+	                        $scope.activeIndex = data.index;
+	                        $scope.activeId = data.id;
 
-	                    $scope.activeIndex = data.activeIndex;
-
-	                    $timeout(function () {
-	                        $scope.active = item;
+	                        $scope.onActiveChange({
+	                            index: $scope.activeIndex,
+	                            id: $scope.activeId
+	                        });
 	                    });
 	                });
 
 	                ctrl.$events.on('navChange', function (nav) {
-	                    $timeout(function () {
+	                    $scope.$evalAsync(function () {
 	                        $scope.nav.prev = nav.prev;
 	                        $scope.nav.next = nav.next;
 	                    });
+	                });
+
+	                $scope.onReady({
+	                    $carousel: $scope
 	                });
 	            };
 	        }

@@ -45,24 +45,9 @@
     border: solid 1px black;
     height: 300px;
 }
-.lazy_carousel.anim .item {
-    /*opacity: 0;*/
-
-    transition: opacity 1s;
-}
-.lazy_carousel.anim .item.showed {
-    opacity: 1;
-}
 
 .lazy_carousel .item.active {
     color: red;
-}
-
-.fonticon-arrow-left:after {
-    content: 'Prev';
-}
-.fonticon-arrow-right:after {
-    content: 'Next';
 }
 
 @media (max-width: 700px) {
@@ -79,98 +64,123 @@
 <div id="console">
 
 </div>
-    <div id="demo1" class="lazy_carousel">
-        <div class="lc-list_holder">
-            <ul class="lc-list"></ul>
+
+    <div id="demo" ng-controller="demoCtrl">
+        <div class="lazy_carousel"
+             my-lazy-carousel="carousel.items"
+             my-lazy-carousel-on-ready="carouselReady($carousel)"
+             item-as="item"
+        >
+            <div class="item" ng-class="{'active': $carousel.activeId == item.id}">
+                {{item.id}}
+            </div>
         </div>
+        <a ng-click="$carousel.slideToDir(1)">Next</a>
+        <br />
+        <a ng-click="$carousel.slideToDir(-1)">Prev</a>
     </div>
-    <div class="lc-nav">
-        <a href="#" onclick="demo1.slideTo(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="demo1.slideTo(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
-    </div>
-
-    <!--<div ng-app="demo" ng-controller="demoCtrl">-->
-        <!--<div class="lazy_carousel anim"-->
-             <!--my-lazy-carousel="carousel.items"-->
-             <!--my-lazy-carousel-active="carousel.active"-->
-             <!--item-as="item"-->
-             <!--no-key-decorator="true">-->
-            <!--<div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">-->
-                <!--{{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}-->
-                <!--<br />-->
-                <!--<a href="#" ng-click="$carousel.setActive($event, item)">Active</a>-->
-            <!--</div>-->
-        <!--</div>-->
-
-        <!--<br>-->
-        <!--<br>-->
-        <!--<br>-->
-
-        <!--<div class="lazy_carousel anim" my-lazy-carousel="carousel.items" my-lazy-carousel-active="carousel.active" item-as="item">-->
-            <!--<div class="item" ng-class="{'active': $isActive, 'showed': $isShowed}">-->
-                <!--{{item.id}}, {{item._id}},   {{carousel.activeItem.id}}, {{$isActive}}-->
-                <!--<br />-->
-                <!--<a href="#" ng-click="$carousel.setActive($event, item)">Active</a>-->
-            <!--</div>-->
-        <!--</div>-->
-    <!--</div>-->
 
     <script src="../node_modules/angular/angular.js"></script>
     <script src="../node_modules/es6-promise/dist/es6-promise.js"></script>
     <script src="../node_modules/my-utils/src/utils.js"></script>
 
-    <script src="../dist/LazyCarousel.js"></script>
-
-    <script src="angular.js"></script>
+    <script src="../dist/MyNgLazyCarousel.js"></script>
 
     <script>
         (function(){
-            var LC = window.LazyCarousel;
-            var LazyCarousel = LC.default,
-                keyHandlerDecorator = LC.keyHandlerDecorator,
-                swipeDecorator = LC.swipeDecorator;
+            var angular = window.angular;
 
-            var demo1Holder = document.getElementById("demo1");
-            var demo1 = LazyCarousel.create(demo1Holder);
+            var demoHolder = document.getElementById("demo");
+            var demo = angular.module('demo', ['myLazyCarousel']);
 
-            demo1._getItemTemplate = function(item) {
-                return '<li class="item" data-id="'+ item.id +'">'+ item.id +'</li>';
-            };
+            demo.controller('demoCtrl', function($scope, $timeout) {
+                var $carousel;
 
-            demo1.updateItems([
-                {id: 1},
-                {id: 2},
-                {id: 3},
-                {id: 4},
-                {id: 5},
-                {id: 6},
-                {id: 7},
-                {id: 8},
-                {id: 9},
-                {id: 10},
-                {id: 11},
-                {id: 12},
-                {id: 13},
-                {id: 14},
-                {id: 15},
-                {id: 16},
-                {id: 17},
-                {id: 18},
-                {id: 19},
-                {id: 20},
-                {id: 21},
-                {id: 22},
-                {id: 23},
-                {id: 24},
-                {id: 25},
-                {id: 26},
-                {id: 27},
-                {id: 28},
-                {id: 29},
-                {id: 30}
-            ]);
+                $scope.$carousel = null;
+                $scope.carousel = {};
 
-            window.demo1 = demo1;
+                $scope.carousel.items = [
+                    {id: 1},
+                    {id: 2},
+                    {id: 3},
+                    {id: 4},
+                    {id: 5},
+                    {id: 6},
+                    {id: 7},
+                    {id: 8},
+                    {id: 9},
+                    {id: 10},
+                    //{id: 11},
+                    //{id: 12},
+                    //{id: 13},
+                    //{id: 14},
+                    //{id: 15},
+                    //{id: 16},
+                    //{id: 17},
+                    //{id: 18},
+                    //{id: 19},
+                    //{id: 20},
+                    //{id: 21},
+                    //{id: 22},
+                    //{id: 23},
+                    //{id: 24},
+                    //{id: 25}
+                ];
+                $scope.carousel.active = 0;
+
+                $scope.carouselReady = function(_$carousel){
+                    $scope.$carousel = _$carousel;
+                    window.demo = _$carousel;
+                };
+
+                this.add = function(item, index) {
+                    var newArr = $scope.carousel.items.slice(0);
+                    if (typeof index !== 'undefined') {
+                        newArr.splice(index, 0, item);
+                    }
+                    else {
+                        newArr.push(item);
+                    }
+                    $timeout(function(){
+                        $scope.carousel.items = newArr;
+                    });
+                };
+
+                this.remove = function(index, _count) {
+                    var count = _count || 1;
+                    var newArr = $scope.carousel.items.slice(0);
+                    newArr.splice(index, count);
+                    $timeout(function(){
+                        $scope.carousel.items = newArr;
+                    });
+                };
+
+                this.mix = function() {
+                    var newArr = $scope.carousel.items.slice(0);
+                    shuffle(newArr);
+
+                    console.log($scope.carousel.items, newArr);
+
+                    $timeout(function(){
+                        $scope.carousel.items = newArr;
+                    });
+                };
+
+                function shuffle(a) {
+                    var j, x, i;
+                    for (i = a.length; i; i -= 1) {
+                        j = Math.floor(Math.random() * i);
+                        x = a[i - 1];
+                        a[i - 1] = a[j];
+                        a[j] = x;
+                    }
+                }
+
+                window.demoCtrl = this;
+
+            });
+
+            angular.bootstrap(demoHolder, ['demo']);
         })();
     </script>
 

@@ -4,13 +4,13 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "angular": "~1.5.6",
     "classlist.js": "^1.1.20150312",
     "es6-promise": "~3.0.2",
     "events": "^1.1.1",
     "my-utils": "https://github.com/failwin/my-utils.git"
   },
   "devDependencies": {
+    "angular": "~1.5.6",
     "angular-mocks": "~1.5.6",
     "babel-core": "^6.10.4",
     "babel-eslint": "^6.1.2",

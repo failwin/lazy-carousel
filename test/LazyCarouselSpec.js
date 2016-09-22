@@ -501,7 +501,7 @@ describe('LazyCarousel', function(){
                 log = [];
 
                 inst.$events.on('activeChange', function(data) {
-                    log.push(data.active);
+                    log.push(data.index);
                 });
 
                 spyOn(inst, '_animateOffset').and.callFake(function(){

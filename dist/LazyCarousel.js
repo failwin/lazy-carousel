@@ -142,6 +142,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.$listHolder = null;
 
 	        this.active = 0;
+	        this.activeId = 0;
 
 	        this.nav = {
 	            prev: false,
@@ -166,7 +167,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._translateZ = '';
 
 	        this.changesTracker = new this.opts.ChangesTracker(this.$list, {
-	            trackById: this.opts.uniquKeyProp,
+	            trackById: this.opts.uniqueKeyProp,
 	            beforeAdd: this._addItemPre.bind(this),
 	            afterAdd: this._addItemPost.bind(this),
 	            beforeRemove: this._removeItemPre.bind(this),
@@ -177,7 +178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    LazyCarousel.prototype.defOpts = {
-	        uniquKeyProp: 'id',
+	        uniqueKeyProp: 'id',
 	        EventEmitter: _events.EventEmitter,
 	        ChangesTracker: _ChangesTracker2.default
 	    };
@@ -283,9 +284,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LazyCarousel.prototype._notifyActiveChange = function (active, _force) {
 	        if (this.active !== active || _force) {
-	            this.$events.emit('activeChange', {
-	                active: active
-	            });
+	            var activeItem = this.items[active];
+	            if (activeItem) {
+	                this.$events.emit('activeChange', {
+	                    index: active,
+	                    id: activeItem[this.opts.uniqueKeyProp]
+	                });
+	            }
 	        }
 	    };
 	    LazyCarousel.prototype._notifyNavChange = function () {
@@ -503,8 +508,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    LazyCarousel.prototype._removeItemPost = function ($item) {};
 
 	    LazyCarousel.prototype._getItemTemplate = function (item) {
-	        var idKey = this.opts.uniquKeyProp;
-	        return '<li class="item" data-id="' + item[idKey] + '">' + item[idKey] + '</li>';
+	        var idKey = this.opts.uniqueKeyProp;
+	        return '<li class="lc-item" data-id="' + item[idKey] + '">' + item[idKey] + '</li>';
 	    };
 
 	    LazyCarousel.prototype._attachHandlers = function () {
