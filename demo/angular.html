@@ -81,6 +81,34 @@
         <a ng-click="$carousel.slideToDir(1)">Next</a>
         <br />
         <a ng-click="$carousel.slideToDir(-1)">Prev</a>
+
+        <div class="lazy_carousel"
+             my-lazy-carousel="carousel.items"
+             my-lazy-carousel-on-ready="carouselReady($carousel)"
+             my-lazy-carousel-swipe-decorator="{supportMouse: true}"
+             item-as="item"
+                >
+            <div class="item" ng-class="{'active': $carousel.activeId == item.id}">
+                {{item.id}}
+            </div>
+        </div>
+        <a ng-click="$carousel.slideToDir(1)">Next</a>
+        <br />
+        <a ng-click="$carousel.slideToDir(-1)">Prev</a>
+
+        <div class="lazy_carousel"
+             my-lazy-carousel="carousel.items"
+             my-lazy-carousel-on-ready="carouselReady($carousel)"
+             my-lazy-carousel-key-handler-decorator
+             item-as="item"
+                >
+            <div class="item" ng-class="{'active': $carousel.activeId == item.id}">
+                {{item.id}}
+            </div>
+        </div>
+        <a ng-click="$carousel.slideToDir(1)">Next</a>
+        <br />
+        <a ng-click="$carousel.slideToDir(-1)">Prev</a>
     </div>
 
     <script src="../node_modules/angular/angular.js"></script>

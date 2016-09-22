@@ -47,6 +47,7 @@ export default function keyHandlerDecorator(options) {
         var _attachHandlers = inst._attachHandlers.bind(inst),
             _detachHandlers = inst._detachHandlers.bind(inst);
 
+        inst.__keyHandlerDecorator = true;
         inst._attachHandlers = function(){
             _attachHandlers();
 

@@ -275,15 +275,19 @@ export default function swipeDecorator(options) {
         supportMouse: false,
         supportTouch: true
     };
-    var opts = utils.extend({}, defOpts);
-    opts = utils.extend(opts, options);
 
     return function(inst) {
         var _attachHandlers = inst._attachHandlers.bind(inst),
             _detachHandlers = inst._detachHandlers.bind(inst);
 
+        var opts = utils.extend({}, defOpts);
+        opts = utils.extend(opts, options);
+
+        inst.__swipeDecorator = true;
+
         // swipe options
         inst.swipe = {};
+        inst.swipe.opts = opts;
         inst.swipe._isActive = false;
         inst.swipe._lastPos = {};
         inst.swipe._preventMove = null;
@@ -302,7 +306,7 @@ export default function swipeDecorator(options) {
         inst._attachHandlers = function(){
             _attachHandlers();
 
-            if (opts.supportTouch) {
+            if (this.swipe.opts.supportTouch) {
                 // Touch
                 this.$list.addEventListener('touchstart', _touchStart, false);
                 this.$list.addEventListener('touchmove', _touchMove, false);
@@ -310,7 +314,7 @@ export default function swipeDecorator(options) {
                 this.$list.addEventListener('touchcancel', _touchEnd, false);
             }
 
-            if (opts.supportMouse) {
+            if (this.swipe.opts.supportMouse) {
                 // Mouse
                 this.$list.addEventListener('mousedown', _touchStart, false);
                 this.$list.addEventListener('mousemove', _touchMove, false);
@@ -322,7 +326,7 @@ export default function swipeDecorator(options) {
         inst._detachHandlers = function(){
             _detachHandlers();
 
-            if (opts.supportTouch) {
+            if (this.swipe.opts.supportTouch) {
                 // Touch
                 this.$list.removeEventListener('touchstart', _touchStart, false);
                 this.$list.removeEventListener('touchmove', _touchMove, false);
@@ -330,7 +334,7 @@ export default function swipeDecorator(options) {
                 this.$list.removeEventListener('touchcancel', _touchEnd, false);
             }
 
-            if (opts.supportMouse) {
+            if (this.swipe.opts.supportMouse) {
                 // Mouse
                 this.$list.removeEventListener('mousedown', _touchStart, false);
                 this.$list.removeEventListener('mousemove', _touchMove, false);

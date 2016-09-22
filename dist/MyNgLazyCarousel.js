@@ -1638,15 +1638,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        supportMouse: false,
 	        supportTouch: true
 	    };
-	    var opts = _myUtils2.default.extend({}, defOpts);
-	    opts = _myUtils2.default.extend(opts, options);
 
 	    return function (inst) {
 	        var _attachHandlers = inst._attachHandlers.bind(inst),
 	            _detachHandlers = inst._detachHandlers.bind(inst);
 
+	        var opts = _myUtils2.default.extend({}, defOpts);
+	        opts = _myUtils2.default.extend(opts, options);
+
+	        inst.__swipeDecorator = true;
+
 	        // swipe options
 	        inst.swipe = {};
+	        inst.swipe.opts = opts;
 	        inst.swipe._isActive = false;
 	        inst.swipe._lastPos = {};
 	        inst.swipe._preventMove = null;
@@ -1665,7 +1669,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst._attachHandlers = function () {
 	            _attachHandlers();
 
-	            if (opts.supportTouch) {
+	            if (this.swipe.opts.supportTouch) {
 	                // Touch
 	                this.$list.addEventListener('touchstart', _touchStart, false);
 	                this.$list.addEventListener('touchmove', _touchMove, false);
@@ -1673,7 +1677,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$list.addEventListener('touchcancel', _touchEnd, false);
 	            }
 
-	            if (opts.supportMouse) {
+	            if (this.swipe.opts.supportMouse) {
 	                // Mouse
 	                this.$list.addEventListener('mousedown', _touchStart, false);
 	                this.$list.addEventListener('mousemove', _touchMove, false);
@@ -1685,7 +1689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst._detachHandlers = function () {
 	            _detachHandlers();
 
-	            if (opts.supportTouch) {
+	            if (this.swipe.opts.supportTouch) {
 	                // Touch
 	                this.$list.removeEventListener('touchstart', _touchStart, false);
 	                this.$list.removeEventListener('touchmove', _touchMove, false);
@@ -1693,7 +1697,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.$list.removeEventListener('touchcancel', _touchEnd, false);
 	            }
 
-	            if (opts.supportMouse) {
+	            if (this.swipe.opts.supportMouse) {
 	                // Mouse
 	                this.$list.removeEventListener('mousedown', _touchStart, false);
 	                this.$list.removeEventListener('mousemove', _touchMove, false);
@@ -1926,6 +1930,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var _attachHandlers = inst._attachHandlers.bind(inst),
 	            _detachHandlers = inst._detachHandlers.bind(inst);
 
+	        inst.__keyHandlerDecorator = true;
 	        inst._attachHandlers = function () {
 	            _attachHandlers();
 
@@ -2032,23 +2037,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Controller
 	var MyLazyCarouselCtrl = function () {
-	    //var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
-
 	    function MyLazyCarouselCtrl($scope, $timeout) {
 	        this.$scope = $scope;
 	        this.$timeout = $timeout;
 
 	        this._itemScopeAs = 'item';
 
-	        _LazyCarousel2.default.call(this, null, {
-	            noInit: true,
-	            changesTrackerOpts: {
-	                trackById: '_id',
-	                trackByIdFn: function trackByIdFn(key, value, index, trackById) {
-	                    return value[trackById];
-	                }
-	            }
-	        });
+	        _LazyCarousel2.default.call(this, null);
 	    }
 	    MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
 	    _myUtils2.default.inherits(MyLazyCarouselCtrl, _LazyCarousel2.default);
@@ -2102,13 +2097,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	            itemAs: '@itemAs',
 	            initActive: '@myLazyCarouselActive',
 	            onReady: '&myLazyCarouselOnReady',
-	            onActiveChange: '&myLazyCarouselOnActiveChange'
+	            onActiveChange: '&myLazyCarouselOnActiveChange',
+	            swipeDecoratorOpts: '=myLazyCarouselSwipeDecorator',
+	            keyHandlerDecoratorOpts: '=myLazyCarouselKeyHandlerDecorator'
 	        },
 	        template: '<div class="lc-list_holder">' + '   <ul class="lc-list"></ul>' + '</div>',
 	        controller: 'myLazyCarouselCtrl',
 	        compile: function compile(tElement, tAttrs) {
 
 	            return function ($scope, element, attrs, ctrl, transclude) {
+	                var opts;
+	                if ($scope.swipeDecoratorOpts || typeof attrs.myLazyCarouselSwipeDecorator !== 'undefined') {
+	                    opts = $scope.swipeDecoratorOpts || {};
+	                    ctrl = (0, _SwipeDecorator2.default)(opts)(ctrl);
+	                }
+	                if ($scope.keyHandlerDecoratorOpts || typeof attrs.myLazyCarouselKeyHandlerDecorator !== 'undefined') {
+	                    opts = $scope.keyHandlerDecoratorOpts || {};
+	                    ctrl = (0, _KeyHandlerDecorator2.default)(opts)(ctrl);
+	                }
+
 	                ctrl.init(element[0], transclude);
 
 	                $scope.activeIndex = parseInt($scope.initActive, 10) || 0;

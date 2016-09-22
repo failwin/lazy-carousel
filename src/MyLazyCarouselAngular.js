@@ -9,23 +9,13 @@ var myLazyCarouselModule = angular.module('myLazyCarousel', []);
 
 // Controller
 var MyLazyCarouselCtrl = (function() {
-    //var LazyCarousel = keyHandlerDecorator()(swipeDecorator()(LazyCarousel_));
-
     function MyLazyCarouselCtrl($scope, $timeout) {
         this.$scope = $scope;
         this.$timeout = $timeout;
 
         this._itemScopeAs = 'item';
 
-        LazyCarousel.call(this, null, {
-            noInit: true,
-            changesTrackerOpts: {
-                trackById: '_id',
-                trackByIdFn: function(key, value, index, trackById) {
-                    return value[trackById];
-                }
-            }
-        });
+        LazyCarousel.call(this, null);
     }
     MyLazyCarouselCtrl.$inject = ['$scope', '$timeout'];
     utils.inherits(MyLazyCarouselCtrl, LazyCarousel);
@@ -79,7 +69,9 @@ function MyLazyCarouselDirective($timeout) {
             itemAs: '@itemAs',
             initActive: '@myLazyCarouselActive',
             onReady: '&myLazyCarouselOnReady',
-            onActiveChange: '&myLazyCarouselOnActiveChange'
+            onActiveChange: '&myLazyCarouselOnActiveChange',
+            swipeDecoratorOpts: '=myLazyCarouselSwipeDecorator',
+            keyHandlerDecoratorOpts: '=myLazyCarouselKeyHandlerDecorator'
         },
         template:   '<div class="lc-list_holder">' +
                     '   <ul class="lc-list"></ul>' +
@@ -88,6 +80,16 @@ function MyLazyCarouselDirective($timeout) {
         compile: function(tElement, tAttrs) {
 
             return function ($scope, element, attrs, ctrl, transclude) {
+                var opts;
+                if ($scope.swipeDecoratorOpts || typeof attrs.myLazyCarouselSwipeDecorator !== 'undefined') {
+                    opts = $scope.swipeDecoratorOpts || {};
+                    ctrl = swipeDecorator(opts)(ctrl);
+                }
+                if ($scope.keyHandlerDecoratorOpts || typeof attrs.myLazyCarouselKeyHandlerDecorator !== 'undefined') {
+                    opts = $scope.keyHandlerDecoratorOpts || {};
+                    ctrl = keyHandlerDecorator(opts)(ctrl);
+                }
+
                 ctrl.init(element[0], transclude);
 
                 $scope.activeIndex = parseInt($scope.initActive, 10) || 0;

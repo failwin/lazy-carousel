@@ -84,7 +84,7 @@ describe('MyLazyCarouselAngular', function() {
         });
     });
 
-    describe('initialization', function() {
+    describe('functionality', function() {
         let $scope;
 
         beforeEach(function() {
@@ -244,4 +244,146 @@ describe('MyLazyCarouselAngular', function() {
         });
     });
 
+    describe('decorators', function(){
+        let $scope;
+
+        beforeEach(function() {
+            $scope = $rootScope.$new();
+
+            $scope.carousel = {
+                items: getFakeItems(1)
+            };
+        });
+
+        describe('keyHandlerDecorator', function(){
+
+            it ('should not be available by default', function(){
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                $scope.$digest();
+
+                expect(ctrl.__keyHandlerDecorator).not.toBeDefined();
+            });
+
+            it ('should be possible set up by attribute', function(){
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        my-lazy-carousel-key-handler-decorator
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                expect(ctrl.__keyHandlerDecorator).toBeDefined();
+            });
+        });
+
+        describe('swipeDecorator', function(){
+
+            it ('should not be available by default', function(){
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                $scope.$digest();
+
+                expect(ctrl.__swipeDecorator).not.toBeDefined();
+            });
+
+            it ('should be possible set up by attribute', function(){
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        my-lazy-carousel-swipe-decorator
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                expect(ctrl.__swipeDecorator).toBeDefined();
+                expect(ctrl.swipe).toBeDefined();
+            });
+
+            it ('should have default decorator options', function(){
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        my-lazy-carousel-swipe-decorator
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                $scope.$digest();
+
+                expect(ctrl.swipe.opts.supportMouse).toBe(false);
+                expect(ctrl.swipe.opts.supportTouch).toBe(true);
+            });
+
+            it ('should be possible set custom decorator options', function(){
+                $scope.swipeOpts = {
+                    supportMouse: true
+                };
+
+                let { elem, ctrl } = compileElement(`
+                    <div class="lazy_carousel"
+                        my-lazy-carousel="carousel.items"
+                        my-lazy-carousel-swipe-decorator="swipeOpts"
+                        item-as="item"
+                    >
+                        {{item.id}}
+                    </div>
+                `.trim(), $scope);
+
+                $scope.$digest();
+
+                expect(ctrl.swipe.opts.supportMouse).toBe(true);
+                expect(ctrl.swipe.opts.supportTouch).toBe(true);
+            });
+        });
+    });
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
