@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +9,7 @@
 <meta name="keywords" content="" />
 <meta name="description" content="Maak een Schildereitje, krijg korting" />
 
-<link rel="stylesheet" href="../src/base.css">
+<link rel="stylesheet" href="../dist/styles.css">
 
 <!--[if lte IE 9]>
 <script src="../node_modules/classlist.js/classList.js"></script>
@@ -20,15 +17,11 @@
 
 <style type="text/css">
 
-#console {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    background: #fff;
-}
-
 .lazy_carousel {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 
@@ -41,9 +34,19 @@
     font-size: 50px;
 
 }
-.lazy_carousel .item {
-    border: solid 1px black;
+.lazy_carousel .lc-item {
+    position: relative;
     height: 300px;
+}
+.lazy_carousel .lc-item:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    border: solid 1px black;
 }
 
 .lazy_carousel .item.active {

@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +9,7 @@
 <meta name="keywords" content="" />
 <meta name="description" content="Maak een Schildereitje, krijg korting" />
 
-<link rel="stylesheet" href="../src/base.css">
+<link rel="stylesheet" href="../dist/styles.css">
 
 <!--[if lte IE 9]>
 <script src="../node_modules/classlist.js/classList.js"></script>
@@ -21,6 +18,10 @@
 <style type="text/css">
 
 .lazy_carousel {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 
@@ -33,9 +34,19 @@
     font-size: 50px;
 
 }
-.lazy_carousel .item {
-    border: solid 1px black;
+.lazy_carousel .lc-item {
+    position: relative;
     height: 300px;
+}
+.lazy_carousel .lc-item:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    border: solid 1px black;
 }
 
 @media (max-width: 700px) {
@@ -58,9 +69,41 @@
         </div>
     </div>
     <div class="lc-nav">
-        <a href="#" onclick="__demo.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="__demo.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+        <a href="#" onclick="__demo1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+        <a href="#" onclick="__demo1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
     </div>
+
+
+    <div id="demo2" class="lazy_carousel">
+        <div class="lc-list_holder">
+            <ul class="lc-list"></ul>
+        </div>
+    </div>
+    <div class="lc-nav">
+        <a href="#" onclick="__demo2.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+        <a href="#" onclick="__demo2.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+    </div>
+
+    <div id="demo3" class="lazy_carousel">
+        <div class="lc-list_holder">
+            <ul class="lc-list"></ul>
+        </div>
+    </div>
+    <div class="lc-nav">
+        <a href="#" onclick="__demo3.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+        <a href="#" onclick="__demo3.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+    </div>
+
+    <div id="demo4" class="lazy_carousel">
+        <div class="lc-list_holder">
+            <ul class="lc-list"></ul>
+        </div>
+    </div>
+    <div class="lc-nav">
+        <a href="#" onclick="__demo4.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+        <a href="#" onclick="__demo4.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+    </div>
+
 
     <script src="../node_modules/es6-promise/dist/es6-promise.js"></script>
     <script src="../node_modules/my-utils/src/utils.js"></script>
@@ -72,49 +115,73 @@
             var LC = window.LazyCarousel;
             var LazyCarousel = LC.default,
                 keyHandlerDecorator = LC.keyHandlerDecorator,
-                swipeDecorator = LC.swipeDecorator;
+                swipeDecorator = LC.swipeDecorator,
+                SwipeDecorator = LC.SwipeDecorator;
 
+            function getFakeItems(items, _uniqueKeyProp) {
+                var res,
+                        obj,
+                        key = _uniqueKeyProp || 'id';
+
+                if (utils.isArray(items)) {
+                    res = items.map(function(id) {
+                        obj = {};
+                        obj[key] = id;
+                        return obj;
+                    });
+                }
+                else {
+                    res = [];
+                    for (var i = 0; i < items; i++) {
+                        obj = {};
+                        obj[key] = i;
+                        res.push(obj);
+                    }
+                }
+                return res;
+            }
+
+            /* Demo 1 */
             var demo1Holder = document.getElementById("demo1");
             var demo1 = LazyCarousel.create(demo1Holder);
 
-            demo1._getItemTemplate = function(item) {
-                return '<li class="item" data-id="'+ item.id +'">'+ item.id +'</li>';
-            };
 
-            demo1.updateItems([
-                {id: 1},
-                {id: 2},
-                {id: 3},
-                {id: 4},
-                {id: 5},
-                {id: 6},
-                {id: 7},
-                {id: 8},
-                {id: 9},
-                {id: 10},
-                {id: 11},
-                {id: 12},
-                {id: 13},
-                {id: 14},
-                {id: 15},
-                {id: 16},
-                {id: 17},
-                {id: 18},
-                {id: 19},
-                {id: 20},
-                {id: 21},
-                {id: 22},
-                {id: 23},
-                {id: 24},
-                {id: 25},
-                {id: 26},
-                {id: 27},
-                {id: 28},
-                {id: 29},
-                {id: 30}
-            ]);
+            demo1.updateItems(getFakeItems(30));
 
             window.__demo1 = demo1;
+
+            /* Demo 2, with keyHandlerDecorator */
+
+            var demo2Holder = document.getElementById("demo2");
+            var demo2 = new LazyCarousel(demo2Holder);
+            demo2 = keyHandlerDecorator()(demo2);
+            demo2.init();
+
+            demo2.updateItems(getFakeItems(30));
+
+            window.__demo2 = demo2;
+
+            /* Demo 3, with SwipeDecorator */
+
+            var demo3Holder = document.getElementById("demo3");
+            var LazyCarouselWithSwipeDecorator = SwipeDecorator(LazyCarousel);
+            var demo3 = new LazyCarouselWithSwipeDecorator(demo3Holder, {supportMouse: true});
+            demo3.init();
+
+            demo3.updateItems(getFakeItems(30));
+
+            window.__demo3 = demo3;
+
+            /* Demo 4, with swipeDecorator */
+
+            var demo4Holder = document.getElementById("demo4");
+            var demo4 = new LazyCarousel(demo4Holder);
+            demo4 = swipeDecorator({supportMouse: true})(demo4);
+            demo4.init();
+
+            demo4.updateItems(getFakeItems(30));
+
+            window.__demo4 = demo4;
         })();
     </script>
 

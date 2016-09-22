@@ -27,12 +27,14 @@ var output = {
     path: path.resolve('./dist'),
     publicPath: '/dist/',
     filename: '[name].js',
+    sourceMapFilename: '[file].map',
     library: '[name]',
     libraryTarget: 'umd'
 };
 
 if (isProd) {
-    output.filename = '[name].min.js'
+    output.filename = '[name].min.js',
+    output.sourceMapFilename = '[file].min.map'
 }
 
 if (isTest) {

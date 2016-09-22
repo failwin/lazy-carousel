@@ -169,7 +169,7 @@ var LazyCarousel = (function() {
 
         var offsetLeft = this._calculateOffset();
 
-        this._setOffset(offsetLeft, true);
+        this._setOffset(offsetLeft);
     };
 
     LazyCarousel.prototype._notifyActiveChange = function(active, _force){
@@ -198,10 +198,10 @@ var LazyCarousel = (function() {
         }
     };
 
-    LazyCarousel.prototype._setOffset = function(offsetLeft, _save) {
+    LazyCarousel.prototype._setOffset = function(offsetLeft, _notSave) {
         this.$list.style[this._transformProperty] = 'translateX('+ offsetLeft +'px) ' + this._translateZ;
 
-        if (_save){
+        if (!_notSave) {
             this.offsetLeft = offsetLeft;
         }
     };
@@ -295,7 +295,7 @@ var LazyCarousel = (function() {
             this._isBusy = false;
             this.active = newIndex;
             this._notifyNavChange();
-            this._setOffset(toOffset, true);
+            this._setOffset(toOffset);
             this._updateVisible();
             this._centerList();
         }.bind(this))
@@ -312,7 +312,7 @@ var LazyCarousel = (function() {
             var self = this;
 
             if (!duration) {
-                this._setOffset(to);
+                this._setOffset(to, true);
                 resolve();
             }
             else {
