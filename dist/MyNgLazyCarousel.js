@@ -94,7 +94,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        console.log(args);
 	    }
 	};
-
+	var type = {
+	    x: 'X',
+	    y: 'Y'
+	};
 	var LazyCarousel = function () {
 	    function LazyCarousel(elem, opts) {
 	        this.opts = _myUtils2.default.extend({}, this.defOpts);
@@ -143,6 +146,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    LazyCarousel.prototype.defOpts = {
+	        type: type.x,
 	        uniqueKeyProp: 'id',
 	        EventEmitter: _events.EventEmitter,
 	        ChangesTracker: _ChangesTracker2.default
@@ -190,16 +194,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (!this.$list || !this.$listHolder) {
 	            return;
 	        }
+	        var prop = this.opts.type === type.x ? 'clientWidth' : 'clientHeight';
 
-	        this.holderSize = this.$listHolder ? this.$listHolder.clientWidth : null;
+	        this.holderSize = this.$listHolder ? this.$listHolder[prop] : null;
 
 	        var item = this.$list ? this.$list.querySelector('li') : null;
 
 	        if (item) {
-	            this.itemSize = item.clientWidth;
+	            this.itemSize = item[prop];
 	        } else {
 	            item = _myUtils2.default.appendElement(this.$list, '<li class="item"></li>');
-	            this.itemSize = item.clientWidth;
+	            this.itemSize = item[prop];
 	            this.$list.removeChild(item);
 	        }
 	    };
@@ -274,7 +279,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    LazyCarousel.prototype._setOffset = function (offsetLeft, _notSave) {
-	        this.$list.style[this._transformProperty] = 'translateX(' + offsetLeft + 'px) ' + this._translateZ;
+	        this.$list.style[this._transformProperty] = 'translate' + this.opts.type + '(' + offsetLeft + 'px) ' + this._translateZ;
 
 	        if (!_notSave) {
 	            this.offsetLeft = offsetLeft;
@@ -285,19 +290,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    LazyCarousel.prototype._calculateOffset = function (_offset) {
-	        var offsetLeft, leftItemsCount;
+	        var offsetLeft, beforeItemsCount;
 
 	        if (this.isSimple) {
-	            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+	            beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
 	        } else {
-	            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
+	            beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
 	        }
 
-	        if (leftItemsCount < 0) {
+	        if (beforeItemsCount < 0) {
 	            return this._getOffset();
 	        }
 
-	        offsetLeft = this.holderSize / 2 - this.itemSize / 2 - leftItemsCount * this.itemSize;
+	        offsetLeft = this.holderSize / 2 - this.itemSize / 2 - beforeItemsCount * this.itemSize;
 
 	        if (_offset) {
 	            offsetLeft -= _offset * this.itemSize;
@@ -369,7 +374,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LazyCarousel.prototype._animateOffset = function (from, to, duration) {
 	        var transformProperty = this._transformProperty,
-	            translateZ = this._translateZ;
+	            translateZ = this._translateZ,
+	            type = this.opts.type;
 
 	        return new _es6Promise.Promise(function (resolve, reject) {
 	            var self = this;
@@ -381,7 +387,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (_myUtils2.default.supportsTransitions()) {
 	                    // css3 transition
 	                    _myUtils2.default.animateCss(this.$list, {
-	                        'transform': 'translateX(' + to + 'px) ' + this._translateZ
+	                        'transform': 'translate' + type + '(' + to + 'px) ' + translateZ
 	                    }, {
 	                        duration: duration,
 	                        onComplete: resolve
@@ -398,8 +404,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            animate({
 	                duration: duration,
 	                step: function step(progress) {
-	                    var curOffsetLeft = from + delta * progress;
-	                    $elem.style[transformProperty] = 'translateX(' + curOffsetLeft + 'px) ' + translateZ;
+	                    var curOffset = from + delta * progress;
+	                    $elem.style[transformProperty] = 'translate' + type + '(' + curOffset + 'px) ' + translateZ;
 	                },
 	                complete: complete
 	            });
@@ -441,12 +447,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // TODO: test
 
 	        if (this.isSimple) {
-	            var leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+	            var beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
 
 	            if (dir > 0) {
-	                count = this.items.length - leftItemsCount - 1;
+	                count = this.items.length - beforeItemsCount - 1;
 	            } else {
-	                count = leftItemsCount;
+	                count = beforeItemsCount;
 	            }
 	        } else {
 	            count = this.visible;
@@ -524,6 +530,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst.init();
 	        return inst;
 	    };
+	    LazyCarousel.type = type;
 
 	    return LazyCarousel;
 	}();
@@ -1354,7 +1361,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.SwipeDecorator = SwipeDecorator;
 	exports.default = swipeDecorator;
 
 	var _myUtils = __webpack_require__(5);
@@ -1368,7 +1374,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  itemSize
 	 *
 	 *  slideToDir
-	 *  handleEvent
 	 *  _getOffset
 	 *  _setOffset
 	 *  _calculateOffset
@@ -1377,269 +1382,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  _detachHandlers
 	 */
 
-	function SwipeDecorator(base, options) {
-	    function SwipeDecorator() {
-	        base.apply(this, arguments);
-
-	        // swipe options
-	        this.swipe = {};
-	        this.swipe._isActive = false;
-	        this.swipe._lastPos = {};
-	        this.swipe._preventMove = null;
-	        this.swipe._timer = null;
-	        this.swipe._timeStamp = 0;
-	        this.swipe._velocity = 0;
-	        this.swipe._amplitude = 0;
-	        this.swipe._offsetLeft = 0;
-	        this.swipe._offsetLeftTrack = 0;
-	        this.swipe._offsetLeftTarget = 0;
-	        this.swipe._weight = 0.99;
-
-	        this.swipe._targetCount = 0;
-	        this.swipe._dir = 1;
-	    }
-	    _myUtils2.default.inherits(SwipeDecorator, base);
-
-	    SwipeDecorator.prototype.defOpts = _myUtils2.default.extend({
-	        supportMouse: false,
-	        supportTouch: true
-	    }, base.prototype.defOpts);
-
-	    SwipeDecorator.prototype._attachHandlers = function () {
-	        base.prototype._attachHandlers.apply(this, arguments);
-
-	        if (this.opts.supportTouch) {
-	            // Touch
-	            this.$list.addEventListener('touchstart', this, false);
-	            this.$list.addEventListener('touchmove', this, false);
-	            this.$list.addEventListener('touchend', this, false);
-	            this.$list.addEventListener('touchcancel', this, false);
-	        }
-
-	        if (this.opts.supportMouse) {
-
-	            // Mouse
-	            this.$list.addEventListener('mousedown', this, false);
-	            this.$list.addEventListener('mousemove', this, false);
-	            this.$list.addEventListener('mouseup', this, false);
-	            this.$list.addEventListener('mouseleave', this, false);
-	        }
-	    };
-
-	    SwipeDecorator.prototype._detachHandlers = function () {
-	        base.prototype._detachHandlers.apply(this, arguments);
-
-	        if (this.opts.supportTouch) {
-	            // Touch
-	            this.$list.removeEventListener('touchstart', this, false);
-	            this.$list.removeEventListener('touchmove', this, false);
-	            this.$list.removeEventListener('touchend', this, false);
-	            this.$list.removeEventListener('touchcancel', this, false);
-	        }
-
-	        if (this.opts.supportMouse) {
-	            // Mouse
-	            this.$list.removeEventListener('mousedown', this, false);
-	            this.$list.removeEventListener('mousemove', this, false);
-	            this.$list.removeEventListener('mouseup', this, false);
-	        }
-	    };
-
-	    SwipeDecorator.prototype.handleEvent = function () {
-	        base.prototype.handleEvent.apply(this, arguments);
-
-	        var event = arguments[0];
-
-	        switch (event.type) {
-	            case 'touchstart':
-	            case 'mousedown':
-	                {
-	                    this._touchStart(event);
-	                    break;
-	                }
-	            case 'touchmove':
-	            case 'mousemove':
-	                {
-	                    this._touchMove(event);
-	                    break;
-	                }
-	            case 'touchend':
-	            case 'touchcancel':
-	            case 'mouseup':
-	            case 'mouseleave':
-	                {
-	                    this._touchEnd(event);
-	                    break;
-	                }
-	            default:
-	                {
-
-	                    break;
-	                }
-	        }
-	    };
-
-	    SwipeDecorator.prototype._touchStart = function (event) {
-	        if (this._isBusy) {
-	            return;
-	        }
-
-	        this.swipe._isActive = true;
-	        this.swipe._lastPos = this._getEventPosition(event);
-	        this.swipe._amplitude = this.swipe._offsetLeft = 0;
-	        this.swipe._velocity = 0;
-	        this.swipe._offsetLeftTrack = this.swipe._offsetLeft = this._getOffset();
-	        this.swipe._timeStamp = Date.now();
-	        window.clearInterval(this.swipe._timer);
-	        this.swipe._timer = window.setInterval(this._track.bind(this), 100);
-	    };
-	    SwipeDecorator.prototype._touchMove = function (event) {
-	        if (!this.swipe._isActive) {
-	            return;
-	        }
-
-	        var coords = this._getEventPosition(event);
-
-	        if (this.swipe._preventMove === null) {
-	            var swipeDir = this._getSwipeDirection(this.swipe._lastPos, coords);
-	            if (swipeDir === null) {
-	                return;
-	            } else if (swipeDir === 'up' || swipeDir === 'down') {
-	                this.swipe._isActive = false;
-	                return;
-	            } else {
-	                this.swipe._preventMove = true;
-	            }
-	        }
-	        event.preventDefault();
-	        event.stopPropagation();
-
-	        var deltaX = coords.x - this.swipe._lastPos.x;
-
-	        var offsetLeft = this._getOffset() + deltaX;
-	        this._setOffset(offsetLeft, true);
-	        this.swipe._offsetLeft = offsetLeft;
-	    };
-	    SwipeDecorator.prototype._touchEnd = function (event) {
-	        if (!this.swipe._isActive) {
-	            return;
-	        }
-
-	        this.swipe._isActive = false;
-	        this.swipe._preventMove = null;
-	        window.clearInterval(this.swipe._timer);
-
-	        this.swipe._offsetLeftTarget = this.swipe._offsetLeft;
-	        this.swipe._targetCount = 0;
-
-	        var coords = this._getEventPosition(event);
-
-	        this.swipe._dir = 1;
-	        if (coords.x > this.swipe._lastPos.x) {
-	            this.swipe._dir = -1;
-	        }
-
-	        var maxCount = this._getMaxSlideCount(this.swipe._dir);
-
-	        if (this.swipe._velocity > 100 || this.swipe._velocity < -100) {
-
-	            this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
-
-	            var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
-
-	            this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
-	        }
-
-	        this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
-
-	        this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
-
-	        if (this.swipe._targetCount > maxCount) {
-	            this.swipe._targetCount = maxCount;
-	        }
-
-	        this.swipe._offsetLeftTarget = this._calculateOffset(this.swipe._dir * this.swipe._targetCount);
-
-	        this.swipe._amplitude = this.swipe._offsetLeftTarget - this.swipe._offsetLeft;
-
-	        this.swipe._timeStamp = Date.now();
-	        requestAnimationFrame(this._animate.bind(this));
-	    };
-
-	    SwipeDecorator.prototype._track = function (event) {
-	        var now, elapsed, delta, v;
-
-	        now = Date.now();
-	        elapsed = now - this.swipe._timeStamp;
-	        this.swipe._timeStamp = now;
-	        delta = this.swipe._offsetLeft - this.swipe._offsetLeftTrack;
-	        this.swipe._offsetLeftTrack = this.swipe._offsetLeft;
-
-	        v = 1000 * delta / (1 + elapsed);
-	        this.swipe._velocity = 0.8 * v + 0.2 * this.swipe._velocity;
-	    };
-	    SwipeDecorator.prototype._animate = function () {
-	        var now, elapsed, delta;
-
-	        if (this.swipe._amplitude) {
-	            now = Date.now();
-	            elapsed = now - this.swipe._timeStamp;
-	            delta = -this.swipe._amplitude * Math.exp(-elapsed / 325);
-	            if (delta > 5 || delta < -5) {
-	                this._setOffset(this.swipe._offsetLeftTarget + delta, true);
-	                requestAnimationFrame(this._animate.bind(this));
-	                this._isBusy = true;
-	            } else {
-	                this._isBusy = false;
-	                this.slideToDir(this.swipe._dir, this.swipe._targetCount, true);
-	            }
-	        }
-	    };
-
-	    SwipeDecorator.prototype._getEventPosition = function (event) {
-	        var originalEvent = event.originalEvent || event;
-	        var touches = originalEvent.touches && originalEvent.touches.length ? originalEvent.touches : [originalEvent];
-	        var e = originalEvent.changedTouches && originalEvent.changedTouches[0] || touches[0];
-
-	        return {
-	            x: e.clientX,
-	            y: e.clientY
-	        };
-	    };
-	    SwipeDecorator.prototype._getSwipeDirection = function (startPoint, endPoint) {
-	        var x = startPoint.x - endPoint.x;
-	        var y = startPoint.y - endPoint.y;
-
-	        var xAbs = Math.abs(x),
-	            yAbs = Math.abs(y);
-
-	        if (xAbs < 25 && yAbs < 25) {
-	            return null;
-	        }
-
-	        if (xAbs > yAbs) {
-	            if (x > 0) {
-	                return 'left';
-	            }
-	            return 'right';
-	        } else {
-	            if (y > 0) {
-	                return 'up';
-	            }
-	            return 'down';
-	        }
-	    };
-
-	    return SwipeDecorator;
-	}
+	var type = {
+	    x: 'X',
+	    y: 'Y'
+	};
 
 	function swipeDecorator(options) {
 	    var defOpts = {
+	        type: type.x,
 	        supportMouse: false,
 	        supportTouch: true
 	    };
 
-	    return function (inst) {
+	    return function swipeDecoratorFn(inst) {
 	        var _attachHandlers = inst._attachHandlers.bind(inst),
 	            _detachHandlers = inst._detachHandlers.bind(inst);
 
@@ -1658,9 +1413,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst.swipe._timeStamp = 0;
 	        inst.swipe._velocity = 0;
 	        inst.swipe._amplitude = 0;
-	        inst.swipe._offsetLeft = 0;
-	        inst.swipe._offsetLeftTrack = 0;
-	        inst.swipe._offsetLeftTarget = 0;
+	        inst.swipe._offset = 0;
+	        inst.swipe._offsetTrack = 0;
+	        inst.swipe._offsetTarget = 0;
 	        inst.swipe._weight = 0.99;
 
 	        inst.swipe._targetCount = 0;
@@ -1713,9 +1468,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this.swipe._isActive = true;
 	            this.swipe._lastPos = _getEventPosition(event);
-	            this.swipe._amplitude = this.swipe._offsetLeft = 0;
+	            this.swipe._amplitude = this.swipe._offset = 0;
 	            this.swipe._velocity = 0;
-	            this.swipe._offsetLeftTrack = this.swipe._offsetLeft = this._getOffset();
+	            this.swipe._offsetTrack = this.swipe._offset = this._getOffset();
 	            this.swipe._timeStamp = Date.now();
 	            window.clearInterval(this.swipe._timer);
 	            this.swipe._timer = window.setInterval(this._track.bind(this), 100);
@@ -1726,13 +1481,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return;
 	            }
 
-	            var coords = _getEventPosition(event);
+	            var coords = _getEventPosition(event),
+	                prop = this.swipe.opts.type.toLowerCase();
 
 	            if (this.swipe._preventMove === null) {
-	                var swipeDir = _getSwipeDirection(this.swipe._lastPos, coords);
+	                var swipeDir = _getSwipeDirection(this.swipe._lastPos, coords, this.swipe.opts.type);
+
 	                if (swipeDir === null) {
 	                    return;
-	                } else if (swipeDir === 'up' || swipeDir === 'down') {
+	                } else if (this.swipe.opts.type === type.x && (swipeDir === 'up' || swipeDir === 'down')) {
+	                    this.swipe._isActive = false;
+	                    return;
+	                } else if (this.swipe.opts.type === type.y && (swipeDir === 'left' || swipeDir === 'right')) {
 	                    this.swipe._isActive = false;
 	                    return;
 	                } else {
@@ -1742,11 +1502,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            event.preventDefault();
 	            event.stopPropagation();
 
-	            var deltaX = coords.x - this.swipe._lastPos.x;
+	            var deltaX = coords[prop] - this.swipe._lastPos[prop];
 
-	            var offsetLeft = this._getOffset() + deltaX;
-	            this._setOffset(offsetLeft, true);
-	            this.swipe._offsetLeft = offsetLeft;
+	            var offset = this._getOffset() + deltaX;
+	            this._setOffset(offset, true);
+	            this.swipe._offset = offset;
 	        }.bind(inst);
 
 	        var _touchEnd = function (event) {
@@ -1754,17 +1514,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return;
 	            }
 
+	            var prop = this.swipe.opts.type.toLowerCase();
+
 	            this.swipe._isActive = false;
 	            this.swipe._preventMove = null;
 	            window.clearInterval(this.swipe._timer);
 
-	            this.swipe._offsetLeftTarget = this.swipe._offsetLeft;
+	            this.swipe._offsetTarget = this.swipe._offset;
 	            this.swipe._targetCount = 0;
 
 	            var coords = _getEventPosition(event);
 
 	            this.swipe._dir = 1;
-	            if (coords.x > this.swipe._lastPos.x) {
+	            if (coords[prop] > this.swipe._lastPos[prop]) {
 	                this.swipe._dir = -1;
 	            }
 
@@ -1774,12 +1536,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
 
-	                var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
+	                var count = Math.abs((this.swipe._offsetTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
 
-	                this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
+	                this.swipe._offsetTarget = this._getOffset() + this.swipe._amplitude;
 	            }
 
-	            this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
+	            this.swipe._targetCount = (this.swipe._offsetTarget - this._getOffset()) / this.itemSize;
 
 	            this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 
@@ -1787,9 +1549,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                this.swipe._targetCount = maxCount;
 	            }
 
-	            this.swipe._offsetLeftTarget = this._calculateOffset(this.swipe._dir * this.swipe._targetCount);
+	            this.swipe._offsetTarget = this._calculateOffset(this.swipe._dir * this.swipe._targetCount);
 
-	            this.swipe._amplitude = this.swipe._offsetLeftTarget - this.swipe._offsetLeft;
+	            this.swipe._amplitude = this.swipe._offsetTarget - this.swipe._offset;
 
 	            this.swipe._timeStamp = Date.now();
 	            requestAnimationFrame(this._animate.bind(this));
@@ -1801,8 +1563,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            now = Date.now();
 	            elapsed = now - this.swipe._timeStamp;
 	            this.swipe._timeStamp = now;
-	            delta = this.swipe._offsetLeft - this.swipe._offsetLeftTrack;
-	            this.swipe._offsetLeftTrack = this.swipe._offsetLeft;
+	            delta = this.swipe._offset - this.swipe._offsetTrack;
+	            this.swipe._offsetTrack = this.swipe._offset;
 
 	            v = 1000 * delta / (1 + elapsed);
 	            this.swipe._velocity = 0.8 * v + 0.2 * this.swipe._velocity;
@@ -1815,7 +1577,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                elapsed = now - this.swipe._timeStamp;
 	                delta = -this.swipe._amplitude * Math.exp(-elapsed / 325);
 	                if (delta > 5 || delta < -5) {
-	                    this._setOffset(this.swipe._offsetLeftTarget + delta, true);
+	                    this._setOffset(this.swipe._offsetTarget + delta, true);
 	                    requestAnimationFrame(this._animate.bind(this));
 	                    this._isBusy = true;
 	                } else {
@@ -1837,8 +1599,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 
 	        var _getSwipeDirection = function _getSwipeDirection(startPoint, endPoint) {
-	            var x = startPoint.x - endPoint.x;
-	            var y = startPoint.y - endPoint.y;
+	            var x = startPoint.x - endPoint.x,
+	                y = startPoint.y - endPoint.y;
 
 	            var xAbs = Math.abs(x),
 	                yAbs = Math.abs(y);
@@ -1864,6 +1626,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return inst;
 	    };
 	}
+	swipeDecorator.type = type;
 
 /***/ },
 /* 9 */
@@ -1874,7 +1637,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.KeyHandlerDecorator = KeyHandlerDecorator;
 	exports.default = keyHandlerDecorator;
 
 	var _myUtils = __webpack_require__(5);
@@ -1888,42 +1650,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *  _attachHandlers,
 	 *  _detachHandlers
 	 */
-
-	function KeyHandlerDecorator(base, options) {
-	    function KeyHandlerDecorator() {
-	        base.apply(this, arguments);
-	        this._keyHandler = this._keyHandler.bind(this);
-	    }
-	    _myUtils2.default.inherits(KeyHandlerDecorator, base);
-
-	    KeyHandlerDecorator.prototype._attachHandlers = function () {
-	        base.prototype._attachHandlers.apply(this, arguments);
-
-	        document.addEventListener('keyup', this._keyHandler, false);
-	    };
-
-	    KeyHandlerDecorator.prototype._detachHandlers = function () {
-	        base.prototype._detachHandlers.apply(this, arguments);
-
-	        document.removeEventListener('keyup', this._keyHandler, false);
-	    };
-
-	    KeyHandlerDecorator.prototype._keyHandler = function (event) {
-	        // > 39
-	        // < 37
-	        var keyCode = event.which || event.keyCode;
-
-	        if (keyCode === 39 || keyCode === 37) {
-	            var dir = 1;
-	            if (keyCode === 37) {
-	                dir = -1;
-	            }
-	            this.slideToDir(dir);
-	        }
-	    };
-
-	    return KeyHandlerDecorator;
-	}
 
 	function keyHandlerDecorator(options) {
 	    return function (inst) {

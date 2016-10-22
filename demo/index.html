@@ -49,6 +49,15 @@
     border: solid 1px black;
 }
 
+.lazy_carousel__vertical .lc-list_holder {
+    height: 300px;
+
+}
+.lazy_carousel__vertical li {
+    height: 300px;
+    width: auto;
+}
+
 @media (max-width: 700px) {
 
     .lazy_carousel li {
@@ -63,46 +72,81 @@
 <div id="console">
 
 </div>
-    <div id="demo1" class="lazy_carousel">
-        <div class="lc-list_holder">
-            <ul class="lc-list"></ul>
-        </div>
-    </div>
-    <div class="lc-nav">
-        <a href="#" onclick="__demo1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="__demo1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
-    </div>
+    <table style="width: 100%; table-layout: fixed;">
+        <tr>
+            <td>
+                <div id="demo1" class="lazy_carousel">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+            <td style="width: 30%;">
+                <div id="demo1_1" class="lazy_carousel lazy_carousel__vertical">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo1_1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo1_1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="demo2" class="lazy_carousel">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo2.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo2.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+            <td style="width: 30%;">
+                <div id="demo2_1" class="lazy_carousel lazy_carousel__vertical">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo2_1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo2_1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="demo3" class="lazy_carousel">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo3.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo3.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+            <td style="width: 30%;">
+                <div id="demo3_1" class="lazy_carousel lazy_carousel__vertical">
+                    <div class="lc-list_holder">
+                        <ul class="lc-list"></ul>
+                    </div>
+                </div>
+                <div class="lc-nav">
+                    <a href="#" onclick="__demo3_1.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
+                    <a href="#" onclick="__demo3_1.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
+                </div>
+            </td>
+        </tr>
+    </table>
 
-
-    <div id="demo2" class="lazy_carousel">
-        <div class="lc-list_holder">
-            <ul class="lc-list"></ul>
-        </div>
-    </div>
-    <div class="lc-nav">
-        <a href="#" onclick="__demo2.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="__demo2.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
-    </div>
-
-    <div id="demo3" class="lazy_carousel">
-        <div class="lc-list_holder">
-            <ul class="lc-list"></ul>
-        </div>
-    </div>
-    <div class="lc-nav">
-        <a href="#" onclick="__demo3.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="__demo3.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
-    </div>
-
-    <div id="demo4" class="lazy_carousel">
-        <div class="lc-list_holder">
-            <ul class="lc-list"></ul>
-        </div>
-    </div>
-    <div class="lc-nav">
-        <a href="#" onclick="__demo4.slideToDir(-1); return false;" class="lc-nav_link prev" data-dir="-1">Prev</a>
-        <a href="#" onclick="__demo4.slideToDir(1); return false;" class="lc-nav_link next" data-dir="1">Next</a>
-    </div>
 
 
     <script src="../node_modules/es6-promise/dist/es6-promise.js"></script>
@@ -115,8 +159,7 @@
             var LC = window.LazyCarousel;
             var LazyCarousel = LC.default,
                 keyHandlerDecorator = LC.keyHandlerDecorator,
-                swipeDecorator = LC.swipeDecorator,
-                SwipeDecorator = LC.SwipeDecorator;
+                swipeDecorator = LC.swipeDecorator;
 
             function getFakeItems(items, _uniqueKeyProp) {
                 var res,
@@ -161,27 +204,57 @@
 
             window.__demo2 = demo2;
 
-            /* Demo 3, with SwipeDecorator */
+            /* Demo 3, with swipeDecorator */
 
             var demo3Holder = document.getElementById("demo3");
-            var LazyCarouselWithSwipeDecorator = SwipeDecorator(LazyCarousel);
-            var demo3 = new LazyCarouselWithSwipeDecorator(demo3Holder, {supportMouse: true});
+            var demo3 = new LazyCarousel(demo3Holder);
+            demo3 = swipeDecorator({supportMouse: true})(demo3);
             demo3.init();
 
             demo3.updateItems(getFakeItems(30));
 
             window.__demo3 = demo3;
 
-            /* Demo 4, with swipeDecorator */
+            /* Demo 1_1, vertical */
 
-            var demo4Holder = document.getElementById("demo4");
-            var demo4 = new LazyCarousel(demo4Holder);
-            demo4 = swipeDecorator({supportMouse: true})(demo4);
-            demo4.init();
+            var demo1_1Holder = document.getElementById("demo1_1");
+            var demo1_1 = new LazyCarousel(demo1_1Holder, {
+                type: LazyCarousel.type.y
+            });
+            demo1_1.init();
 
-            demo4.updateItems(getFakeItems(30));
+            demo1_1.updateItems(getFakeItems(30));
 
-            window.__demo4 = demo4;
+            window.__demo1_1 = demo1_1;
+
+            /* Demo 2_1, vertical with keyHandlerDecorator */
+
+            var demo2_1Holder = document.getElementById("demo2_1");
+            var demo2_1 = new LazyCarousel(demo2_1Holder, {
+                type: LazyCarousel.type.y
+            });
+            demo2_1 = keyHandlerDecorator()(demo2_1);
+            demo2_1.init();
+
+            demo2_1.updateItems(getFakeItems(30));
+
+            window.__demo2_1 = demo2_1;
+
+            /* Demo 3, with swipeDecorator */
+
+            var demo3_1Holder = document.getElementById("demo3_1");
+            var demo3_1 = new LazyCarousel(demo3_1Holder, {
+                type: LazyCarousel.type.y
+            });
+            demo3_1 = swipeDecorator({
+                type: swipeDecorator.type.y,
+                supportMouse: true
+            })(demo3_1);
+            demo3_1.init();
+
+            demo3_1.updateItems(getFakeItems(30));
+
+            window.__demo3_1 = demo3_1;
         })();
     </script>
 

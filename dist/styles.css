@@ -35,4 +35,21 @@
     margin: 0;
     padding: 0;
 }
+
+.lazy_carousel__vertical .lc-list {
+    width: auto;
+    height: 1000em;
+
+    -webkit-transform: translateY(0);
+    -moz-transform: translateY(0);
+    -o-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+}
+
+.lazy_carousel__vertical .lc-item,
+.lazy_carousel__vertical .lc-list li.item {
+    float: none;
+    display: block;
+}
 /*# sourceMappingURL=styles.css.map*/

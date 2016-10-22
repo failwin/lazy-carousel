@@ -14,7 +14,10 @@ var log = function() {
         console.log(args);
     }
 };
-
+var type = {
+    x: 'X',
+    y: 'Y'
+};
 var LazyCarousel = (function() {
     function LazyCarousel(elem, opts) {
         this.opts = utils.extend({}, this.defOpts);
@@ -63,6 +66,7 @@ var LazyCarousel = (function() {
     }
 
     LazyCarousel.prototype.defOpts = {
+        type: type.x,
         uniqueKeyProp: 'id',
         EventEmitter: EventEmitter,
         ChangesTracker: ChangesTracker
@@ -110,17 +114,18 @@ var LazyCarousel = (function() {
         if (!this.$list || !this.$listHolder) {
             return;
         }
+        var prop = (this.opts.type === type.x) ? 'clientWidth' : 'clientHeight';
 
-        this.holderSize = this.$listHolder ? this.$listHolder.clientWidth : null;
+        this.holderSize = this.$listHolder ? this.$listHolder[prop] : null;
 
         var item = this.$list ? this.$list.querySelector('li') : null;
 
         if (item) {
-            this.itemSize = item.clientWidth;
+            this.itemSize = item[prop];
         }
         else {
             item = utils.appendElement(this.$list, '<li class="item"></li>');
-            this.itemSize = item.clientWidth;
+            this.itemSize = item[prop];
             this.$list.removeChild(item);
         }
     };
@@ -199,7 +204,7 @@ var LazyCarousel = (function() {
     };
 
     LazyCarousel.prototype._setOffset = function(offsetLeft, _notSave) {
-        this.$list.style[this._transformProperty] = 'translateX('+ offsetLeft +'px) ' + this._translateZ;
+        this.$list.style[this._transformProperty] = 'translate'+ this.opts.type +'('+ offsetLeft +'px) ' + this._translateZ;
 
         if (!_notSave) {
             this.offsetLeft = offsetLeft;
@@ -211,20 +216,20 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype._calculateOffset = function(_offset) {
         var offsetLeft,
-            leftItemsCount;
+            beforeItemsCount;
 
         if (this.isSimple) {
-            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+            beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
         }
         else {
-            leftItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
+            beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(0, 0, this.items.length, this.partialItems.length, this.isSimple);
         }
 
-        if (leftItemsCount < 0) {
+        if (beforeItemsCount < 0) {
             return this._getOffset();
         }
 
-        offsetLeft = this.holderSize/2 - this.itemSize/2 - (leftItemsCount * this.itemSize);
+        offsetLeft = this.holderSize/2 - this.itemSize/2 - (beforeItemsCount * this.itemSize);
 
         if (_offset) {
             offsetLeft -= (_offset * this.itemSize);
@@ -306,7 +311,8 @@ var LazyCarousel = (function() {
 
     LazyCarousel.prototype._animateOffset = function(from, to, duration) {
         var transformProperty = this._transformProperty,
-            translateZ = this._translateZ;
+            translateZ = this._translateZ,
+            type = this.opts.type;
 
         return new Promise(function(resolve, reject) {
             var self = this;
@@ -320,7 +326,7 @@ var LazyCarousel = (function() {
                     // css3 transition
                     utils.animateCss(this.$list,
                         {
-                            'transform' : 'translateX('+ to +'px) ' + this._translateZ
+                            'transform' : 'translate'+ type +'('+ to +'px) ' + translateZ
                         },
                         {
                             duration : duration,
@@ -340,8 +346,8 @@ var LazyCarousel = (function() {
             animate({
                 duration: duration,
                 step: function(progress) {
-                    var curOffsetLeft = from + delta * progress;
-                    $elem.style[transformProperty] = 'translateX('+ curOffsetLeft +'px) ' + translateZ;
+                    var curOffset = from + delta * progress;
+                    $elem.style[transformProperty] = 'translate'+ type +'('+ curOffset +'px) ' + translateZ;
                 },
                 complete: complete
             });
@@ -383,13 +389,13 @@ var LazyCarousel = (function() {
         // TODO: test
 
         if (this.isSimple) {
-            var leftItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+            var beforeItemsCount = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
 
             if (dir > 0) {
-                count = this.items.length - leftItemsCount - 1;
+                count = this.items.length - beforeItemsCount - 1;
             }
             else {
-                count = leftItemsCount;
+                count = beforeItemsCount;
             }
         }
         else {
@@ -470,6 +476,7 @@ var LazyCarousel = (function() {
         inst.init();
         return inst;
     };
+    LazyCarousel.type = type;
 
     return LazyCarousel;
 })();

@@ -1,9 +1,9 @@
 import LazyCarousel from './LazyCarousel.js';
-import swipeDecorator, { SwipeDecorator } from './decorators/SwipeDecorator.js';
-import keyHandlerDecorator, { KeyHandlerDecorator } from './decorators/KeyHandlerDecorator.js';
+import swipeDecorator from './decorators/SwipeDecorator.js';
+import keyHandlerDecorator from './decorators/KeyHandlerDecorator.js';
 
 export default LazyCarousel;
-export { swipeDecorator, SwipeDecorator, keyHandlerDecorator, KeyHandlerDecorator };
+export { swipeDecorator, keyHandlerDecorator };
 
 
 //export default from './LazyCarousel.js';
