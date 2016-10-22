@@ -777,36 +777,36 @@ describe('LazyCarousel', function(){
         it('should get correct holder width', function() {
             inst.init();
 
-            expect(inst.holderWidth).toBe(1000);
+            expect(inst.holderSize).toBe(1000);
         });
 
         it('should get correct item width from fake item', function() {
             inst.init();
 
-            expect(inst.itemWidth).toBe(150);
+            expect(inst.itemSize).toBe(150);
         });
     });
 
     describe('_calculateVisibility', function() {
         var inst,
-            holderWidth,
-            itemWidth,
+            holderSize,
+            itemSize,
             items = [];
 
         beforeEach(function() {
             inst = createCarousel({});
 
             spyOn(inst, '_fetchElementsSize').and.callFake(function(){
-                this.holderWidth = holderWidth;
-                this.itemWidth = itemWidth;
+                this.holderSize = holderSize;
+                this.itemSize = itemSize;
             });
 
             inst.init();
         });
 
         it('should return simple mode', function() {
-            holderWidth = 1000;
-            itemWidth = 100;
+            holderSize = 1000;
+            itemSize = 100;
             items = getFakeItems(2);
 
             inst.updateItems(items);
@@ -817,8 +817,8 @@ describe('LazyCarousel', function(){
         });
 
         it('should return complex mode', function() {
-            holderWidth = 1000;
-            itemWidth = 100;
+            holderSize = 1000;
+            itemSize = 100;
             items = getFakeItems(50);
 
             inst.updateItems(items);
@@ -827,8 +827,8 @@ describe('LazyCarousel', function(){
         });
 
         it('should return odd visible count in complex mode', function() {
-            holderWidth = 1000;
-            itemWidth = 100;
+            holderSize = 1000;
+            itemSize = 100;
             items = getFakeItems(50);
 
             inst.updateItems(items);
@@ -836,7 +836,7 @@ describe('LazyCarousel', function(){
             expect(inst.isSimple).toBe(false);
             expect(inst.visible).toBe(11);
 
-            holderWidth = 1100;
+            holderSize = 1100;
 
             inst.updateItems(items);
 
@@ -845,8 +845,8 @@ describe('LazyCarousel', function(){
         });
 
         it('should return correct addition items count', function() {
-            holderWidth = 1000;
-            itemWidth = 100;
+            holderSize = 1000;
+            itemSize = 100;
             items = getFakeItems(50);
 
             inst.updateItems(items);
@@ -1005,8 +1005,8 @@ describe('LazyCarousel', function(){
         var inst,
             elem,
             items,
-            holderWidth = 1000,
-            itemWidth = 200,
+            holderSize = 1000,
+            itemSize = 200,
             partialItems = [];
 
         beforeEach(function() {
@@ -1015,8 +1015,8 @@ describe('LazyCarousel', function(){
             inst = createCarousel({}, elem);
 
             spyOn(inst, '_fetchElementsSize').and.callFake(function(){
-                this.holderWidth = holderWidth;
-                this.itemWidth = itemWidth;
+                this.holderSize = holderSize;
+                this.itemSize = itemSize;
             });
 
             spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){
@@ -1118,8 +1118,8 @@ describe('LazyCarousel', function(){
         var inst,
             elem,
             items,
-            holderWidth = 1000,
-            itemWidth = 200,
+            holderSize = 1000,
+            itemSize = 200,
             partialItems = [];
 
         /**
@@ -1127,7 +1127,7 @@ describe('LazyCarousel', function(){
          * @returns {number} left offset according to the left side
          */
         function getOffsetLeft(centerOffset) {
-            return holderWidth/2 - itemWidth/2 + (centerOffset * itemWidth);
+            return holderSize/2 - itemSize/2 + (centerOffset * itemSize);
         }
 
         beforeEach(function() {
@@ -1136,8 +1136,8 @@ describe('LazyCarousel', function(){
             inst = createCarousel({}, elem);
 
             spyOn(inst, '_fetchElementsSize').and.callFake(function(){
-                this.holderWidth = holderWidth;
-                this.itemWidth = itemWidth;
+                this.holderSize = holderSize;
+                this.itemSize = itemSize;
             });
 
             spyOn(LazyCarousel.utils, 'getPartialItems').and.callFake(function(){

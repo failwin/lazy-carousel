@@ -44,8 +44,8 @@ var LazyCarousel = (function() {
         this._partialItemsBefore = [];
         this._partialItemsAfter = [];
 
-        this.holderWidth = null;
-        this.itemWidth = null;
+        this.holderSize = null;
+        this.itemSize = null;
         this.offsetLeft = 0;
 
         this._transformProperty = '';
@@ -111,16 +111,16 @@ var LazyCarousel = (function() {
             return;
         }
 
-        this.holderWidth = this.$listHolder ? this.$listHolder.clientWidth : null;
+        this.holderSize = this.$listHolder ? this.$listHolder.clientWidth : null;
 
         var item = this.$list ? this.$list.querySelector('li') : null;
 
         if (item) {
-            this.itemWidth = item.clientWidth;
+            this.itemSize = item.clientWidth;
         }
         else {
             item = utils.appendElement(this.$list, '<li class="item"></li>');
-            this.itemWidth = item.clientWidth;
+            this.itemSize = item.clientWidth;
             this.$list.removeChild(item);
         }
     };
@@ -130,7 +130,7 @@ var LazyCarousel = (function() {
             addition = 0,
             count = this.items.length;
 
-        visible = Math.floor(this.holderWidth/this.itemWidth) + 1;
+        visible = Math.floor(this.holderSize/this.itemSize) + 1;
         if (visible % 2 === 0) {    // 0 2 4 6
             visible++;              // 1 3 5 7
         }
@@ -224,10 +224,10 @@ var LazyCarousel = (function() {
             return this._getOffset();
         }
 
-        offsetLeft = this.holderWidth/2 - this.itemWidth/2 - (leftItemsCount * this.itemWidth);
+        offsetLeft = this.holderSize/2 - this.itemSize/2 - (leftItemsCount * this.itemSize);
 
         if (_offset) {
-            offsetLeft -= (_offset * this.itemWidth);
+            offsetLeft -= (_offset * this.itemSize);
         }
 
         return offsetLeft;

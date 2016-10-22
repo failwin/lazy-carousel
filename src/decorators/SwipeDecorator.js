@@ -2,7 +2,7 @@ import utils from 'my-utils';
 
 /**
  *  $list
- *  itemWidth
+ *  itemSize
  *
  *  slideToDir
  *  handleEvent
@@ -180,12 +180,12 @@ export function SwipeDecorator(base, options) {
 
             this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
 
-            var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude)/this.itemWidth);
+            var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude)/this.itemSize);
 
             this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
         }
 
-        this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemWidth;
+        this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
 
         this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 
@@ -413,12 +413,12 @@ export default function swipeDecorator(options) {
 
                 this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
 
-                var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude)/this.itemWidth);
+                var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude)/this.itemSize);
 
                 this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
             }
 
-            this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemWidth;
+            this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
 
             this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 

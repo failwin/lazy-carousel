@@ -159,8 +159,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._partialItemsBefore = [];
 	        this._partialItemsAfter = [];
 
-	        this.holderWidth = null;
-	        this.itemWidth = null;
+	        this.holderSize = null;
+	        this.itemSize = null;
 	        this.offsetLeft = 0;
 
 	        this._transformProperty = '';
@@ -226,15 +226,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	        }
 
-	        this.holderWidth = this.$listHolder ? this.$listHolder.clientWidth : null;
+	        this.holderSize = this.$listHolder ? this.$listHolder.clientWidth : null;
 
 	        var item = this.$list ? this.$list.querySelector('li') : null;
 
 	        if (item) {
-	            this.itemWidth = item.clientWidth;
+	            this.itemSize = item.clientWidth;
 	        } else {
 	            item = _myUtils2.default.appendElement(this.$list, '<li class="item"></li>');
-	            this.itemWidth = item.clientWidth;
+	            this.itemSize = item.clientWidth;
 	            this.$list.removeChild(item);
 	        }
 	    };
@@ -244,7 +244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            addition = 0,
 	            count = this.items.length;
 
-	        visible = Math.floor(this.holderWidth / this.itemWidth) + 1;
+	        visible = Math.floor(this.holderSize / this.itemSize) + 1;
 	        if (visible % 2 === 0) {
 	            // 0 2 4 6
 	            visible++; // 1 3 5 7
@@ -332,10 +332,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return this._getOffset();
 	        }
 
-	        offsetLeft = this.holderWidth / 2 - this.itemWidth / 2 - leftItemsCount * this.itemWidth;
+	        offsetLeft = this.holderSize / 2 - this.itemSize / 2 - leftItemsCount * this.itemSize;
 
 	        if (_offset) {
-	            offsetLeft -= _offset * this.itemWidth;
+	            offsetLeft -= _offset * this.itemSize;
 	        }
 
 	        return offsetLeft;
@@ -1400,7 +1400,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 *  $list
-	 *  itemWidth
+	 *  itemSize
 	 *
 	 *  slideToDir
 	 *  handleEvent
@@ -1580,12 +1580,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
 
-	            var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemWidth);
+	            var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
 
 	            this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
 	        }
 
-	        this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemWidth;
+	        this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
 
 	        this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 
@@ -1809,12 +1809,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
 
-	                var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemWidth);
+	                var count = Math.abs((this.swipe._offsetLeftTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
 
 	                this.swipe._offsetLeftTarget = this._getOffset() + this.swipe._amplitude;
 	            }
 
-	            this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemWidth;
+	            this.swipe._targetCount = (this.swipe._offsetLeftTarget - this._getOffset()) / this.itemSize;
 
 	            this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 
