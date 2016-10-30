@@ -180,6 +180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    LazyCarousel.prototype.updateItems = function (items, _active) {
 	        this.items = items && items.length ? items : [];
+	        var oldActive = this.active;
 	        this.active = _active || 0;
 
 	        this._fetchElementsSize();
@@ -187,7 +188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._updateVisible();
 	        this._centerList();
 
-	        this._notifyActiveChange(this.active, true);
+	        this._notifyActiveChange(this.active, true, oldActive);
 	        this._notifyNavChange();
 	    };
 	    LazyCarousel.prototype._fetchElementsSize = function () {
@@ -252,8 +253,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._setOffset(offsetLeft);
 	    };
 
-	    LazyCarousel.prototype._notifyActiveChange = function (active, _force) {
+	    LazyCarousel.prototype._notifyActiveChange = function (active, _force, _oldActive) {
 	        if (this.active !== active || _force) {
+	            var oldActiveIndex = LazyCarousel.utils.globalToPartialIndex(_oldActive, 0, this.items.length, this.partialItems.length, this.isSimple);
+
+	            var newActiveIndex = LazyCarousel.utils.globalToPartialIndex(active, 0, this.items.length, this.partialItems.length, this.isSimple);
+
+	            this.$events.emit('changeActiveBefore', {
+	                oldActive: _oldActive,
+	                newActive: active,
+	                $oldActiveItem: this.$list.children[oldActiveIndex],
+	                $newActiveItem: this.$list.children[newActiveIndex]
+	            });
+
 	            var activeItem = this.items[active];
 	            if (activeItem) {
 	                this.$events.emit('activeChange', {
@@ -354,19 +366,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._isBusy = true;
 
 	        if (_myUtils2.default.supportsTransitions()) {
-	            this._notifyActiveChange(newIndex);
+	            this._notifyActiveChange(newIndex, false, this.active);
 	        }
 
 	        return this._animateOffset(fromOffset, toOffset, duration).then(function () {
 	            if (!_myUtils2.default.supportsTransitions()) {
-	                this._notifyActiveChange(newIndex);
+	                this._notifyActiveChange(newIndex, false, this.active);
 	            }
 	            this._isBusy = false;
+	            var oldActive = this.active;
 	            this.active = newIndex;
 	            this._notifyNavChange();
 	            this._setOffset(toOffset);
 	            this._updateVisible();
 	            this._centerList();
+
+	            var oldActiveIndex = LazyCarousel.utils.globalToPartialIndex(oldActive, 0, this.items.length, this.partialItems.length, this.isSimple);
+
+	            var newActiveIndex = LazyCarousel.utils.globalToPartialIndex(this.active, 0, this.items.length, this.partialItems.length, this.isSimple);
+
+	            this.$events.emit('changeActiveAfter', {
+	                oldActive: oldActive,
+	                newActive: this.active,
+	                $oldActiveItem: this.$list.children[oldActiveIndex],
+	                $newActiveItem: this.$list.children[newActiveIndex]
+	            });
 	        }.bind(this)).catch(function (error) {
 	            console.error(error);
 	        });
@@ -1060,7 +1084,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: true
 	});
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	var NG_REMOVED = '$$MY_NG_REMOVED';
 

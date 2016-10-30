@@ -42,16 +42,17 @@ describe('ChangesTracker', function() {
         expect(elem.firstChild).toBe(inst.$startComment);
     });
 
-    it('should insert item ', function() {
+    it('should insert items ', function() {
         var elem = document.createElement('ul');
 
         var inst = createInstance(elem);
 
         inst.updateList([
-            {id: 1, name: 'Yura'}
+            {id: 1},
+            {id: 2}
         ]);
 
-        expect(elem.children.length).toBe(1);
+        expect(elem.children.length).toBe(2);
     });
 
     it('should remove item ', function() {
@@ -60,7 +61,7 @@ describe('ChangesTracker', function() {
         var inst = createInstance(elem);
 
         inst.updateList([
-            {id: 1, name: 'Yura'}
+            {id: 1}
         ]);
 
         expect(elem.children.length).toBe(1);
