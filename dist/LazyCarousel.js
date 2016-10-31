@@ -1450,7 +1450,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var defOpts = {
 	        type: type.x,
 	        supportMouse: false,
-	        supportTouch: true
+	        supportTouch: true,
+	        weight: 0.99,
+            velocity: 0.8
 	    };
 
 	    return function swipeDecoratorFn(inst) {
@@ -1475,7 +1477,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst.swipe._offset = 0;
 	        inst.swipe._offsetTrack = 0;
 	        inst.swipe._offsetTarget = 0;
-	        inst.swipe._weight = 0.99;
 
 	        inst.swipe._targetCount = 0;
 	        inst.swipe._dir = 1;
@@ -1532,7 +1533,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.swipe._offsetTrack = this.swipe._offset = this._getOffset();
 	            this.swipe._timeStamp = Date.now();
 	            window.clearInterval(this.swipe._timer);
-	            this.swipe._timer = window.setInterval(this._track.bind(this), 100);
+	            this.swipe._timer = window.setInterval(this._track.bind(this), 50);
 	        }.bind(inst);
 
 	        var _touchMove = function (event) {
@@ -1591,18 +1592,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var maxCount = this._getMaxSlideCount(this.swipe._dir);
 
-	            if (this.swipe._velocity > 100 || this.swipe._velocity < -100) {
+	            if (this.swipe._velocity > 50 || this.swipe._velocity < -50) {
 
-	                this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
+	                this.swipe._amplitude = opts.weight * this.swipe._velocity;
 
-	                var count = Math.abs((this.swipe._offsetTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
+                    this.swipe._targetCount = Math.abs((this.swipe._offsetTarget + this.swipe._dir * this.swipe._amplitude) / this.itemSize);
+                }
+                else {
+                    this.swipe._targetCount = (this.swipe._offsetTarget - this._getOffset()) / this.itemSize;
+                }
 
-	                this.swipe._offsetTarget = this._getOffset() + this.swipe._amplitude;
-	            }
+                if (Math.abs(this.swipe._targetCount) < 1 && (Math.abs(this.swipe._targetCount) - Math.floor(Math.abs(this.swipe._targetCount)) < 0.25)) {
+                    this.swipe._targetCount = 0;
+                }
+                else {
+                    this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
+                }
 
-	            this.swipe._targetCount = (this.swipe._offsetTarget - this._getOffset()) / this.itemSize;
-
-	            this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
 
 	            if (this.swipe._targetCount > maxCount) {
 	                this.swipe._targetCount = maxCount;
@@ -1626,7 +1632,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.swipe._offsetTrack = this.swipe._offset;
 
 	            v = 1000 * delta / (1 + elapsed);
-	            this.swipe._velocity = 0.8 * v + 0.2 * this.swipe._velocity;
+	            this.swipe._velocity = (1 - opts.velocity) * v + opts.velocity * this.swipe._velocity;
 	        }.bind(inst);
 	        inst._animate = function () {
 	            var now, elapsed, delta;
