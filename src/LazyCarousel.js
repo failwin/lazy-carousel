@@ -108,7 +108,7 @@ var LazyCarousel = (function() {
         this._updateVisible();
         this._centerList();
 
-        this._notifyActiveChange(this.active, true, oldActive);
+        this._notifyActiveChange(this.active, true, oldActive, 0);
         this._notifyNavChange();
     };
     LazyCarousel.prototype._fetchElementsSize = function() {
@@ -178,7 +178,7 @@ var LazyCarousel = (function() {
         this._setOffset(offsetLeft);
     };
 
-    LazyCarousel.prototype._notifyActiveChange = function(active, _force, _oldActive) {
+    LazyCarousel.prototype._notifyActiveChange = function(active, _force, _oldActive, _dir) {
         if (this.active !== active || _force) {
             var oldActiveIndex = LazyCarousel.utils.globalToPartialIndex(_oldActive,
                                                                             0,
@@ -196,7 +196,8 @@ var LazyCarousel = (function() {
                 oldActive: _oldActive,
                 newActive: active,
                 $oldActiveItem: this.$list.children[oldActiveIndex],
-                $newActiveItem: this.$list.children[newActiveIndex]
+                $newActiveItem: this.$list.children[newActiveIndex],
+                dir: _dir || 0
             });
 
             var activeItem = this.items[active];
@@ -309,13 +310,13 @@ var LazyCarousel = (function() {
         this._isBusy = true;
 
         if (utils.supportsTransitions()) {
-            this._notifyActiveChange(newIndex, false, this.active);
+            this._notifyActiveChange(newIndex, false, this.active, dir);
         }
 
         return this._animateOffset(fromOffset, toOffset, duration)
         .then(function() {
             if (!utils.supportsTransitions()) {
-                this._notifyActiveChange(newIndex, false, this.active);
+                this._notifyActiveChange(newIndex, false, this.active, dir);
             }
             this._isBusy = false;
             var oldActive = this.active;
@@ -341,7 +342,8 @@ var LazyCarousel = (function() {
                 oldActive: oldActive,
                 newActive: this.active,
                 $oldActiveItem: this.$list.children[oldActiveIndex],
-                $newActiveItem: this.$list.children[newActiveIndex]
+                $newActiveItem: this.$list.children[newActiveIndex],
+                dir: dir
             });
         }.bind(this))
         .catch(function(error){

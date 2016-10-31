@@ -188,7 +188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._updateVisible();
 	        this._centerList();
 
-	        this._notifyActiveChange(this.active, true, oldActive);
+	        this._notifyActiveChange(this.active, true, oldActive, 0);
 	        this._notifyNavChange();
 	    };
 	    LazyCarousel.prototype._fetchElementsSize = function () {
@@ -253,7 +253,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._setOffset(offsetLeft);
 	    };
 
-	    LazyCarousel.prototype._notifyActiveChange = function (active, _force, _oldActive) {
+	    LazyCarousel.prototype._notifyActiveChange = function (active, _force, _oldActive, _dir) {
 	        if (this.active !== active || _force) {
 	            var oldActiveIndex = LazyCarousel.utils.globalToPartialIndex(_oldActive, 0, this.items.length, this.partialItems.length, this.isSimple);
 
@@ -263,7 +263,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                oldActive: _oldActive,
 	                newActive: active,
 	                $oldActiveItem: this.$list.children[oldActiveIndex],
-	                $newActiveItem: this.$list.children[newActiveIndex]
+	                $newActiveItem: this.$list.children[newActiveIndex],
+	                dir: _dir || 0
 	            });
 
 	            var activeItem = this.items[active];
@@ -366,12 +367,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._isBusy = true;
 
 	        if (_myUtils2.default.supportsTransitions()) {
-	            this._notifyActiveChange(newIndex, false, this.active);
+	            this._notifyActiveChange(newIndex, false, this.active, dir);
 	        }
 
 	        return this._animateOffset(fromOffset, toOffset, duration).then(function () {
 	            if (!_myUtils2.default.supportsTransitions()) {
-	                this._notifyActiveChange(newIndex, false, this.active);
+	                this._notifyActiveChange(newIndex, false, this.active, dir);
 	            }
 	            this._isBusy = false;
 	            var oldActive = this.active;
@@ -389,7 +390,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                oldActive: oldActive,
 	                newActive: this.active,
 	                $oldActiveItem: this.$list.children[oldActiveIndex],
-	                $newActiveItem: this.$list.children[newActiveIndex]
+	                $newActiveItem: this.$list.children[newActiveIndex],
+	                dir: dir
 	            });
 	        }.bind(this)).catch(function (error) {
 	            console.error(error);
