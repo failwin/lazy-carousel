@@ -107,7 +107,8 @@ export default function swipeDecorator(options) {
 
             this.swipe._isActive = true;
             this.swipe._initPos = _getEventPosition(event);
-            this.swipe._amplitude = this.swipe._offset = 0;
+			this.swipe._offset = this._getOffset();
+            this.swipe._amplitude = 0;
 
             this.swipe._startPos = this.swipe._initPos;
             inst.swipe._startTime = Date.now();
