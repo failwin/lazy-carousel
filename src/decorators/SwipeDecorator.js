@@ -22,7 +22,11 @@ export default function swipeDecorator(options) {
     var defOpts = {
         type: type.x,
         supportMouse: false,
-        supportTouch: true
+        supportTouch: true,
+        deceleration: 0.0006,
+        nextSlideRatio: 0.15,
+        speedRatio: 1,
+        animateMinPx: 5
     };
 
     return function swipeDecoratorFn(inst) {
@@ -37,20 +41,24 @@ export default function swipeDecorator(options) {
         // swipe options
         inst.swipe = {};
         inst.swipe.opts = opts;
-        inst.swipe._isActive = false;
-        inst.swipe._lastPos = {};
-        inst.swipe._preventMove = null;
-        inst.swipe._timer = null;
-        inst.swipe._timeStamp = 0;
-        inst.swipe._velocity = 0;
-        inst.swipe._amplitude = 0;
-        inst.swipe._offset = 0;
-        inst.swipe._offsetTrack = 0;
-        inst.swipe._offsetTarget = 0;
-        inst.swipe._weight = 0.99;
 
-        inst.swipe._targetCount = 0;
+        inst.swipe._isActive = false;
+        inst.swipe._preventMove = null;
+
         inst.swipe._dir = 1;
+        inst.swipe._offset = 0;
+        inst.swipe._offsetTarget = 0;
+        inst.swipe._amplitude = 0;
+        inst.swipe._targetCount = 0;
+
+        inst.swipe._initPos = {};
+
+        inst.swipe._startPos = {};
+        inst.swipe._startTime = 0;
+
+        inst.swipe._endTime = 0;
+
+        inst.swipe._animateTime = 0;
 
         inst._attachHandlers = function(){
             _attachHandlers();
@@ -98,13 +106,11 @@ export default function swipeDecorator(options) {
             }
 
             this.swipe._isActive = true;
-            this.swipe._lastPos = _getEventPosition(event);
+            this.swipe._initPos = _getEventPosition(event);
             this.swipe._amplitude = this.swipe._offset = 0;
-            this.swipe._velocity = 0;
-            this.swipe._offsetTrack = this.swipe._offset = this._getOffset();
-            this.swipe._timeStamp = Date.now();
-            window.clearInterval(this.swipe._timer);
-            this.swipe._timer = window.setInterval(this._track.bind(this), 100);
+
+            this.swipe._startPos = this.swipe._initPos;
+            inst.swipe._startTime = Date.now();
         }.bind(inst);
 
         var _touchMove = function(event){
@@ -113,10 +119,12 @@ export default function swipeDecorator(options) {
             }
 
             var coords = _getEventPosition(event),
-                prop = this.swipe.opts.type.toLowerCase();
+                prop = this.swipe.opts.type.toLowerCase(),
+                timestamp,
+                offset;
 
             if (this.swipe._preventMove === null) {
-                var swipeDir = _getSwipeDirection(this.swipe._lastPos, coords, this.swipe.opts.type);
+                var swipeDir = _getSwipeDirection(this.swipe._initPos, coords, this.swipe.opts.type);
 
                 if (swipeDir === null) {
                     return;
@@ -136,11 +144,15 @@ export default function swipeDecorator(options) {
             event.preventDefault();
             event.stopPropagation();
 
-            var deltaX = coords[prop] - this.swipe._lastPos[prop];
-
-            var offset = this._getOffset() + deltaX;
+            offset = this._getOffset() + coords[prop] - this.swipe._initPos[prop];
             this._setOffset(offset, true);
             this.swipe._offset = offset;
+
+            timestamp = Date.now();
+            if ( timestamp - this.swipe._startTime > 300 ) {
+                this.swipe._startTime = timestamp;
+                this.swipe._startPos = coords;
+            }
         }.bind(inst);
 
         var _touchEnd = function(event) {
@@ -148,71 +160,82 @@ export default function swipeDecorator(options) {
                 return;
             }
 
-            var prop = this.swipe.opts.type.toLowerCase();
+            var coords = _getEventPosition(event),
+                prop = this.swipe.opts.type.toLowerCase();
 
             this.swipe._isActive = false;
             this.swipe._preventMove = null;
-            window.clearInterval(this.swipe._timer);
 
             this.swipe._offsetTarget = this.swipe._offset;
             this.swipe._targetCount = 0;
 
-            var coords = _getEventPosition(event);
-
             this.swipe._dir = 1;
-            if (coords[prop] > this.swipe._lastPos[prop]) {
+            if (coords[prop] > this.swipe._initPos[prop]) {
                 this.swipe._dir = -1;
             }
 
-            var maxCount = this._getMaxSlideCount(this.swipe._dir);
+            // magic ))
+            this.__calculateSwipeCount(coords);
 
-            if (this.swipe._velocity > 100 || this.swipe._velocity < -100) {
+            this.swipe._offsetTarget = this._calculateOffset(this.swipe._dir * this.swipe._targetCount);
 
-                this.swipe._amplitude = this.swipe._weight * this.swipe._velocity;
+            this.swipe._amplitude = this.swipe._offsetTarget - this.swipe._offset;
 
-                var count = Math.abs((this.swipe._offsetTarget + this.swipe._dir * this.swipe._amplitude)/this.itemSize);
+            this.swipe._endTime = Date.now();
+            requestAnimationFrame(this.__animate.bind(this));
+        }.bind(inst);
 
-                this.swipe._offsetTarget = this._getOffset() + this.swipe._amplitude;
+        inst.__calculateSwipeCount = function (coords) {
+            var prop = this.swipe.opts.type.toLowerCase(),
+                maxCount = this._getMaxSlideCount(this.swipe._dir),
+                timestamp = Date.now(),
+                duration = timestamp - this.swipe._startTime,
+                amplitude,
+                speed;
+
+            if ( duration < 300 ) {
+                amplitude = _getSwipeAmplitude(coords[prop], this.swipe._startPos[prop], duration, inst.swipe.opts.deceleration);
+            }
+            else {
+                amplitude = Math.abs(coords[prop] - this.swipe._initPos[prop]);
             }
 
-            this.swipe._targetCount = (this.swipe._offsetTarget - this._getOffset()) / this.itemSize;
+            speed = amplitude / duration;
+            this.swipe._animateTime = amplitude / speed;
 
-            this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
+            this.swipe._targetCount = (amplitude * - this.swipe._dir) / this.itemSize;
+
+            if (Math.abs(this.swipe._targetCount) < 1) {
+                if ((Math.abs(this.swipe._targetCount) - Math.floor(Math.abs(this.swipe._targetCount)) < inst.swipe.opts.nextSlideRatio )) {
+                    this.swipe._targetCount = 0;
+                }
+                else {
+                    this.swipe._targetCount = 1;
+                }
+            }
+            else {
+                this.swipe._targetCount = Math.round(Math.abs(this.swipe._targetCount));
+            }
 
             if (this.swipe._targetCount > maxCount) {
                 this.swipe._targetCount = maxCount;
             }
 
-            this.swipe._offsetTarget = this._calculateOffset(this.swipe._dir * this.swipe._targetCount);
-
-            this.swipe._amplitude = (this.swipe._offsetTarget - this.swipe._offset);
-
-            this.swipe._timeStamp = Date.now();
-            requestAnimationFrame(this._animate.bind(this));
+            return this.swipe._targetCount;
         }.bind(inst);
 
-        inst._track = function(event) {
-            var now, elapsed, delta, v;
-
-            now = Date.now();
-            elapsed = now - this.swipe._timeStamp;
-            this.swipe._timeStamp = now;
-            delta = this.swipe._offset - this.swipe._offsetTrack;
-            this.swipe._offsetTrack = this.swipe._offset;
-
-            v = 1000 * delta / (1 + elapsed);
-            this.swipe._velocity = 0.8 * v + 0.2 * this.swipe._velocity;
-        }.bind(inst);
-        inst._animate = function() {
+        inst.__animate = function() {
             var now, elapsed, delta;
+
+            var min = this.swipe.opts.animateMinPx;
 
             if (this.swipe._amplitude) {
                 now = Date.now();
-                elapsed = now - this.swipe._timeStamp;
-                delta = - this.swipe._amplitude * Math.exp(- elapsed / 325);
-                if (delta > 5 || delta < -5) {
+                elapsed = now - this.swipe._endTime;
+                delta = - this.swipe._amplitude * Math.exp(- elapsed / (this.swipe._animateTime * this.swipe.opts.speedRatio));
+                if (delta > min || delta < -min) {
                     this._setOffset(this.swipe._offsetTarget + delta, true);
-                    requestAnimationFrame(this._animate.bind(this));
+                    requestAnimationFrame(this.__animate.bind(this));
                     this._isBusy = true;
                 }
                 else {
@@ -222,7 +245,7 @@ export default function swipeDecorator(options) {
             }
         }.bind(inst);
 
-        var _getEventPosition = function(event) {
+        function _getEventPosition(event) {
             var originalEvent = event.originalEvent || event;
             var touches = originalEvent.touches && originalEvent.touches.length ? originalEvent.touches : [originalEvent];
             var e = (originalEvent.changedTouches && originalEvent.changedTouches[0]) || touches[0];
@@ -231,9 +254,9 @@ export default function swipeDecorator(options) {
                 x: e.clientX,
                 y: e.clientY
             };
-        };
+        }
 
-        var _getSwipeDirection = function(startPoint, endPoint) {
+        function _getSwipeDirection(startPoint, endPoint) {
             var x = startPoint.x - endPoint.x,
                 y = startPoint.y - endPoint.y;
 
@@ -256,7 +279,15 @@ export default function swipeDecorator(options) {
                 }
                 return 'down';
             }
-        };
+        }
+
+        function _getSwipeAmplitude(current, start, time, deceleration) {
+            var distance = current - start,
+                speed = Math.abs(distance) / time;
+
+            return Math.abs(distance) + (( speed * speed ) / ( 2 * deceleration ));
+
+        }
 
         //return SwipeDecorator(inst, options);
         return inst;
