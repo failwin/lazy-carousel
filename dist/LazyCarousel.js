@@ -1454,7 +1454,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        deceleration: 0.0006,
 	        nextSlideRatio: 0.15,
 	        speedRatio: 1,
-	        animateMinPx: 5
+	        animateMinPx: 3
 	    };
 
 	    return function swipeDecoratorFn(inst) {
@@ -1471,7 +1471,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        inst.swipe.opts = opts;
 
 	        inst.swipe._isActive = false;
-	        inst.swipe._preventMove = null;
+	        inst.swipe._preventSwipe = null;
 
 	        inst.swipe._dir = 1;
 	        inst.swipe._offset = 0;
@@ -1534,6 +1534,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            this.swipe._isActive = true;
+	            this.swipe._preventSwipe = null;
 	            this.swipe._initPos = _getEventPosition(event);
 	            this.swipe._offset = this._getOffset();
 	            this.swipe._amplitude = 0;
@@ -1552,19 +1553,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	                timestamp,
 	                offset;
 
-	            if (this.swipe._preventMove === null) {
+	            if (this.swipe._preventSwipe === null) {
 	                var swipeDir = _getSwipeDirection(this.swipe._initPos, coords, this.swipe.opts.type);
 
 	                if (swipeDir === null) {
 	                    return;
 	                } else if (this.swipe.opts.type === type.x && (swipeDir === 'up' || swipeDir === 'down')) {
 	                    this.swipe._isActive = false;
+	                    this.swipe._preventSwipe = true;
 	                    return;
 	                } else if (this.swipe.opts.type === type.y && (swipeDir === 'left' || swipeDir === 'right')) {
 	                    this.swipe._isActive = false;
+	                    this.swipe._preventSwipe = true;
 	                    return;
 	                } else {
-	                    this.swipe._preventMove = true;
+	                    this.swipe._preventSwipe = false;
 	                }
 	            }
 	            event.preventDefault();
@@ -1586,14 +1589,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return;
 	            }
 
+	            if (this.swipe._preventSwipe === null || this.swipe._preventSwipe === true) {
+	                this.swipe._isActive = false;
+	                this.swipe._preventSwipe = null;
+	                this._isBusy = false;
+	                return;
+	            }
+
 	            var coords = _getEventPosition(event),
 	                prop = this.swipe.opts.type.toLowerCase();
 
 	            this.swipe._isActive = false;
-	            this.swipe._preventMove = null;
-
-	            this.swipe._offsetTarget = this.swipe._offset;
-	            this.swipe._targetCount = 0;
+	            this.swipe._preventSwipe = null;
 
 	            this.swipe._dir = 1;
 	            if (coords[prop] > this.swipe._initPos[prop]) {
@@ -1662,6 +1669,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    this._isBusy = true;
 	                } else {
 	                    this._isBusy = false;
+	                    this._setOffset(this.swipe._offsetTarget, true);
 	                    this.slideToDir(this.swipe._dir, this.swipe._targetCount, true);
 	                }
 	            }
@@ -1685,7 +1693,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var xAbs = Math.abs(x),
 	                yAbs = Math.abs(y);
 
-	            if (xAbs < 25 && yAbs < 25) {
+	            if (xAbs < 20 && yAbs < 20) {
 	                return null;
 	            }
 
