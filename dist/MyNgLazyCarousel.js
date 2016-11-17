@@ -727,6 +727,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    for (var i = index, k = 0; k < afterHalf; i++, k++) {
 	        normalIndex = normalizeIndex(i, globalCount);
 	        item = list[normalIndex];
+	        item.$index = normalIndex;
 	        afterHalfArr.push(item);
 	    }
 
@@ -734,6 +735,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    for (var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
 	        normalIndex = normalizeIndex(j, globalCount);
 	        item = list[normalIndex];
+	        item.$index = normalIndex;
 	        beforeHalfArr.push(item);
 	    }
 
@@ -1460,18 +1462,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (this.swipe.opts.supportTouch) {
 	                // Touch
-	                this.$list.addEventListener('touchstart', _touchStart, false);
-	                this.$list.addEventListener('touchmove', _touchMove, false);
-	                this.$list.addEventListener('touchend', _touchEnd, false);
-	                this.$list.addEventListener('touchcancel', _touchEnd, false);
+	                this.$list.parentNode.addEventListener('touchstart', _touchStart, false);
+	                this.$list.parentNode.addEventListener('touchmove', _touchMove, false);
+	                this.$list.parentNode.addEventListener('touchend', _touchEnd, false);
+	                this.$list.parentNode.addEventListener('touchcancel', _touchEnd, false);
 	            }
 
 	            if (this.swipe.opts.supportMouse) {
 	                // Mouse
-	                this.$list.addEventListener('mousedown', _touchStart, false);
-	                this.$list.addEventListener('mousemove', _touchMove, false);
-	                this.$list.addEventListener('mouseup', _touchEnd, false);
-	                this.$list.addEventListener('mouseleave', _touchEnd, false);
+	                this.$list.parentNode.addEventListener('mousedown', _touchStart, false);
+	                this.$list.parentNode.addEventListener('mousemove', _touchMove, false);
+	                this.$list.parentNode.addEventListener('mouseup', _touchEnd, false);
+	                this.$list.parentNode.addEventListener('mouseleave', _touchEnd, false);
 	            }
 	        }.bind(inst);
 
@@ -1480,18 +1482,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (this.swipe.opts.supportTouch) {
 	                // Touch
-	                this.$list.removeEventListener('touchstart', _touchStart, false);
-	                this.$list.removeEventListener('touchmove', _touchMove, false);
-	                this.$list.removeEventListener('touchend', _touchEnd, false);
-	                this.$list.removeEventListener('touchcancel', _touchEnd, false);
+	                this.$list.parentNode.removeEventListener('touchstart', _touchStart, false);
+	                this.$list.parentNode.removeEventListener('touchmove', _touchMove, false);
+	                this.$list.parentNode.removeEventListener('touchend', _touchEnd, false);
+	                this.$list.parentNode.removeEventListener('touchcancel', _touchEnd, false);
 	            }
 
 	            if (this.swipe.opts.supportMouse) {
 	                // Mouse
-	                this.$list.removeEventListener('mousedown', _touchStart, false);
-	                this.$list.removeEventListener('mousemove', _touchMove, false);
-	                this.$list.removeEventListener('mouseup', _touchEnd, false);
-	                this.$list.removeEventListener('mouseleave', _touchEnd, false);
+	                this.$list.parentNode.removeEventListener('mousedown', _touchStart, false);
+	                this.$list.parentNode.removeEventListener('mousemove', _touchMove, false);
+	                this.$list.parentNode.removeEventListener('mouseup', _touchEnd, false);
+	                this.$list.parentNode.removeEventListener('mouseleave', _touchEnd, false);
 	            }
 	        }.bind(inst);
 
