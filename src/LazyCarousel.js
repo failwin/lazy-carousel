@@ -691,6 +691,7 @@ function getPartialItems(list, index, visible, addition, isSimple) {
     for(var i = index, k = 0; k < afterHalf; i++, k++) {
         normalIndex = normalizeIndex(i, globalCount);
         item = list[normalIndex];
+        item.$index = normalIndex;
         afterHalfArr.push(item);
     }
 
@@ -698,6 +699,7 @@ function getPartialItems(list, index, visible, addition, isSimple) {
     for(var j = index - 1, l = 0; l < beforeHalf; j--, l++) {
         normalIndex = normalizeIndex(j, globalCount);
         item = list[normalIndex];
+        item.$index = normalIndex;
         beforeHalfArr.push(item);
     }
 
