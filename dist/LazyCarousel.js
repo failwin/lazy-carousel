@@ -377,7 +377,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        if (this._isBusy) {
-	            return _es6Promise.Promise.reject();
+	            return _es6Promise.Promise.resolve();
 	        }
 
 	        var maxCount = this._getMaxSlideCount(dir);

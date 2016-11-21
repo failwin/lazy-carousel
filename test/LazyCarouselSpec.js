@@ -30,9 +30,10 @@ describe('LazyCarousel', function(){
             key = _uniqueKeyProp || 'id';
 
         if (utils.isArray(items)) {
-            res = items.map(function(id) {
+            res = items.map(function(id, i) {
                 obj = {};
                 obj[key] = id;
+                obj.$index = id;
                 return obj;
             });
         }
@@ -41,6 +42,7 @@ describe('LazyCarousel', function(){
             for (var i = 0; i < items; i++) {
                 obj = {};
                 obj[key] = i;
+                obj.$index = i;
                 res.push(obj);
             }
         }

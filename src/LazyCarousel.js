@@ -287,7 +287,7 @@ var LazyCarousel = (function() {
         }
 
         if (this._isBusy) {
-            return Promise.reject();
+            return Promise.resolve();
         }
 
         var maxCount = this._getMaxSlideCount(dir);
